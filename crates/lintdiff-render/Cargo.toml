@@ -1,0 +1,11 @@
+[package]
+name = "lintdiff-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Renderers (Markdown, annotations) for lintdiff."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }
+serde_json.workspace = true

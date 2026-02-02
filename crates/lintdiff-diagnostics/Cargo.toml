@@ -1,0 +1,13 @@
+[package]
+name = "lintdiff-diagnostics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Cargo JSON diagnostics parsing for lintdiff."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

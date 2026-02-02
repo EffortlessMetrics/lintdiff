@@ -1,0 +1,27 @@
+[package]
+name = "lintdiff"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "CLI for lintdiff."
+
+[dependencies]
+lintdiff-app = { path = "../lintdiff-app" }
+lintdiff-render = { path = "../lintdiff-render" }
+lintdiff-types = { path = "../lintdiff-types" }
+
+clap.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+lintdiff-domain = { path = "../lintdiff-domain" }
+lintdiff-diff = { path = "../lintdiff-diff" }
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+cucumber = "0.22"
+
+[[test]]
+name = "bdd"
+path = "tests/bdd.rs"
+harness = false

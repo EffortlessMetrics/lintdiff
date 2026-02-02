@@ -1,0 +1,19 @@
+[package]
+name = "lintdiff-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Orchestration adapters for lintdiff (IO, git, time)."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-diff = { path = "../lintdiff-diff" }
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-domain = { path = "../lintdiff-domain" }
+lintdiff-render = { path = "../lintdiff-render" }
+
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+time.workspace = true

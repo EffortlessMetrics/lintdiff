@@ -1,0 +1,25 @@
+[package]
+name = "lintdiff-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+lintdiff-diff = { path = "../crates/lintdiff-diff" }
+lintdiff-diagnostics = { path = "../crates/lintdiff-diagnostics" }
+
+[[bin]]
+name = "diff_parser"
+path = "fuzz_targets/diff_parser.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "diagnostics_parser"
+path = "fuzz_targets/diagnostics_parser.rs"
+test = false
+doc = false

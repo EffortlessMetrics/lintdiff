@@ -1,0 +1,14 @@
+[package]
+name = "lintdiff-diff"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Unified diff parsing for lintdiff."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1"

@@ -1,0 +1,21 @@
+# lintdiff configuration (local policy knobs)
+#
+# Cockpit-level blocking policy belongs in cockpit.toml.
+# lintdiff config is about how lintdiff interprets and budgets diagnostics.
+
+# fail_on = "error"   # error | warn | never
+# max_findings = 200
+# max_annotations = 50
+# workspace_only = true
+
+[filter]
+# include_paths = ["src/**"]
+# exclude_paths = ["**/target/**", "**/generated/**"]
+
+# allow_codes = ["lintdiff.diagnostic.clippy.needless_borrow"]
+# suppress_codes = ["lintdiff.diagnostic.clippy.some_noisy_lint"]
+# deny_codes = ["lintdiff.diagnostic.rustc.E0502"]
+
+[provenance]
+# record_rustc = true
+# record_clippy = true
