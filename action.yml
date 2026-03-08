@@ -1,0 +1,136 @@
+name: "lintdiff"
+description: "Filter Rust diagnostics to lines changed in a PR and post annotations."
+branding:
+  icon: "check-circle"
+  color: "orange"
+
+inputs:
+  base:
+    description: "Base ref for diff (default: auto-detect from PR context)"
+    required: false
+  head:
+    description: "Head ref for diff (default: auto-detect from PR context)"
+    required: false
+  config:
+    description: "Path to lintdiff.toml config file"
+    required: false
+  fail_on:
+    description: "Override fail_on policy (error, warn, never)"
+    required: false
+  diagnostics:
+    description: "Path to diagnostics JSONL file (cargo clippy --message-format=json output)"
+    required: false
+  version:
+    description: "lintdiff version to use (default: latest)"
+    required: false
+    default: "latest"
+  working_directory:
+    description: "Working directory for lintdiff"
+    required: false
+    default: "."
+
+outputs:
+  verdict:
+    description: "Verdict status (pass, warn, fail, skip)"
+    value: ${{ steps.run.outputs.verdict }}
+  report_path:
+    description: "Path to the report JSON file"
+    value: ${{ steps.run.outputs.report_path }}
+  exit_code:
+    description: "Exit code from lintdiff"
+    value: ${{ steps.run.outputs.exit_code }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Determine version
+      id: version
+      shell: bash
+      run: |
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          VERSION=$(curl -fsSL https://api.github.com/repos/effortless-metrics/lintdiff/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Failed to determine latest lintdiff version"
+            exit 1
+          fi
+        else
+          VERSION="${{ inputs.version }}"
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Download lintdiff
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+
+        case "${OS}-${ARCH}" in
+          linux-x86_64)  TARGET="x86_64-unknown-linux-musl"  ; EXT="tar.gz" ;;
+          darwin-x86_64) TARGET="x86_64-apple-darwin"         ; EXT="tar.gz" ;;
+          darwin-arm64)  TARGET="aarch64-apple-darwin"        ; EXT="tar.gz" ;;
+          *)
+            echo "::error::Unsupported platform: ${OS}-${ARCH}"
+            exit 1
+            ;;
+        esac
+
+        URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/lintdiff-${TARGET}.${EXT}"
+        echo "Downloading lintdiff ${VERSION} for ${TARGET}..."
+        curl -fsSL "$URL" -o "lintdiff-archive.${EXT}"
+
+        if [ "$EXT" = "tar.gz" ]; then
+          tar xzf "lintdiff-archive.${EXT}"
+        fi
+
+        chmod +x lintdiff
+        echo "$(pwd)" >> "$GITHUB_PATH"
+
+    - name: Run lintdiff
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        ARGS="ci github"
+
+        if [ -n "${{ inputs.base }}" ]; then
+          ARGS="$ARGS --base ${{ inputs.base }}"
+        fi
+        if [ -n "${{ inputs.head }}" ]; then
+          ARGS="$ARGS --head ${{ inputs.head }}"
+        fi
+        if [ -n "${{ inputs.config }}" ]; then
+          ARGS="$ARGS --config ${{ inputs.config }}"
+        fi
+        if [ -n "${{ inputs.fail_on }}" ]; then
+          ARGS="$ARGS --fail-on ${{ inputs.fail_on }}"
+        fi
+        if [ -n "${{ inputs.diagnostics }}" ]; then
+          ARGS="$ARGS --diagnostics ${{ inputs.diagnostics }}"
+        fi
+
+        REPORT_PATH="artifacts/lintdiff/report.json"
+        echo "report_path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
+
+        set +e
+        lintdiff $ARGS --out "$REPORT_PATH" --annotations github
+        EXIT_CODE=$?
+        set -e
+
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+        # Extract verdict from report
+        if [ -f "$REPORT_PATH" ]; then
+          VERDICT=$(grep -oP '"status":\s*"\K[^"]+' "$REPORT_PATH" | head -1)
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+        fi
+
+        exit $EXIT_CODE
+
+    - name: Upload report artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: lintdiff-report
+        path: ${{ inputs.working_directory }}/artifacts/lintdiff/
+        if-no-files-found: ignore

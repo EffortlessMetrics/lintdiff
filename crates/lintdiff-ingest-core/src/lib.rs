@@ -308,6 +308,22 @@ fn finalize(mut report: Report, _cfg: &EffectiveConfig) -> Report {
     report
 }
 
+pub fn truncate_message(msg: &str, max_len: usize) -> String {
+    if msg.len() <= max_len {
+        msg.to_string()
+    } else {
+        let end = msg
+            .char_indices()
+            .map(|(i, _)| i)
+            .take_while(|&i| i <= max_len)
+            .last()
+            .unwrap_or(0);
+        let mut s = msg[..end].to_string();
+        s.push_str("...");
+        s
+    }
+}
+
 fn tool_error_finding(code: &str, msg: &str) -> Finding {
     Finding {
         severity: Severity::Error,
@@ -373,5 +389,58 @@ diff --git a/src/lib.rs b/src/lib.rs
             report.findings[0].location.as_ref().unwrap().path.as_str(),
             "src/lib.rs"
         );
+    }
+
+    #[test]
+    fn truncate_message_ascii_within_limit() {
+        let msg = "hello world";
+        assert_eq!(truncate_message(msg, 20), "hello world");
+    }
+
+    #[test]
+    fn truncate_message_ascii_at_exact_boundary() {
+        let msg = "hello";
+        assert_eq!(truncate_message(msg, 5), "hello");
+    }
+
+    #[test]
+    fn truncate_message_ascii_over_limit() {
+        let msg = "hello world";
+        assert_eq!(truncate_message(msg, 5), "hello...");
+    }
+
+    #[test]
+    fn truncate_message_unicode_at_multibyte_boundary() {
+        // "aé" = 'a' (1 byte) + 'é' (2 bytes) = 3 bytes total
+        // With max_len=2, slicing at byte 2 would be inside 'é'.
+        // Should truncate to "a" (byte index 1) instead of panicking.
+        let msg = "aéb";
+        let result = truncate_message(msg, 2);
+        assert_eq!(result, "a...");
+    }
+
+    #[test]
+    fn truncate_message_emoji_boundary() {
+        // '🦀' is 4 bytes. "x🦀y" = 1 + 4 + 1 = 6 bytes.
+        // max_len=3: last char boundary <= 3 is index 1 ('x' ends at 1, '🦀' starts at 1 and ends at 5).
+        // So we should get "x..." because the emoji starts at byte 1 but extends to byte 5.
+        let msg = "x🦀y";
+        let result = truncate_message(msg, 3);
+        assert_eq!(result, "x...");
+    }
+
+    #[test]
+    fn truncate_message_all_multibyte() {
+        // "ééé" = 6 bytes, max_len=4 → last boundary <= 4 is byte 4 ("éé")
+        let msg = "ééé";
+        let result = truncate_message(msg, 4);
+        assert_eq!(result, "éé...");
+    }
+
+    #[test]
+    fn truncate_message_zero_max_len() {
+        let msg = "hello";
+        let result = truncate_message(msg, 0);
+        assert_eq!(result, "...");
     }
 }
