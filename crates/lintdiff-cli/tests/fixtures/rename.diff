@@ -1,0 +1,8 @@
+diff --git a/src/old_name.rs b/src/new_name.rs
+similarity index 90%
+rename from src/old_name.rs
+rename to src/new_name.rs
+--- a/src/old_name.rs
++++ b/src/new_name.rs
+@@ -1,0 +1,1 @@
++fn renamed_func() { let x = (); }

@@ -220,3 +220,93 @@ Feature: Diff-scoped diagnostics
     Then verdict status is "warn"
     And findings count is 2
     And finding 0 and 1 share fingerprint
+
+  # =============================================================================
+  # Explain artifact scenarios
+  # =============================================================================
+
+  Scenario: Explain artifact tracks all diagnostics
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    When lintdiff ingests the inputs
+    Then explain total equals diagnostics total
+    And explain has 1 entries with disposition "included"
+
+  Scenario: Explain artifact records outside-diff disposition
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_outside_diff.jsonl"
+    When lintdiff ingests the inputs
+    Then explain has 1 entries with disposition "dropped_outside_diff"
+    And explain has 0 entries with disposition "included"
+
+  Scenario: Explain artifact records no-span disposition
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "no_span_diagnostics.jsonl"
+    When lintdiff ingests the inputs
+    Then explain has 1 entries with disposition "dropped_no_span"
+    And explain has 1 entries with disposition "included"
+
+  Scenario: Explain artifact records suppressed-by-code disposition
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "suppress_code.jsonl"
+    And suppress code "lintdiff.diagnostic.clippy.let_unit_value"
+    When lintdiff ingests the inputs
+    Then explain has 1 entries with disposition "suppressed_by_code"
+
+  Scenario: Explain artifact records path-filter disposition
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    And filter exclude path "src/lib.rs"
+    And feature flag "path_filters" is "true"
+    When lintdiff ingests the inputs
+    Then explain has 1 entries with disposition "dropped_by_path_filter"
+    And explain has 0 entries with disposition "included"
+
+  # =============================================================================
+  # Edge-case fixtures: rename, moved code, multi-span, macro, generated files
+  # =============================================================================
+
+  Scenario: Renamed file with diagnostics on new path
+    Given a diff fixture "rename.diff"
+    And a diagnostics fixture "rename_diagnostics.jsonl"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And warn count is 1
+
+  Scenario: Moved code matches diagnostics at new line positions
+    Given a diff fixture "moved_code.diff"
+    And a diagnostics fixture "moved_code_diagnostics.jsonl"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And findings count is 1
+
+  Scenario: Multi-span diagnostic matches primary span in diff
+    Given a diff fixture "multi_file.diff"
+    And a diagnostics fixture "multi_span.jsonl"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And findings count is 1
+
+  Scenario: Macro-expanded diagnostic outside workspace is dropped
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "macro_expanded.jsonl"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And findings count is 1
+
+  Scenario: Generated file path can be excluded by filter
+    Given a diff fixture "generated_file.diff"
+    And a diagnostics fixture "generated_file_diagnostics.jsonl"
+    And filter exclude path "src/generated/**"
+    And feature flag "path_filters" is "true"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And findings count is 1
+
+  Scenario: Markdown output includes explain summary
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    When lintdiff ingests the inputs
+    And lintdiff renders markdown output
+    Then markdown output contains "Diagnostics:"
+    And markdown output contains "1 matched"
