@@ -1,0 +1,56 @@
+{
+  "schema": "lintdiff.report.v1",
+  "tool": {
+    "name": "lintdiff",
+    "version": "0.1.0"
+  },
+  "run": {
+    "started_at": "2026-01-01T00:00:00Z",
+    "ended_at": "2026-01-01T00:00:01Z"
+  },
+  "verdict": {
+    "status": "pass",
+    "counts": {
+      "info": 0,
+      "warn": 0,
+      "error": 0
+    }
+  },
+  "findings": [],
+  "data": {
+    "explain": [
+      {
+        "code": "lintdiff.diagnostic.clippy.let_unit_value",
+        "disposition": "dropped_outside_diff",
+        "file": "src/lib.rs",
+        "line": 999,
+        "message_preview": "unused variable"
+      }
+    ],
+    "explain_summary": {
+      "cut_by_budget": 0,
+      "dropped_by_path_filter": 0,
+      "dropped_no_span": 0,
+      "dropped_outside_diff": 1,
+      "included": 0,
+      "suppressed_by_code": 0,
+      "total": 1
+    },
+    "repro": null,
+    "stats": {
+      "denied_by_code": 0,
+      "diagnostics_total": 1,
+      "diagnostics_with_path_in_diff": 1,
+      "diagnostics_with_spans": 1,
+      "diff_added_lines": 1,
+      "diff_files": 1,
+      "diff_hunks": 1,
+      "filtered_out_by_path": 0,
+      "matched_findings_emitted": 0,
+      "matched_findings_total": 0,
+      "suppressed_by_code": 0
+    },
+    "truncated": false,
+    "truncated_findings": 0
+  }
+}

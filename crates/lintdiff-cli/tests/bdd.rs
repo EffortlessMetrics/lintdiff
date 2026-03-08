@@ -38,6 +38,11 @@ async fn deny_code(world: &mut LintdiffWorld, code: String) {
     world.config.filter.deny_codes.push(code);
 }
 
+#[given(expr = "suppress code {string}")]
+async fn suppress_code(world: &mut LintdiffWorld, code: String) {
+    world.config.filter.suppress_codes.push(code);
+}
+
 #[given(expr = "filter exclude path {string}")]
 async fn given_filter_exclude(world: &mut LintdiffWorld, pattern: String) {
     world.config.filter.exclude_paths.push(pattern);
@@ -291,6 +296,62 @@ async fn then_finding_severity(world: &mut LintdiffWorld, index: i32, severity: 
         actual, severity,
         "Expected finding {} to have severity {:?}, but got {:?}",
         idx, severity, actual
+    );
+}
+
+#[then("explain total equals diagnostics total")]
+async fn then_explain_total_equals_diagnostics(world: &mut LintdiffWorld) {
+    let r = world.report.as_ref().expect("report produced");
+    let data = r.data.as_ref().expect("report has data");
+
+    let explain = data
+        .get("explain")
+        .expect("data has explain")
+        .as_array()
+        .expect("explain is array");
+    let stats_total = data
+        .get("stats")
+        .and_then(|s| s.get("diagnostics_total"))
+        .and_then(|v| v.as_u64())
+        .expect("stats has diagnostics_total");
+
+    assert_eq!(
+        explain.len() as u64,
+        stats_total,
+        "explain entries ({}) should equal diagnostics_total ({})",
+        explain.len(),
+        stats_total
+    );
+}
+
+#[then(expr = "explain has {int} entries with disposition {string}")]
+async fn then_explain_disposition_count(
+    world: &mut LintdiffWorld,
+    expected: i32,
+    disposition: String,
+) {
+    let r = world.report.as_ref().expect("report produced");
+    let data = r.data.as_ref().expect("report has data");
+
+    let explain = data
+        .get("explain")
+        .expect("data has explain")
+        .as_array()
+        .expect("explain is array");
+
+    let count = explain
+        .iter()
+        .filter(|e| {
+            e.get("disposition")
+                .and_then(|d| d.as_str())
+                .is_some_and(|d| d == disposition)
+        })
+        .count();
+
+    assert_eq!(
+        count as i32, expected,
+        "Expected {} explain entries with disposition {:?}, but got {}",
+        expected, disposition, count
     );
 }
 

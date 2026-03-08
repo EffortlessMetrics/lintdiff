@@ -37,6 +37,53 @@ pub fn render_markdown(report: &Report, opts: MarkdownOptions) -> String {
         status, report.verdict.counts.error, report.verdict.counts.warn, report.verdict.counts.info
     ));
 
+    // Explain summary line
+    if let Some(data) = &report.data {
+        if let Some(summary) = data.get("explain_summary") {
+            let total = summary.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
+            if total > 0 {
+                let included = summary
+                    .get("included")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let outside = summary
+                    .get("dropped_outside_diff")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let no_span = summary
+                    .get("dropped_no_span")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let by_path = summary
+                    .get("dropped_by_path_filter")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let suppressed = summary
+                    .get("suppressed_by_code")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+
+                out.push_str(&format!(
+                    "**Diagnostics:** {} total: {} matched",
+                    total, included
+                ));
+                if outside > 0 {
+                    out.push_str(&format!(", {} outside diff", outside));
+                }
+                if no_span > 0 {
+                    out.push_str(&format!(", {} no span", no_span));
+                }
+                if by_path > 0 {
+                    out.push_str(&format!(", {} filtered by path", by_path));
+                }
+                if suppressed > 0 {
+                    out.push_str(&format!(", {} suppressed", suppressed));
+                }
+                out.push_str("\n\n");
+            }
+        }
+    }
+
     if let Some(data) = &report.data {
         if let Some(trunc) = data.get("truncated").and_then(|v| v.as_bool()) {
             if trunc {
@@ -156,4 +203,120 @@ fn escape_github_command(s: &str) -> String {
     s.replace('%', "%25")
         .replace('\r', "%0D")
         .replace('\n', "%0A")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lintdiff_types::{
+        Counts, Finding, Location, NormPath, Report, RunInfo, ToolInfo, Verdict, VerdictStatus,
+        SCHEMA_ID, TOOL_NAME,
+    };
+
+    fn test_report(status: VerdictStatus, findings: Vec<Finding>) -> Report {
+        let counts = counts_from(&findings);
+        Report {
+            schema: SCHEMA_ID.to_string(),
+            tool: ToolInfo {
+                name: TOOL_NAME.to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            run: RunInfo {
+                started_at: "2026-01-01T00:00:00Z".to_string(),
+                ended_at: "2026-01-01T00:00:01Z".to_string(),
+                duration_ms: None,
+                host: None,
+                git: None,
+            },
+            verdict: Verdict {
+                status,
+                counts,
+                reasons: vec![],
+            },
+            findings,
+            data: None,
+        }
+    }
+
+    fn counts_from(findings: &[Finding]) -> Counts {
+        let mut c = Counts::default();
+        for f in findings {
+            match f.severity {
+                Severity::Info => c.info += 1,
+                Severity::Warn => c.warn += 1,
+                Severity::Error => c.error += 1,
+            }
+        }
+        c
+    }
+
+    fn warn_finding(path: &str, line: u32, code: &str, msg: &str) -> Finding {
+        Finding {
+            severity: Severity::Warn,
+            check_id: Some("diagnostics.on_diff".to_string()),
+            code: code.to_string(),
+            message: msg.to_string(),
+            location: Some(Location {
+                path: NormPath::new(path),
+                line: Some(line),
+                col: None,
+            }),
+            help: None,
+            url: None,
+            fingerprint: None,
+            data: None,
+        }
+    }
+
+    #[test]
+    fn markdown_pass_shows_no_findings_message() {
+        let r = test_report(VerdictStatus::Pass, vec![]);
+        let md = render_markdown(&r, MarkdownOptions::default());
+        assert!(md.contains("PASS"));
+        assert!(md.contains("No diagnostics matched"));
+    }
+
+    #[test]
+    fn markdown_warn_shows_table() {
+        let f = warn_finding("src/lib.rs", 1, "test.code", "test message");
+        let r = test_report(VerdictStatus::Warn, vec![f]);
+        let md = render_markdown(&r, MarkdownOptions::default());
+        assert!(md.contains("WARN"));
+        assert!(md.contains("| Sev | Location | Code | Message |"));
+        assert!(md.contains("src/lib.rs:1"));
+        assert!(md.contains("test.code"));
+    }
+
+    #[test]
+    fn markdown_escapes_pipe_in_message() {
+        let f = warn_finding("src/lib.rs", 1, "test", "has | pipe");
+        let r = test_report(VerdictStatus::Warn, vec![f]);
+        let md = render_markdown(&r, MarkdownOptions::default());
+        assert!(md.contains("has \\| pipe"));
+    }
+
+    #[test]
+    fn annotations_format_correct() {
+        let f = warn_finding("src/lib.rs", 42, "test.code", "message");
+        let r = test_report(VerdictStatus::Warn, vec![f]);
+        let out = render_github_annotations(&r, 50);
+        assert!(out.contains("::warning file=src/lib.rs,line=42::[test.code] message"));
+    }
+
+    #[test]
+    fn annotations_escapes_newlines() {
+        let f = warn_finding("src/lib.rs", 1, "test", "line1\nline2");
+        let r = test_report(VerdictStatus::Warn, vec![f]);
+        let out = render_github_annotations(&r, 50);
+        assert!(out.contains("line1%0Aline2"));
+        assert!(!out.contains('\n') || out.lines().count() <= 2); // only the trailing newline
+    }
+
+    #[test]
+    fn annotations_empty_for_no_findings() {
+        let r = test_report(VerdictStatus::Pass, vec![]);
+        let out = render_github_annotations(&r, 50);
+        assert!(out.trim().is_empty());
+    }
 }
