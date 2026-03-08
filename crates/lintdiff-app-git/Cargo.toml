@@ -1,0 +1,11 @@
+[package]
+name = "lintdiff-app-git"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Git + repository helpers for lintdiff adapters."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }
+thiserror.workspace = true

@@ -1,0 +1,15 @@
+[package]
+name = "lintdiff-fingerprint"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Stable finding fingerprint generation for lintdiff."
+
+[dependencies]
+hex.workspace = true
+sha2.workspace = true
+lintdiff-types = { path = "../lintdiff-types" }
+
+[dev-dependencies]
+proptest = "1"

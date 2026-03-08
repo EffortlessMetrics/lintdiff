@@ -5,16 +5,29 @@ members = [
   "crates/lintdiff-diff",
   "crates/lintdiff-diagnostics",
   "crates/lintdiff-domain",
+  "crates/lintdiff-core",
+  "crates/lintdiff-match",
+  "crates/lintdiff-ingest-core",
+  "crates/lintdiff-policy",
+  "crates/lintdiff-fingerprint",
   "crates/lintdiff-render",
+  "crates/lintdiff-app-git",
+  "crates/lintdiff-app-io",
   "crates/lintdiff-app",
   "crates/lintdiff-cli",
+  "crates/lintdiff-bdd",
+  "crates/lintdiff-bdd-harness",
+  "crates/lintdiff-ingest",
+  "crates/lintdiff-feature-flags",
+  "crates/lintdiff-bdd-grid",
 ]
+exclude = ["fuzz"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.75"
+rust-version = "1.92"
 authors = ["Effortless Metrics <opensource@effortlessmetrics.com>"]
 repository = "https://github.com/effortless-metrics/lintdiff"
 description = "Diff-scoped filter for rustc/Clippy diagnostics, emitting a cockpit-compatible receipt."

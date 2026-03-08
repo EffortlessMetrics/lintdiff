@@ -13,4 +13,4 @@ thiserror.workspace = true
 time.workspace = true
 
 [dev-dependencies]
-jsonschema = "0.18"
+jsonschema = "0.28"

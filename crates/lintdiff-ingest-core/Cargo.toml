@@ -1,0 +1,16 @@
+[package]
+name = "lintdiff-ingest-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Core ingest pipeline implementation for lintdiff."
+
+[dependencies]
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-diff = { path = "../lintdiff-diff" }
+lintdiff-match = { path = "../lintdiff-match" }
+lintdiff-policy = { path = "../lintdiff-policy" }
+lintdiff-types = { path = "../lintdiff-types" }
+
+serde_json.workspace = true

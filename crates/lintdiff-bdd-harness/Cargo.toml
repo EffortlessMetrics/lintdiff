@@ -1,0 +1,16 @@
+[package]
+name = "lintdiff-bdd-harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Fixture harness with feature-flag matrix helpers for lintdiff BDD tests."
+
+[dependencies]
+lintdiff-bdd-grid = { path = "../lintdiff-bdd-grid" }
+lintdiff-core = { path = "../lintdiff-core" }
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-diff = { path = "../lintdiff-diff" }
+lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
+lintdiff-types = { path = "../lintdiff-types" }
+

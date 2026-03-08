@@ -14,14 +14,12 @@ fn sample_report_validates_against_schema() {
     let schema_json: serde_json::Value = serde_json::from_str(&schema_raw).expect("schema json");
     let report_json: serde_json::Value = serde_json::from_str(&report_raw).expect("report json");
 
-    let compiled = jsonschema::JSONSchema::options()
-        .with_draft(jsonschema::Draft::Draft202012)
-        .compile(&schema_json)
+    let validator = jsonschema::draft202012::options()
+        .build(&schema_json)
         .expect("compile schema");
 
-    let res = compiled.validate(&report_json);
-    if let Err(errors) = res {
-        let msgs: Vec<String> = errors.map(|e| e.to_string()).collect();
-        panic!("schema validation failed:\n{}", msgs.join("\n"));
+    let res = validator.validate(&report_json);
+    if let Err(error) = res {
+        panic!("schema validation failed: {error}");
     }
 }

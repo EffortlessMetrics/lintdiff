@@ -11,7 +11,7 @@ pub struct NormPath(String);
 
 impl NormPath {
     pub fn new(raw: impl AsRef<str>) -> Self {
-        normalize_path(raw.asRef())
+        normalize_path(raw.as_ref())
     }
 
     pub fn as_str(&self) -> &str {

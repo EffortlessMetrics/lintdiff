@@ -11,6 +11,8 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 lintdiff-diff = { path = "../crates/lintdiff-diff" }
 lintdiff-diagnostics = { path = "../crates/lintdiff-diagnostics" }
+lintdiff-fingerprint = { path = "../crates/lintdiff-fingerprint" }
+lintdiff-types = { path = "../crates/lintdiff-types" }
 
 [[bin]]
 name = "diff_parser"
@@ -21,5 +23,11 @@ doc = false
 [[bin]]
 name = "diagnostics_parser"
 path = "fuzz_targets/diagnostics_parser.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "finding_fingerprint"
+path = "fuzz_targets/finding_fingerprint.rs"
 test = false
 doc = false

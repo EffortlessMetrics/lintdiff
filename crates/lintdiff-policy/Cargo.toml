@@ -1,0 +1,12 @@
+[package]
+name = "lintdiff-policy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Policy, severity, and finding helpers for lintdiff."
+
+[dependencies]
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-fingerprint = { path = "../lintdiff-fingerprint" }
+lintdiff-types = { path = "../lintdiff-types" }

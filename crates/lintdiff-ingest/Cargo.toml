@@ -1,0 +1,10 @@
+[package]
+name = "lintdiff-ingest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Core receipt synthesis pipeline for lintdiff."
+
+[dependencies]
+lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }

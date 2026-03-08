@@ -14,6 +14,7 @@ cargo install cargo-fuzz
 cd fuzz
 cargo fuzz run diff_parser
 cargo fuzz run diagnostics_parser
+cargo fuzz run finding_fingerprint
 ```
 
 CI runs these on a schedule (timeboxed).

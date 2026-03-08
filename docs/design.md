@@ -25,35 +25,49 @@ lintdiff is implemented as a hexagonal (ports/adapters) tool with a microcrate w
   - Cargo JSON parsing into `Diagnostic` + spans
   - Tolerant parsing (ignores non-diagnostic messages)
   - Clear failure on invalid JSON (tool error)
-- `lintdiff-domain`
-  - Port definitions (diff source, diagnostics source, clock) as traits
-  - Matching engine (diagnostic spans ↔ diff ranges)
+- `lintdiff-match`
+  - Path/span matching primitives (filter compilation, span selection, path relativization)
+- `lintdiff-policy`
+  - Code normalization, allow/suppress/deny, verdict computation, fingerprinting
+- `lintdiff-ingest-core`
+  - Core ingest pipeline (diagnostics + diff → report)
+- `lintdiff-ingest`
+  - Compatibility facade over `lintdiff-ingest-core`
+- `lintdiff-bdd-grid`
+  - BDD matrix representation and feature-flag cell parsing
+  - Deterministic assignment serialization for fixture-driven scenario combinatorics
+- `lintdiff-core`
+  - Domain engine for matching diagnostics to changed lines
   - Policy mapping (`fail_on`, allow/suppress/deny)
   - Receipt generation (verdict + findings + tool-specific data)
+- `lintdiff-domain`
+  - Compatibility façade over `lintdiff-core` (legacy crate name)
 - `lintdiff-render`
   - Markdown renderer (budgeted)
   - GitHub annotations renderer (budgeted)
+- `lintdiff-bdd`
+  - Fixture loading and deterministic BDD ingest harness
+  - Stable feature flag assignment helpers used by scenario grids
+- `lintdiff-bdd-harness`
+  - Fixture loading, ingest helpers, feature-flag matrix runners
 - `lintdiff-app`
-  - Concrete adapters:
-    - read diagnostics from file/stdin
-    - obtain diff from git or patch file
-    - load config
-    - capture provenance (rustc/clippy versions when available)
-    - write artifacts
+  - Orchestration layer, delegates to `lintdiff-app-git` and `lintdiff-app-io`
   - Converts I/O failures into tool-error receipts when possible
+- `lintdiff-app-git`
+  - Git adapter (diff acquisition, repo root, git info)
+- `lintdiff-app-io`
+  - I/O adapter (config loading, diagnostics reading, artifact writing)
+- `lintdiff-feature-flags`
+  - Typed feature-flag registry and parsing
 - `lintdiff-cli`
   - Clap CLI, subcommands, exit code mapping
 
 ## Ports and adapters (hexagonal boundary)
 
-Domain ports (traits) are small and mockable:
+The current API still favors pure-function domain usage. Adapter boundaries
+now have dedicated microcrates (`lintdiff-app-git`, `lintdiff-app-io`).
 
-- `DiffSource`: provides diff text
-- `DiagnosticsSource`: provides diagnostics stream
-- `Clock`: provides timestamps
-- `ArtifactSink`: writes report/markdown/annotations
-
-Concrete adapters live in `lintdiff-app`.
+Concrete adapters are orchestrated by `lintdiff-app`.
 
 The goal is: **you can run domain logic in tests with strings**, no git subprocess, no filesystem.
 
@@ -130,4 +144,3 @@ Annotations renderer emits GitHub workflow commands (`::warning` / `::error`) fo
 - Missing required inputs yields `skip` (not pass).
 - Parse errors are tool/runtime errors (exit 1).
 - When possible, lintdiff still writes a receipt on failures (verdict fail + `tool.runtime_error` finding).
-

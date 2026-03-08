@@ -11,7 +11,7 @@ use crate::{Finding, Severity};
 /// 4) code asc
 /// 5) message asc
 pub fn sort_findings(findings: &mut [Finding]) {
-    findings.sort_by(|a, b| finding_cmp(a, b));
+    findings.sort_by(finding_cmp);
 }
 
 fn severity_rank(s: &Severity) -> u8 {
@@ -32,10 +32,7 @@ fn finding_cmp(a: &Finding, b: &Finding) -> Ordering {
 }
 
 fn path_of(f: &Finding) -> &str {
-    f.location
-        .as_ref()
-        .map(|l| l.path.as_str())
-        .unwrap_or("")
+    f.location.as_ref().map(|l| l.path.as_str()).unwrap_or("")
 }
 
 fn line_of(f: &Finding) -> u32 {
