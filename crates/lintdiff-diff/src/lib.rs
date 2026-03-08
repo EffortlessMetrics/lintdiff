@@ -76,7 +76,9 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
         };
 
         if line.starts_with("rename from ") {
-            st.rename_from = Some(NormPath::new(line.trim_start_matches("rename from ").trim()));
+            st.rename_from = Some(NormPath::new(
+                line.trim_start_matches("rename from ").trim(),
+            ));
             continue;
         }
         if line.starts_with("rename to ") {
@@ -105,10 +107,8 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
         }
 
         if line.starts_with("@@ ") {
-            let (old_start, new_start) = parse_hunk_header(line).map_err(|msg| DiffParseError::Invalid {
-                line: line_no,
-                msg,
-            })?;
+            let (old_start, new_start) = parse_hunk_header(line)
+                .map_err(|msg| DiffParseError::Invalid { line: line_no, msg })?;
             st.in_hunk = true;
             st.hunks += 1;
             st.old_line = old_start;
@@ -152,7 +152,9 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
 }
 
 fn flush_file_state(out: &mut DiffMap, st: Option<FileState>) {
-    let Some(st) = st else { return; };
+    let Some(st) = st else {
+        return;
+    };
 
     let old_path = st
         .rename_from
@@ -191,12 +193,17 @@ fn parse_diff_git_paths(line: &str) -> Option<(String, String)> {
     let _git = parts.next()?;
     let a = parts.next()?;
     let b = parts.next()?;
-    Some((extract_diff_path(a).to_string(), extract_diff_path(b).to_string()))
+    Some((
+        extract_diff_path(a).to_string(),
+        extract_diff_path(b).to_string(),
+    ))
 }
 
 fn extract_diff_path(p: &str) -> &str {
     // strip a/ or b/ prefixes but do not normalize further here
-    p.strip_prefix("a/").or_else(|| p.strip_prefix("b/")).unwrap_or(p)
+    p.strip_prefix("a/")
+        .or_else(|| p.strip_prefix("b/"))
+        .unwrap_or(p)
 }
 
 fn parse_hunk_header(line: &str) -> Result<(u32, u32), String> {
@@ -291,32 +298,32 @@ diff --git a/src/lib.rs b/src/lib.rs
         assert_eq!(ranges, &vec![LineRange::new(1, 3)]);
         assert_eq!(map.stats.hunks, 1);
         assert_eq!(map.stats.added_lines, 3);
-use proptest::prelude::*;
+    }
 
-proptest! {
-    #[test]
-    fn merge_lines_to_ranges_is_idempotent(lines in proptest::collection::vec(1u32..5000, 0..200)) {
-        let ranges1 = merge_lines_to_ranges(lines.clone());
+    use proptest::prelude::*;
 
-        // Expand ranges back to a line vector and merge again.
-        let mut expanded: Vec<u32> = Vec::new();
-        for r in &ranges1 {
-            for l in r.start..=r.end {
-                expanded.push(l);
+    proptest! {
+        #[test]
+        fn merge_lines_to_ranges_is_idempotent(lines in proptest::collection::vec(1u32..5000, 0..200)) {
+            let ranges1 = merge_lines_to_ranges(lines.clone());
+
+            // Expand ranges back to a line vector and merge again.
+            let mut expanded: Vec<u32> = Vec::new();
+            for r in &ranges1 {
+                for l in r.start..=r.end {
+                    expanded.push(l);
+                }
+            }
+            let ranges2 = merge_lines_to_ranges(expanded);
+            prop_assert_eq!(ranges1, ranges2);
+        }
+
+        #[test]
+        fn merged_ranges_are_strictly_increasing(lines in proptest::collection::vec(1u32..5000, 0..200)) {
+            let ranges = merge_lines_to_ranges(lines);
+            for w in ranges.windows(2) {
+                prop_assert!(w[0].end < w[1].start);
             }
         }
-        let ranges2 = merge_lines_to_ranges(expanded);
-        prop_assert_eq!(ranges1, ranges2);
-    }
-
-    #[test]
-    fn merged_ranges_are_strictly_increasing(lines in proptest::collection::vec(1u32..5000, 0..200)) {
-        let ranges = merge_lines_to_ranges(lines);
-        for w in ranges.windows(2) {
-            prop_assert!(w[0].end < w[1].start);
-        }
-    }
-}
-
     }
 }

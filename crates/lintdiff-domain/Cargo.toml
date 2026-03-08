@@ -4,16 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Core matching + policy + report generation for lintdiff."
+description = "Compatibility façade over `lintdiff-core`."
 
 [dependencies]
-lintdiff-types = { path = "../lintdiff-types" }
-lintdiff-diff = { path = "../lintdiff-diff" }
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
-serde_json.workspace = true
-globset.workspace = true
-sha2.workspace = true
-hex.workspace = true
-
-[dev-dependencies]
-insta = { version = "1", features = ["json"] }
+lintdiff-core = { path = "../lintdiff-core" }

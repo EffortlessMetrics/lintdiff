@@ -1,0 +1,12 @@
+[package]
+name = "lintdiff-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Pure domain logic for lintdiff (matching + verdict + report generation)."
+
+[dependencies]
+lintdiff-ingest = { path = "../lintdiff-ingest" }
+
+serde_json.workspace = true

@@ -28,6 +28,10 @@ lintdiff does **not**:
 
 lintdiff treats these as stable contracts:
 
+- Testing contracts:
+  - `lintdiff-bdd-grid` provides reusable scenario-grid primitives for feature-flag experiments.
+  - `lintdiff-bdd` provides reusable fixtures + scenario helpers for adapters and tests.
+
 - Canonical artifacts:
   - `artifacts/lintdiff/report.json` (**required**)
   - `artifacts/lintdiff/comment.md` (**optional**)
@@ -68,4 +72,3 @@ lintdiff is strict about not producing false confidence:
   - stable ordering
   - stable truncation semantics
   - no dependence on filesystem iteration order
-

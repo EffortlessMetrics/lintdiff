@@ -95,7 +95,11 @@ pub fn render_github_annotations(report: &Report, max: usize) -> String {
 
     let mut out = String::new();
 
-    for f in findings.into_iter().filter(|f| f.location.is_some()).take(max) {
+    for f in findings
+        .into_iter()
+        .filter(|f| f.location.is_some())
+        .take(max)
+    {
         let sev = match f.severity {
             Severity::Error => "error",
             Severity::Warn => "warning",
@@ -149,5 +153,7 @@ fn escape_table(s: &str) -> String {
 fn escape_github_command(s: &str) -> String {
     // GitHub Actions command escaping:
     // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
-    s.replace('%', "%25").replace('\r', "%0D").replace('\n', "%0A")
+    s.replace('%', "%25")
+        .replace('\r', "%0D")
+        .replace('\n', "%0A")
 }

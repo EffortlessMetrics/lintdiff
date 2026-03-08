@@ -1,0 +1,1 @@
+{"reason":"compiler-message","message":{"level":"warning","message":"this expression has type `()`","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":99,"line_end":99,"column_start":1,"column_end":10,"is_primary":true},{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"column_start":1,"column_end":10,"is_primary":false}]}}

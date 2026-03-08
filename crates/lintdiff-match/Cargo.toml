@@ -1,0 +1,12 @@
+[package]
+name = "lintdiff-match"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Matching and path-filter primitives for lintdiff."
+
+[dependencies]
+globset.workspace = true
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-types = { path = "../lintdiff-types" }

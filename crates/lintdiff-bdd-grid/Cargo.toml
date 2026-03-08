@@ -1,0 +1,11 @@
+[package]
+name = "lintdiff-bdd-grid"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "BDD scenario-grid primitives for lintdiff feature-flag experiments."
+
+[dependencies]
+lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
+lintdiff-types = { path = "../lintdiff-types" }

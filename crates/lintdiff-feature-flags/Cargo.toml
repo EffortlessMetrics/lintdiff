@@ -1,0 +1,10 @@
+[package]
+name = "lintdiff-feature-flags"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Typed feature-flag registry for lintdiff runtime behavior."
+
+[dependencies]
+lintdiff-types = { path = "../lintdiff-types" }

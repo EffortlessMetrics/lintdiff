@@ -1,23 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FailOn {
+    #[default]
     Error,
     Warn,
     Never,
 }
 
-impl Default for FailOn {
-    fn default() -> Self {
-        Self::Error
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Profile {
     /// Favor signal and stability. Default.
+    #[default]
     Default,
     /// Fail on warnings.
     Strict,
@@ -25,9 +21,25 @@ pub enum Profile {
     Advisory,
 }
 
-impl Default for Profile {
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FeatureFlags {
+    #[serde(default = "default_true")]
+    pub prefer_primary_spans: bool,
+    #[serde(default = "default_true")]
+    pub path_filters: bool,
+}
+
+impl Default for FeatureFlags {
     fn default() -> Self {
-        Self::Default
+        Self {
+            prefer_primary_spans: true,
+            path_filters: true,
+        }
     }
 }
 
@@ -67,6 +79,9 @@ pub struct LintdiffConfig {
 
     #[serde(default)]
     pub provenance: ProvenanceConfig,
+
+    #[serde(default)]
+    pub feature_flags: FeatureFlags,
 }
 
 #[derive(Clone, Debug)]
@@ -78,13 +93,14 @@ pub struct EffectiveConfig {
     pub workspace_only: bool,
     pub filter: FilterConfig,
     pub provenance: ProvenanceConfig,
+    pub feature_flags: FeatureFlags,
 }
 
 impl LintdiffConfig {
     pub fn effective(&self) -> EffectiveConfig {
         let profile = self.profile.clone().unwrap_or_default();
 
-        let fail_on = self.fail_on.clone().unwrap_or_else(|| match profile {
+        let fail_on = self.fail_on.clone().unwrap_or(match profile {
             Profile::Default => FailOn::Error,
             Profile::Strict => FailOn::Warn,
             Profile::Advisory => FailOn::Never,
@@ -98,6 +114,7 @@ impl LintdiffConfig {
             workspace_only: self.workspace_only.unwrap_or(true),
             filter: self.filter.clone(),
             provenance: self.provenance.clone(),
+            feature_flags: self.feature_flags.clone(),
         }
     }
 }

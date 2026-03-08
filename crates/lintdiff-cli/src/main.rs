@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -10,7 +10,9 @@ use lintdiff_types::{Report, ToolInfo};
 #[derive(Parser, Debug)]
 #[command(name = "lintdiff")]
 #[command(version)]
-#[command(about = "Diff-scoped filter for Rust diagnostics (rustc/Clippy), emitting a cockpit receipt.")]
+#[command(
+    about = "Diff-scoped filter for Rust diagnostics (rustc/Clippy), emitting a cockpit receipt."
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Commands,
@@ -43,6 +45,10 @@ enum Commands {
         /// lintdiff.toml path (defaults to <root>/lintdiff.toml if present).
         #[arg(long)]
         config: Option<PathBuf>,
+
+        /// Override feature flags (name=value). Repeat for multiple flags.
+        #[arg(long, value_name = "FLAG=VALUE")]
+        feature_flags: Vec<String>,
 
         /// Where to write report.json.
         #[arg(long, default_value = "artifacts/lintdiff/report.json")]
@@ -79,6 +85,10 @@ enum Commands {
         #[arg(long)]
         config: Option<PathBuf>,
 
+        /// Override feature flags (name=value). Repeat for multiple flags.
+        #[arg(long, value_name = "FLAG=VALUE")]
+        feature_flags: Vec<String>,
+
         /// Where to write report.json.
         #[arg(long, default_value = "artifacts/lintdiff/report.json")]
         out: PathBuf,
@@ -113,9 +123,7 @@ enum Commands {
     },
 
     /// Explain a lintdiff-owned code or check id.
-    Explain {
-        code_or_check: String,
-    },
+    Explain { code_or_check: String },
 }
 
 #[derive(Copy, Clone, Debug, ValueEnum)]
@@ -144,6 +152,7 @@ fn main() -> ExitCode {
             head,
             root,
             config,
+            feature_flags,
             out,
             md,
             annotations,
@@ -163,6 +172,7 @@ fn main() -> ExitCode {
                 head,
                 root,
                 config_path: config,
+                feature_flags,
                 out_path: out,
                 md_path: md,
                 annotations: annotations.into(),
@@ -185,6 +195,7 @@ fn main() -> ExitCode {
             head,
             root,
             config,
+            feature_flags,
             out,
             md,
             annotations,
@@ -206,6 +217,7 @@ fn main() -> ExitCode {
                     head,
                     root,
                     config_path: config,
+                    feature_flags,
                     out_path: out,
                     md_path: md,
                     annotations: annotations.into(),
@@ -225,14 +237,15 @@ fn main() -> ExitCode {
         }
 
         Commands::Md { report, max_items } => {
-            let report = load_report(&report);
-            match report {
+            let report_path = report_path_string(&report);
+            let loaded = load_report(&report);
+            match loaded {
                 Ok(r) => {
                     let md = render_markdown(
                         &r,
                         MarkdownOptions {
                             max_items,
-                            report_path: report_path_string(&report),
+                            report_path,
                         },
                     );
                     print!("{md}");
@@ -272,7 +285,7 @@ fn load_report(path: &PathBuf) -> Result<Report, String> {
     serde_json::from_str::<Report>(&raw).map_err(|e| format!("invalid report json: {e}"))
 }
 
-fn report_path_string(p: &PathBuf) -> String {
+fn report_path_string(p: &Path) -> String {
     p.to_string_lossy().to_string()
 }
 
@@ -293,7 +306,11 @@ fn repro_string_ingest(
     if let Some(p) = diff_file {
         parts.push(format!("--diff-file {}", p.to_string_lossy()));
     } else if base.is_some() && head.is_some() {
-        parts.push(format!("--base {} --head {}", base.as_ref().unwrap(), head.as_ref().unwrap()));
+        parts.push(format!(
+            "--base {} --head {}",
+            base.as_ref().unwrap(),
+            head.as_ref().unwrap()
+        ));
     } else {
         parts.push("--base <base> --head <head>".to_string());
     }
