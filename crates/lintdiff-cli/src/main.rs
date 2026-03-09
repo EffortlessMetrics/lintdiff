@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use lintdiff_app::{run_and_ingest, run_ingest, AnnotationFormat, IngestOptions};
+use lintdiff_app::{run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
 use lintdiff_types::{Report, ToolInfo};
 
@@ -124,6 +124,58 @@ enum Commands {
 
     /// Explain a lintdiff-owned code or check id.
     Explain { code_or_check: String },
+
+    /// CI-aware subcommands that auto-detect environment variables.
+    Ci {
+        #[command(subcommand)]
+        provider: CiProvider,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum CiProvider {
+    /// Run lintdiff in GitHub Actions, auto-detecting base/head from environment.
+    Github {
+        /// Override base ref (default: $GITHUB_BASE_REF).
+        #[arg(long)]
+        base: Option<String>,
+
+        /// Override head ref (default: $GITHUB_SHA or $GITHUB_HEAD_REF).
+        #[arg(long)]
+        head: Option<String>,
+
+        /// Repo root (defaults to $GITHUB_WORKSPACE or git toplevel).
+        #[arg(long)]
+        root: Option<PathBuf>,
+
+        /// lintdiff.toml path.
+        #[arg(long)]
+        config: Option<PathBuf>,
+
+        /// Override fail_on policy.
+        #[arg(long)]
+        fail_on: Option<String>,
+
+        /// Path to diagnostics JSONL file (cargo clippy --message-format=json output).
+        #[arg(long)]
+        diagnostics: Option<PathBuf>,
+
+        /// Override feature flags (name=value).
+        #[arg(long, value_name = "FLAG=VALUE")]
+        feature_flags: Vec<String>,
+
+        /// Where to write report.json.
+        #[arg(long, default_value = "artifacts/lintdiff/report.json")]
+        out: PathBuf,
+
+        /// Where to write a markdown comment section.
+        #[arg(long)]
+        md: Option<PathBuf>,
+
+        /// Emit CI annotations.
+        #[arg(long, value_enum, default_value_t = AnnotationsArg::Github)]
+        annotations: AnnotationsArg,
+    },
 }
 
 #[derive(Copy, Clone, Debug, ValueEnum)]
@@ -178,6 +230,7 @@ fn main() -> ExitCode {
                 annotations: annotations.into(),
                 tool,
                 repro: Some(repro),
+                fail_on_override: None,
             });
 
             match res {
@@ -223,6 +276,7 @@ fn main() -> ExitCode {
                     annotations: annotations.into(),
                     tool,
                     repro,
+                    fail_on_override: None,
                 },
                 command,
             );
@@ -277,6 +331,49 @@ fn main() -> ExitCode {
             print!("{}", explain(&code_or_check));
             ExitCode::from(0)
         }
+
+        Commands::Ci { provider } => match provider {
+            CiProvider::Github {
+                base,
+                head,
+                root,
+                config,
+                fail_on,
+                diagnostics,
+                feature_flags,
+                out,
+                md,
+                annotations,
+            } => {
+                let tool = ToolInfo {
+                    name: "lintdiff".to_string(),
+                    version: env!("CARGO_PKG_VERSION").to_string(),
+                    commit: option_env!("GIT_SHA").map(|s| s.to_string()),
+                };
+
+                let res = run_ci_github(
+                    tool,
+                    base,
+                    head,
+                    root,
+                    config,
+                    fail_on,
+                    diagnostics,
+                    feature_flags,
+                    out,
+                    md,
+                    annotations.into(),
+                );
+
+                match res {
+                    Ok(outcome) => ExitCode::from(outcome.exit_code as u8),
+                    Err(e) => {
+                        eprintln!("lintdiff error: {e}");
+                        ExitCode::from(1)
+                    }
+                }
+            }
+        },
     }
 }
 

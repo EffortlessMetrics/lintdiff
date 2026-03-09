@@ -13,7 +13,7 @@ use lintdiff_feature_flags::set_feature_flags_from_assignments;
 use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,
 };
-use lintdiff_types::{HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo};
+use lintdiff_types::{FailOn, HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo};
 use serde_json::json;
 use thiserror::Error;
 
@@ -25,6 +25,10 @@ pub enum AppError {
     DiffParse { msg: String },
     #[error("invalid feature flag assignment: {msg}")]
     FeatureFlag { msg: String },
+    #[error("CI environment detection failed: {msg}")]
+    CiDetection { msg: String },
+    #[error("config error: {msg}")]
+    Config { msg: String },
     #[error("I/O failure: {0}")]
     Io(#[from] AppIoError),
     #[error("git failure: {0}")]
@@ -54,6 +58,8 @@ pub struct IngestOptions {
     pub tool: ToolInfo,
     /// Optional "how to reproduce" command string.
     pub repro: Option<String>,
+    /// Override fail_on policy (from CLI --fail-on).
+    pub fail_on_override: Option<String>,
 }
 
 pub struct IngestOutcome {
@@ -70,6 +76,12 @@ pub fn run_ingest(opts: IngestOptions) -> Result<IngestOutcome, AppError> {
 
     let mut cfg = load_config(&root, opts.config_path.as_deref())?;
     apply_feature_flag_overrides(&mut cfg, &opts.feature_flags)?;
+    if let Some(ref fo) = opts.fail_on_override {
+        cfg.fail_on = Some(
+            fo.parse::<FailOn>()
+                .map_err(|e| AppError::Config { msg: e })?,
+        );
+    }
     let eff = cfg.effective();
 
     let diff_text = acquire_diff(
@@ -190,6 +202,12 @@ pub fn run_and_ingest(
 
     let mut cfg = load_config(&root, opts.config_path.as_deref())?;
     apply_feature_flag_overrides(&mut cfg, &opts.feature_flags)?;
+    if let Some(ref fo) = opts.fail_on_override {
+        cfg.fail_on = Some(
+            fo.parse::<FailOn>()
+                .map_err(|e| AppError::Config { msg: e })?,
+        );
+    }
     let eff = cfg.effective();
 
     let diff_text = acquire_diff(
@@ -264,6 +282,62 @@ pub fn run_and_ingest(
         markdown,
         annotations,
         exit_code,
+    })
+}
+
+/// Run lintdiff in GitHub Actions mode, auto-detecting base/head from environment.
+///
+/// Reads `GITHUB_BASE_REF`, `GITHUB_SHA`, `GITHUB_HEAD_REF`, `GITHUB_WORKSPACE`,
+/// and `GITHUB_EVENT_NAME` to determine diff parameters automatically.
+#[allow(clippy::too_many_arguments)]
+pub fn run_ci_github(
+    tool: ToolInfo,
+    base_override: Option<String>,
+    head_override: Option<String>,
+    root_override: Option<PathBuf>,
+    config_path: Option<PathBuf>,
+    fail_on_override: Option<String>,
+    diagnostics_path: Option<PathBuf>,
+    feature_flags: Vec<String>,
+    out_path: PathBuf,
+    md_path: Option<PathBuf>,
+    annotations: AnnotationFormat,
+) -> Result<IngestOutcome, AppError> {
+    let base = base_override.or_else(|| std::env::var("GITHUB_BASE_REF").ok());
+    let head = head_override
+        .or_else(|| std::env::var("GITHUB_SHA").ok())
+        .or_else(|| std::env::var("GITHUB_HEAD_REF").ok());
+
+    if base.is_none() || head.is_none() {
+        return Err(AppError::CiDetection {
+            msg: "Could not detect CI environment. Ensure GITHUB_BASE_REF and GITHUB_SHA \
+                  are set (run inside GitHub Actions), or provide --base and --head explicitly."
+                .to_string(),
+        });
+    }
+
+    let root = root_override.or_else(|| std::env::var("GITHUB_WORKSPACE").ok().map(PathBuf::from));
+
+    let repro = format!(
+        "lintdiff ci github --base {} --head {}",
+        base.as_deref().unwrap_or("?"),
+        head.as_deref().unwrap_or("?"),
+    );
+
+    run_ingest(IngestOptions {
+        diagnostics_path,
+        diff_file: None,
+        base,
+        head,
+        root,
+        config_path,
+        feature_flags,
+        out_path,
+        md_path,
+        annotations,
+        tool,
+        repro: Some(repro),
+        fail_on_override,
     })
 }
 
