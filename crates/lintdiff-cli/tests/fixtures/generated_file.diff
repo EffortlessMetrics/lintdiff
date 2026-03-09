@@ -1,0 +1,10 @@
+diff --git a/src/generated/api.rs b/src/generated/api.rs
+--- a/src/generated/api.rs
++++ b/src/generated/api.rs
+@@ -1,0 +1,1 @@
++fn generated_endpoint() { let _ = todo!(); }
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,0 +1,1 @@
++fn real_code() { let x = (); }

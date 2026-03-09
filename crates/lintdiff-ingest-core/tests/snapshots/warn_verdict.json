@@ -1,0 +1,83 @@
+{
+  "schema": "lintdiff.report.v1",
+  "tool": {
+    "name": "lintdiff",
+    "version": "0.1.0"
+  },
+  "run": {
+    "started_at": "2026-01-01T00:00:00Z",
+    "ended_at": "2026-01-01T00:00:01Z"
+  },
+  "verdict": {
+    "status": "warn",
+    "counts": {
+      "info": 0,
+      "warn": 1,
+      "error": 0
+    }
+  },
+  "findings": [
+    {
+      "severity": "warn",
+      "check_id": "diagnostics.on_diff",
+      "code": "lintdiff.diagnostic.clippy.let_unit_value",
+      "message": "unused variable",
+      "location": {
+        "path": "src/lib.rs",
+        "line": 1,
+        "col": 10
+      },
+      "url": "https://rust-lang.github.io/rust-clippy/master/index.html#let_unit_value",
+      "fingerprint": "4175444821e3dddc2913da060d1cbb319000f2cbf79ca24d49f12b57dcbcb13f",
+      "data": {
+        "code_raw": "clippy::let_unit_value",
+        "level": "warning",
+        "matched_span": {
+          "col_end": 11,
+          "col_start": 10,
+          "file": "src/lib.rs",
+          "is_primary": true,
+          "line_end": 1,
+          "line_start": 1
+        }
+      }
+    }
+  ],
+  "data": {
+    "explain": [
+      {
+        "code": "lintdiff.diagnostic.clippy.let_unit_value",
+        "disposition": "included",
+        "file": "src/lib.rs",
+        "fingerprint": "4175444821e3dddc2913da060d1cbb319000f2cbf79ca24d49f12b57dcbcb13f",
+        "line": 1,
+        "message_preview": "unused variable"
+      }
+    ],
+    "explain_summary": {
+      "cut_by_budget": 0,
+      "dropped_by_path_filter": 0,
+      "dropped_no_span": 0,
+      "dropped_outside_diff": 0,
+      "included": 1,
+      "suppressed_by_code": 0,
+      "total": 1
+    },
+    "repro": null,
+    "stats": {
+      "denied_by_code": 0,
+      "diagnostics_total": 1,
+      "diagnostics_with_path_in_diff": 1,
+      "diagnostics_with_spans": 1,
+      "diff_added_lines": 1,
+      "diff_files": 1,
+      "diff_hunks": 1,
+      "filtered_out_by_path": 0,
+      "matched_findings_emitted": 1,
+      "matched_findings_total": 1,
+      "suppressed_by_code": 0
+    },
+    "truncated": false,
+    "truncated_findings": 0
+  }
+}

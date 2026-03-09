@@ -11,7 +11,7 @@ use crate::{Finding, Severity};
 /// 4) code asc
 /// 5) message asc
 pub fn sort_findings(findings: &mut [Finding]) {
-    findings.sort_by(finding_cmp);
+    findings.sort_by(sort_findings_cmp);
 }
 
 fn severity_rank(s: &Severity) -> u8 {
@@ -22,7 +22,8 @@ fn severity_rank(s: &Severity) -> u8 {
     }
 }
 
-fn finding_cmp(a: &Finding, b: &Finding) -> Ordering {
+/// Comparator for deterministic finding ordering. Public for paired-sort use.
+pub fn sort_findings_cmp(a: &Finding, b: &Finding) -> Ordering {
     severity_rank(&a.severity)
         .cmp(&severity_rank(&b.severity))
         .then_with(|| path_of(a).cmp(path_of(b)))
