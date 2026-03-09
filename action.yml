@@ -94,19 +94,19 @@ runs:
         ARGS="ci github"
 
         if [ -n "${{ inputs.base }}" ]; then
-          ARGS="$ARGS --base ${{ inputs.base }}"
+          ARGS="$ARGS --base '${{ inputs.base }}'"
         fi
         if [ -n "${{ inputs.head }}" ]; then
-          ARGS="$ARGS --head ${{ inputs.head }}"
+          ARGS="$ARGS --head '${{ inputs.head }}'"
         fi
         if [ -n "${{ inputs.config }}" ]; then
-          ARGS="$ARGS --config ${{ inputs.config }}"
+          ARGS="$ARGS --config '${{ inputs.config }}'"
         fi
         if [ -n "${{ inputs.fail_on }}" ]; then
-          ARGS="$ARGS --fail-on ${{ inputs.fail_on }}"
+          ARGS="$ARGS --fail-on '${{ inputs.fail_on }}'"
         fi
         if [ -n "${{ inputs.diagnostics }}" ]; then
-          ARGS="$ARGS --diagnostics ${{ inputs.diagnostics }}"
+          ARGS="$ARGS --diagnostics '${{ inputs.diagnostics }}'"
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"
