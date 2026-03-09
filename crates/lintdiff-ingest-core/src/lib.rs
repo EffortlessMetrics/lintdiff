@@ -308,7 +308,8 @@ fn finalize(mut report: Report, _cfg: &EffectiveConfig) -> Report {
     report
 }
 
-pub fn truncate_message(msg: &str, max_len: usize) -> String {
+#[cfg(test)]
+fn truncate_message(msg: &str, max_len: usize) -> String {
     if msg.len() <= max_len {
         msg.to_string()
     } else {
