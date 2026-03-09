@@ -220,3 +220,31 @@ Feature: Diff-scoped diagnostics
     Then verdict status is "warn"
     And findings count is 2
     And finding 0 and 1 share fingerprint
+
+  # =============================================================================
+  # --fail-on flag scenarios
+  # =============================================================================
+
+  Scenario: --fail-on warn causes exit on warnings
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    And fail_on is "warn"
+    When lintdiff ingests the inputs
+    Then verdict status is "fail"
+    And warn count is 1
+
+  Scenario: --fail-on never does not fail on warnings only
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    And fail_on is "never"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And warn count is 1
+
+  Scenario: --fail-on error does not fail on warnings only
+    Given a diff fixture "simple_addition.diff"
+    And a diagnostics fixture "warning_on_changed_line.jsonl"
+    And fail_on is "error"
+    When lintdiff ingests the inputs
+    Then verdict status is "warn"
+    And warn count is 1

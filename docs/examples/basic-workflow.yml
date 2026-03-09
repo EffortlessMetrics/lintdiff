@@ -1,0 +1,25 @@
+# Basic lintdiff workflow for Rust projects.
+# Add this file to .github/workflows/ in your repository.
+name: lintdiff
+
+on:
+  pull_request:
+
+jobs:
+  lintdiff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Run Clippy
+        run: cargo clippy --message-format=json 2>/dev/null > clippy.jsonl || true
+
+      - uses: effortless-metrics/lintdiff@v0.1.0
+        with:
+          diagnostics: clippy.jsonl

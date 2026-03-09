@@ -38,6 +38,15 @@ async fn deny_code(world: &mut LintdiffWorld, code: String) {
     world.config.filter.deny_codes.push(code);
 }
 
+#[given(expr = "fail_on is {string}")]
+async fn given_fail_on(world: &mut LintdiffWorld, value: String) {
+    use std::str::FromStr;
+    world.config.fail_on = Some(
+        lintdiff_types::FailOn::from_str(&value)
+            .unwrap_or_else(|e| panic!("invalid fail_on value '{}': {}", value, e)),
+    );
+}
+
 #[given(expr = "filter exclude path {string}")]
 async fn given_filter_exclude(world: &mut LintdiffWorld, pattern: String) {
     world.config.filter.exclude_paths.push(pattern);
