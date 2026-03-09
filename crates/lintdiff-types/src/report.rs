@@ -120,3 +120,41 @@ pub struct Location {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub col: Option<u32>,
 }
+
+/// Disposition of a single diagnostic through the ingest pipeline.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DiagnosticDisposition {
+    pub code: String,
+    pub message_preview: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<u32>,
+    pub disposition: Disposition,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+}
+
+/// Why a diagnostic was included or excluded from the report.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Disposition {
+    Included,
+    DroppedNoSpan,
+    DroppedOutsideDiff,
+    DroppedByPathFilter,
+    SuppressedByCode,
+    CutByBudget,
+}
+
+/// Summary counters for the explain artifact.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct ExplainSummary {
+    pub total: u32,
+    pub included: u32,
+    pub dropped_no_span: u32,
+    pub dropped_outside_diff: u32,
+    pub dropped_by_path_filter: u32,
+    pub suppressed_by_code: u32,
+    pub cut_by_budget: u32,
+}

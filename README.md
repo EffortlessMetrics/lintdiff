@@ -32,6 +32,29 @@ git diff --unified=0 "$BASE_SHA..$HEAD_SHA" > artifacts/patch.diff
 lintdiff ingest       --diagnostics artifacts/clippy.jsonl       --diff-file artifacts/patch.diff       --out artifacts/lintdiff/report.json       --md artifacts/lintdiff/comment.md       --annotations github
 ```
 
+### GitHub Actions
+
+The easiest way to use lintdiff is with our GitHub Action:
+
+```yaml
+name: Lintdiff
+on: pull_request
+jobs:
+  lintdiff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for git diff
+      - run: cargo clippy --message-format=json > clippy.jsonl
+      - uses: effortless-metrics/lintdiff@v1
+        with:
+          diagnostics: clippy.jsonl
+          fail_on: warn  # Optional: error, warn, or never
+```
+
+See [action.yml](action.yml) for all available inputs and outputs.
+
 ## Repo docs
 
 - `docs/architecture.md` – role, boundaries, IO contracts, failure modes

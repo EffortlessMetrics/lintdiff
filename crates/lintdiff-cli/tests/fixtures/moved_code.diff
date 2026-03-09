@@ -1,0 +1,11 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -10,3 +10,0 @@
+-fn old_func() { let x = (); }
+-fn old_func2() {}
+-fn old_func3() {}
+@@ -50,0 +47,3 @@
++fn moved_func() { let y = (); }
++fn moved_func2() {}
++fn moved_func3() {}

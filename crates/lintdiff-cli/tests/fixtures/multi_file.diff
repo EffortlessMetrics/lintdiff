@@ -1,0 +1,10 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,0 +1,1 @@
++fn a() { let x = (); }
+diff --git a/src/helper.rs b/src/helper.rs
+--- a/src/helper.rs
++++ b/src/helper.rs
+@@ -5,0 +5,1 @@
++fn b() { let y = (); }

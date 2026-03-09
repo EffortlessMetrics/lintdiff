@@ -1,3 +1,6 @@
+use std::fmt;
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -7,6 +10,31 @@ pub enum FailOn {
     Error,
     Warn,
     Never,
+}
+
+impl FromStr for FailOn {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "error" => Ok(Self::Error),
+            "warn" => Ok(Self::Warn),
+            "never" => Ok(Self::Never),
+            other => Err(format!(
+                "invalid fail_on value: {other} (expected error, warn, or never)"
+            )),
+        }
+    }
+}
+
+impl fmt::Display for FailOn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Error => write!(f, "error"),
+            Self::Warn => write!(f, "warn"),
+            Self::Never => write!(f, "never"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
