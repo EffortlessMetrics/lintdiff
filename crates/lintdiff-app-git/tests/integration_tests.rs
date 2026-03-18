@@ -51,7 +51,7 @@ fn create_test_repo() -> Result<TempDir, String> {
     fs::write(repo_path.join("README.md"), "# Test Repository\n").map_err(|e| e.to_string())?;
     git_run(repo_path, &["add", "README.md"])?;
     git_run(repo_path, &["commit", "-m", "Initial commit"])?;
-    
+
     // Ensure branch is named "main" (for compatibility with older git versions)
     git_run(repo_path, &["branch", "-M", "main"])?;
 
