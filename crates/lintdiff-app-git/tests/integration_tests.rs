@@ -42,16 +42,18 @@ fn create_test_repo() -> Result<TempDir, String> {
     let temp_dir = TempDir::new().map_err(|e| format!("failed to create temp dir: {e}"))?;
     let repo_path = temp_dir.path();
 
-    // Initialize git repo
-    git_run(repo_path, &["init"])?;
+    // Initialize git repo with main as default branch
+    git_run(repo_path, &["init", "--initial-branch=main"])?;
     git_run(repo_path, &["config", "user.email", "test@example.com"])?;
     git_run(repo_path, &["config", "user.name", "Test User"])?;
-    git_run(repo_path, &["config", "init.defaultBranch", "main"])?;
 
     // Create initial commit
     fs::write(repo_path.join("README.md"), "# Test Repository\n").map_err(|e| e.to_string())?;
     git_run(repo_path, &["add", "README.md"])?;
     git_run(repo_path, &["commit", "-m", "Initial commit"])?;
+    
+    // Ensure branch is named "main" (for compatibility with older git versions)
+    git_run(repo_path, &["branch", "-M", "main"])?;
 
     Ok(temp_dir)
 }

@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "Checking that lintdiff-domain emits deprecation warning..."
           # Create a temporary test file that uses the deprecated crate
-          mkdir -p /tmp/deptest
+          mkdir -p /tmp/deptest/src
           cat > /tmp/deptest/Cargo.toml << 'EOF'
           [package]
           name = "deptest-domain"
@@ -52,8 +52,6 @@ jobs:
           use lintdiff_domain::*;
           fn main() {}
           EOF
-          
-          mkdir -p /tmp/deptest/src
           # Run cargo check and capture output
           OUTPUT=$(cd /tmp/deptest && RUSTFLAGS="-D warnings" cargo check 2>&1 || true)
           echo "$OUTPUT"
