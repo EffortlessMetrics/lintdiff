@@ -20,9 +20,25 @@ pub struct GridRunResult {
 }
 
 /// Read fixture files from the default test fixture directory.
+///
+/// This function handles both running from the workspace root and from the crate directory.
 pub fn read_fixture(name: &str) -> String {
-    let path = format!("tests/fixtures/{name}");
-    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to read fixture {path}: {e}"))
+    // Try relative path first (works when running from crate directory)
+    let crate_relative = format!("tests/fixtures/{name}");
+    if let Ok(content) = std::fs::read_to_string(&crate_relative) {
+        return content;
+    }
+
+    // Try workspace-relative path (works when running from workspace root)
+    let workspace_relative = format!("crates/lintdiff-cli/tests/fixtures/{name}");
+    if let Ok(content) = std::fs::read_to_string(&workspace_relative) {
+        return content;
+    }
+
+    panic!(
+        "failed to read fixture '{}': tried paths '{}' and '{}': not found",
+        name, crate_relative, workspace_relative
+    )
 }
 
 /// Apply a feature flag value to a config for BDD scenarios.

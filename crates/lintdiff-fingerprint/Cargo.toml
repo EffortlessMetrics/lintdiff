@@ -4,7 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
 description = "Stable finding fingerprint generation for lintdiff."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 
 [dependencies]
 hex.workspace = true
@@ -12,4 +19,4 @@ sha2.workspace = true
 lintdiff-types = { path = "../lintdiff-types" }
 
 [dev-dependencies]
-proptest = "1"
+proptest.workspace = true

@@ -1,0 +1,21 @@
+name: Semver Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/**/src/**/*.rs'
+  pull_request:
+    paths:
+      - 'crates/**/src/**/*.rs'
+
+jobs:
+  semver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-semver-checks
+        run: cargo install cargo-semver-checks
+      - name: Run semver checks
+        run: cargo semver-checks --workspace

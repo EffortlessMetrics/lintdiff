@@ -1,12 +1,103 @@
 //! Rendering helpers for lintdiff receipts.
+//!
+//! This crate provides rendering functionality for converting lintdiff reports
+//! into human-readable formats suitable for different output contexts.
+//!
+//! # Modules
+//!
+//! - **Markdown rendering**: Convert reports to GitHub-flavored markdown tables
+//! - **GitHub annotations**: Generate GitHub Actions workflow commands
+//!
+//! # Example
+//!
+//! ```
+//! use lintdiff_render::{render_markdown, render_github_annotations, MarkdownOptions};
+//! use lintdiff_types::{Report, Verdict, VerdictStatus, Counts, Finding, Severity, Location, NormPath};
+//!
+//! // Create a simple report (normally you'd get this from lintdiff-core)
+//! let report = Report {
+//!     schema: "lintdiff.report.v1".to_string(),
+//!     tool: lintdiff_types::ToolInfo {
+//!         name: "lintdiff".to_string(),
+//!         version: "1.0.0".to_string(),
+//!         commit: None,
+//!     },
+//!     run: lintdiff_types::RunInfo {
+//!         started_at: "2026-01-01T00:00:00Z".to_string(),
+//!         ended_at: "2026-01-01T00:00:01Z".to_string(),
+//!         duration_ms: None,
+//!         host: None,
+//!         git: None,
+//!     },
+//!     verdict: lintdiff_types::Verdict {
+//!         status: VerdictStatus::Pass,
+//!         counts: Counts::default(),
+//!         reasons: vec![],
+//!     },
+//!     findings: vec![],
+//!     data: None,
+//! };
+//!
+//! // Render as markdown
+//! let md = render_markdown(&report, MarkdownOptions::default());
+//! assert!(md.contains("### lintdiff"));
+//! assert!(md.contains("PASS"));
+//!
+//! // Render as GitHub annotations
+//! let annotations = render_github_annotations(&report, 50);
+//! assert!(annotations.is_empty()); // No findings = no annotations
+//! ```
+//!
+//! # Markdown Options
+//!
+//! The [`MarkdownOptions`] struct controls markdown output:
+//!
+//! ```
+//! use lintdiff_render::MarkdownOptions;
+//!
+//! // Default options: 20 items max, default report path
+//! let opts = MarkdownOptions::default();
+//! assert_eq!(opts.max_items, 20);
+//!
+//! // Custom options
+//! let custom = MarkdownOptions {
+//!     max_items: 50,
+//!     report_path: "custom/report.json".to_string(),
+//! };
+//! ```
 
 use lintdiff_types::{sort_findings, Finding, Report, Severity, VerdictStatus};
 
+/// Default path where the lintdiff report is stored.
+///
+/// This is used as the default location in markdown output when referring
+/// users to the full report.
 pub const DEFAULT_REPORT_PATH: &str = "artifacts/lintdiff/report.json";
 
+/// Options for controlling markdown output rendering.
+///
+/// # Example
+///
+/// ```
+/// use lintdiff_render::MarkdownOptions;
+///
+/// // Use defaults
+/// let opts = MarkdownOptions::default();
+///
+/// // Customize for PR comments with limited space
+/// let pr_opts = MarkdownOptions {
+///     max_items: 10,
+///     report_path: "ci-artifacts/lintdiff.json".to_string(),
+/// };
+/// ```
 #[derive(Clone, Debug)]
 pub struct MarkdownOptions {
+    /// Maximum number of findings to include in the markdown table.
+    /// Additional findings will be summarized as "And N more...".
     pub max_items: usize,
+
+    /// Path to the full report file, included in markdown output so users
+    /// can find the complete results.
     pub report_path: String,
 }
 
@@ -19,6 +110,57 @@ impl Default for MarkdownOptions {
     }
 }
 
+/// Render a lintdiff report as GitHub-flavored markdown.
+///
+/// The output includes:
+/// - A header with the lintdiff status
+/// - Summary counts by severity
+/// - Optional explain summary (if present in report data)
+/// - A table of findings (up to `max_items`)
+/// - Links to the full report
+///
+/// # Arguments
+///
+/// * `report` - The lintdiff report to render
+/// * `opts` - Options controlling output format
+///
+/// # Returns
+///
+/// A markdown-formatted string suitable for GitHub PR comments or issues.
+///
+/// # Example
+///
+/// ```
+/// use lintdiff_render::{render_markdown, MarkdownOptions};
+/// use lintdiff_types::{Report, Verdict, VerdictStatus, Counts};
+///
+/// let report = Report {
+///     schema: "lintdiff.report.v1".to_string(),
+///     tool: lintdiff_types::ToolInfo {
+///         name: "lintdiff".to_string(),
+///         version: "1.0.0".to_string(),
+///         commit: None,
+///     },
+///     run: lintdiff_types::RunInfo {
+///         started_at: "2026-01-01T00:00:00Z".to_string(),
+///         ended_at: "2026-01-01T00:00:01Z".to_string(),
+///         duration_ms: None,
+///         host: None,
+///         git: None,
+///     },
+///     verdict: lintdiff_types::Verdict {
+///         status: VerdictStatus::Warn,
+///         counts: Counts { error: 0, warn: 2, info: 0 },
+///         reasons: vec![],
+///     },
+///     findings: vec![],
+///     data: None,
+/// };
+///
+/// let md = render_markdown(&report, MarkdownOptions::default());
+/// assert!(md.contains("**Status:** `WARN`"));
+/// assert!(md.contains("warn 2"));
+/// ```
 pub fn render_markdown(report: &Report, opts: MarkdownOptions) -> String {
     let mut findings = report.findings.clone();
     sort_findings(&mut findings);
@@ -136,6 +278,90 @@ pub fn render_markdown(report: &Report, opts: MarkdownOptions) -> String {
     out
 }
 
+/// Render a lintdiff report as GitHub Actions workflow commands (annotations).
+///
+/// The output uses GitHub's workflow command syntax to create annotations
+/// that appear in the "Files changed" tab of pull requests and in the
+/// Actions run summary.
+///
+/// # Annotation Format
+///
+/// Each annotation follows the format:
+/// ```text
+/// ::<severity> file=<path>,line=<line>::[<code>] <message>
+/// ```
+///
+/// # Severity Mapping
+///
+/// - [`Severity::Error`] → `error` (red icon)
+/// - [`Severity::Warn`] → `warning` (yellow icon)
+/// - [`Severity::Info`] → `notice` (blue icon)
+///
+/// # Arguments
+///
+/// * `report` - The lintdiff report to render
+/// * `max` - Maximum number of annotations to generate (GitHub has limits)
+///
+/// # Returns
+///
+/// A string containing GitHub workflow commands, one per line.
+/// Findings without locations are filtered out (GitHub requires a file path).
+///
+/// # Special Character Escaping
+///
+/// Messages are escaped according to GitHub's requirements:
+/// - `%` → `%25`
+/// - `\r` → `%0D`
+/// - `\n` → `%0A`
+///
+/// # Example
+///
+/// ```
+/// use lintdiff_render::render_github_annotations;
+/// use lintdiff_types::{Report, Finding, Severity, Location, NormPath, Verdict, VerdictStatus, Counts};
+///
+/// let finding = Finding {
+///     severity: Severity::Warn,
+///     check_id: Some("diagnostics.on_diff".to_string()),
+///     code: "UNUSED_VAR".to_string(),
+///     message: "Variable `x` is unused".to_string(),
+///     location: Some(Location {
+///         path: NormPath::new("src/lib.rs"),
+///         line: Some(42),
+///         col: Some(8),
+///     }),
+///     help: None,
+///     url: None,
+///     fingerprint: None,
+///     data: None,
+/// };
+///
+/// let report = Report {
+///     schema: "lintdiff.report.v1".to_string(),
+///     tool: lintdiff_types::ToolInfo {
+///         name: "lintdiff".to_string(),
+///         version: "1.0.0".to_string(),
+///         commit: None,
+///     },
+///     run: lintdiff_types::RunInfo {
+///         started_at: "2026-01-01T00:00:00Z".to_string(),
+///         ended_at: "2026-01-01T00:00:01Z".to_string(),
+///         duration_ms: None,
+///         host: None,
+///         git: None,
+///     },
+///     verdict: lintdiff_types::Verdict {
+///         status: VerdictStatus::Warn,
+///         counts: Counts { error: 0, warn: 1, info: 0 },
+///         reasons: vec![],
+///     },
+///     findings: vec![finding],
+///     data: None,
+/// };
+///
+/// let annotations = render_github_annotations(&report, 50);
+/// assert!(annotations.contains("::warning file=src/lib.rs,line=42,col=8::[UNUSED_VAR]"));
+/// ```
 pub fn render_github_annotations(report: &Report, max: usize) -> String {
     let mut findings = report.findings.clone();
     sort_findings(&mut findings);

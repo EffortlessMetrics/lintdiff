@@ -1,24 +1,337 @@
-name: fuzz
+# Fuzzing CI workflow for lintdiff
+# Runs fuzz targets regularly to catch edge cases and potential panics
+
+name: Fuzzing
 
 on:
-  workflow_dispatch:
+  # Scheduled run weekly on Sunday at 00:00 UTC
   schedule:
-    - cron: "0 6 * * 6" # Saturdays 06:00 UTC
+    - cron: '0 0 * * 0'
+  
+  # Manual trigger with configurable duration
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Duration per target in seconds'
+        required: false
+        default: '60'
+        type: string
+      targets:
+        description: 'Comma-separated list of targets to run (empty = all)'
+        required: false
+        default: ''
+        type: string
+  
+  # Run on push to main if fuzz-related files changed
+  push:
+    branches:
+      - main
+    paths:
+      - 'fuzz/**'
+      - '.github/workflows/fuzz.yml'
+      - 'crates/lintdiff-diff/**'
+      - 'crates/lintdiff-diagnostics/**'
+      - 'crates/lintdiff-fingerprint/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
   fuzz:
+    name: Run Fuzz Targets
     runs-on: ubuntu-latest
+    
+    # Don't run scheduled fuzzing on forks
+    if: github.event_name != 'schedule' || github.repository_owner == github.repository_owner
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - diagnostics_parser
+          - diff_parser
+          - finding_fingerprint
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-fuzz-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fuzz-
+            ${{ runner.os }}-cargo-
+      
+      - name: Cache fuzz corpus
+        uses: actions/cache@v4
+        with:
+          path: |
+            fuzz/corpus
+            fuzz/artifacts
+          key: ${{ runner.os }}-fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-fuzz-corpus-${{ matrix.target }}-
+            ${{ runner.os }}-fuzz-corpus-
+      
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz
+      
+      - name: Check if target exists
+        id: check-target
+        run: |
+          if [ -f "fuzz/fuzz_targets/${{ matrix.target }}.rs" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::Fuzz target ${{ matrix.target }} does not exist, skipping"
+          fi
+      
+      - name: Get target duration
+        id: duration
+        if: steps.check-target.outputs.exists == 'true'
+        run: |
+          # Use manual input duration or default to 60 seconds
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.duration }}" ]; then
+            DURATION="${{ github.event.inputs.duration }}"
+          else
+            DURATION="60"
+          fi
+          echo "value=$DURATION" >> $GITHUB_OUTPUT
+      
+      - name: Check if target should run
+        id: should-run
+        if: steps.check-target.outputs.exists == 'true'
+        run: |
+          # If manual dispatch with specific targets, check if this target is in the list
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.targets }}" ]; then
+            TARGETS="${{ github.event.inputs.targets }}"
+            if echo ",$TARGETS," | grep -q ",${{ matrix.target }},"; then
+              echo "run=true" >> $GITHUB_OUTPUT
+            else
+              echo "run=false" >> $GITHUB_OUTPUT
+              echo "Skipping ${{ matrix.target }} (not in target list)"
+            fi
+          else
+            echo "run=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Seed corpus from structured test cases
+        id: seed-corpus
+        if: |
+          steps.check-target.outputs.exists == 'true' &&
+          steps.should-run.outputs.run == 'true'
+        run: |
+          cd fuzz
+          
+          # Create corpus directory if it doesn't exist
+          mkdir -p corpus/${{ matrix.target }}
+          
+          # Copy structured corpus files if they exist
+          if [ -d "corpus/${{ matrix.target }}" ]; then
+            file_count=$(find corpus/${{ matrix.target }} -type f 2>/dev/null | wc -l)
+            echo "Found $file_count structured corpus entries for ${{ matrix.target }}"
+            echo "file_count=$file_count" >> $GITHUB_OUTPUT
+          else
+            echo "file_count=0" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run fuzz target
+        id: fuzz
+        if: |
+          steps.check-target.outputs.exists == 'true' &&
+          steps.should-run.outputs.run == 'true'
+        run: |
+          cd fuzz
+          
+          # Run the fuzz target with corpus
+          echo "::group::Running ${{ matrix.target }} for ${{ steps.duration.outputs.value }} seconds"
+          echo "Using ${{ steps.seed-corpus.outputs.file_count }} corpus entries as seed"
+          cargo fuzz run ${{ matrix.target }} \
+            corpus/${{ matrix.target }}/ \
+            -- \
+            -max_total_time=${{ steps.duration.outputs.value }} \
+            -max_len=4096 \
+            -rss_limit_mb=2048 \
+            2>&1 | tee fuzz_output.log || exit_code=$?
+          echo "::endgroup::"
+          
+          # Check for crashes
+          if [ -n "${exit_code:-}" ] && [ "${exit_code:-0}" -ne 0 ]; then
+            echo "crashed=true" >> $GITHUB_OUTPUT
+            echo "exit_code=${exit_code}" >> $GITHUB_OUTPUT
+            
+            # Extract crash information
+            if [ -d "artifacts/${{ matrix.target }}" ]; then
+              echo "Crash artifacts found:"
+              ls -la artifacts/${{ matrix.target }}/ || true
+            fi
+          else
+            echo "crashed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Show summary
+          echo "::group::Fuzzing summary for ${{ matrix.target }}"
+          if [ -f fuzz_output.log ]; then
+            tail -50 fuzz_output.log
+          fi
+          echo "::endgroup::"
+        
+        continue-on-error: true
+      
+      - name: Upload crash artifacts
+        if: |
+          steps.check-target.outputs.exists == 'true' && 
+          steps.should-run.outputs.run == 'true' &&
+          steps.fuzz.outputs.crashed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-${{ matrix.target }}-${{ github.run_id }}
+          path: |
+            fuzz/artifacts/${{ matrix.target }}
+            fuzz/fuzz_output.log
+          retention-days: 30
+      
+      - name: Upload corpus artifacts
+        if: |
+          steps.check-target.outputs.exists == 'true' && 
+          steps.should-run.outputs.run == 'true' &&
+          always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-${{ matrix.target }}-${{ github.run_id }}
+          path: fuzz/corpus/${{ matrix.target }}
+          retention-days: 7
+          if-no-files-found: ignore
+      
+      - name: Set job status
+        if: |
+          steps.check-target.outputs.exists == 'true' && 
+          steps.should-run.outputs.run == 'true' &&
+          steps.fuzz.outputs.crashed == 'true'
+        run: |
+          echo "::error::Fuzz target ${{ matrix.target }} crashed!"
+          exit 1
 
-      - name: Fuzz diff parser (30s)
-        run: cargo fuzz run diff_parser -- -max_total_time=30
-        working-directory: fuzz
-
-      - name: Fuzz diagnostics parser (30s)
-        run: cargo fuzz run diagnostics_parser -- -max_total_time=30
-        working-directory: fuzz
+  # Summary job that runs after all fuzz targets
+  fuzz-summary:
+    name: Fuzzing Summary
+    runs-on: ubuntu-latest
+    needs: fuzz
+    if: always()
+    
+    steps:
+      - name: Check fuzz results
+        run: |
+          echo "## Fuzzing Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check results from matrix jobs
+          for target in diagnostics_parser diff_parser finding_fingerprint; do
+            if [ "${{ needs.fuzz.result }}" == "failure" ]; then
+              echo "| $target | ❌ Failed or Crashed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| $target | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "**Duration per target:** ${{ github.event.inputs.duration }}s" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'crash-*'
+          path: crashes
+          merge-multiple: false
+        continue-on-error: true
+      
+      - name: Check for crashes
+        id: check-crashes
+        run: |
+          if [ -d "crashes" ] && [ "$(ls -A crashes 2>/dev/null)" ]; then
+            echo "crashes_found=true" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Crashes Detected!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The following targets crashed during fuzzing:" >> $GITHUB_STEP_SUMMARY
+            for dir in crashes/crash-*/; do
+              if [ -d "$dir" ]; then
+                target=$(basename "$dir" | sed 's/crash-//' | cut -d'-' -f1-2)
+                echo "- $target" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the uploaded artifacts for crash details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "crashes_found=false" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ No Crashes Detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Create issue on crash
+        if: steps.check-crashes.outputs.crashes_found == 'true' && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🐛 Fuzzing Crash Detected (Run #${{ github.run_number }})`;
+            const body = `
+            ## Fuzzing Crash Report
+            
+            A crash was detected during scheduled fuzzing.
+            
+            **Run Details:**
+            - Run ID: ${{ github.run_id }}
+            - Run Number: ${{ github.run_number }}
+            - Triggered by: ${{ github.event_name }}
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref }}
+            
+            **Artifacts:**
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for crash artifacts.
+            
+            **Next Steps:**
+            1. Download the crash artifacts
+            2. Reproduce locally with \`cargo fuzz run <target> <crash-file>\`
+            3. Fix the issue
+            4. Close this issue
+            `;
+            
+            // Check if similar issue exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'fuzzing-crash'
+            });
+            
+            // Only create if no similar open issue
+            if (issues.data.length < 5) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['fuzzing-crash', 'bug']
+              });
+            }
+      
+      - name: Fail if crashes found
+        if: steps.check-crashes.outputs.crashes_found == 'true'
+        run: exit 1

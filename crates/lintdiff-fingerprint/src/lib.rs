@@ -1,12 +1,141 @@
 //! Stable receipt fingerprint generation.
 //!
-//! Fingerprints intentionally normalize message whitespace so noisy renderer
-//! differences do not alter identity for the same diagnostic at the same code/location.
+//! This crate provides deterministic fingerprint generation for diagnostic findings.
+//! Fingerprints are used to uniquely identify lint warnings/errors across different
+//! runs of the linting tool, enabling tracking of issues across code changes.
+//!
+//! # Fingerprint Composition
+//!
+//! A fingerprint is computed from:
+//! - **Code**: The diagnostic code (e.g., "clippy::needless_borrow", "E001")
+//! - **Location**: Optional file path and line number
+//! - **Message**: The diagnostic message text
+//!
+//! # Normalization
+//!
+//! Message text is normalized to ensure stable fingerprints:
+//! - Leading and trailing whitespace is trimmed
+//! - All internal whitespace (spaces, tabs, newlines) is collapsed to single spaces
+//! - This prevents noisy formatting differences from changing the fingerprint
+//!
+//! # Output Format
+//!
+//! Fingerprints are returned as 64-character lowercase hexadecimal strings
+//! (SHA-256 hash encoded as hex).
+//!
+//! # Example
+//!
+//! ```
+//! use lintdiff_fingerprint::fingerprint;
+//! use lintdiff_types::{Location, NormPath};
+//!
+//! // Simple fingerprint without location
+//! let fp = fingerprint("E001", None, "Variable unused");
+//! assert_eq!(fp.len(), 64);
+//!
+//! // Fingerprint with location
+//! let loc = Location {
+//!     path: NormPath::new("src/main.rs"),
+//!     line: Some(42),
+//!     col: Some(10),
+//! };
+//! let fp = fingerprint("clippy::unwrap_used", Some(&loc), "used unwrap");
+//! assert_eq!(fp.len(), 64);
+//!
+//! // Whitespace normalization - these produce the same fingerprint
+//! let fp1 = fingerprint("CODE", None, "  hello   world  ");
+//! let fp2 = fingerprint("CODE", None, "hello world");
+//! assert_eq!(fp1, fp2);
+//! ```
+//!
+//! # Stability Guarantee
+//!
+//! Fingerprints are designed to be stable across versions. The same inputs
+//! will always produce the same fingerprint. This enables:
+//!
+//! - Tracking issues across CI runs
+//! - Comparing lint results between branches
+//! - Suppressing known issues with stable identifiers
+//!
+//! # Thread Safety
+//!
+//! The [`fingerprint`] function is thread-safe and can be called concurrently
+//! from multiple threads.
 
 use lintdiff_types::Location;
 use sha2::{Digest, Sha256};
 
 /// Create a deterministic digest for a diagnostic finding.
+///
+/// Generates a SHA-256 hash from the diagnostic code, optional location,
+/// and message. The message is normalized to ensure whitespace variations
+/// don't affect the fingerprint.
+///
+/// # Arguments
+///
+/// * `code` - The diagnostic code (e.g., "clippy::needless_borrow", "E001")
+/// * `loc` - Optional location containing file path and line number
+/// * `msg` - The diagnostic message text (will be whitespace-normalized)
+///
+/// # Returns
+///
+/// A 64-character lowercase hexadecimal string representing the SHA-256 hash.
+///
+/// # Examples
+///
+/// ```
+/// use lintdiff_fingerprint::fingerprint;
+///
+/// // Without location
+/// let fp = fingerprint("WARN001", None, "General warning");
+/// assert_eq!(fp.len(), 64);
+/// assert!(fp.chars().all(|c| c.is_ascii_hexdigit()));
+/// ```
+///
+/// ```
+/// use lintdiff_fingerprint::fingerprint;
+/// use lintdiff_types::{Location, NormPath};
+///
+/// // With location
+/// let loc = Location {
+///     path: NormPath::new("src/lib.rs"),
+///     line: Some(10),
+///     col: None,
+/// };
+/// let fp = fingerprint("CODE", Some(&loc), "message");
+/// assert_eq!(fp.len(), 64);
+/// ```
+///
+/// # Whitespace Normalization
+///
+/// ```
+/// use lintdiff_fingerprint::fingerprint;
+/// use lintdiff_types::{Location, NormPath};
+///
+/// let loc = Location {
+///     path: NormPath::new("test.rs"),
+///     line: Some(1),
+///     col: None,
+/// };
+///
+/// // All these produce the same fingerprint
+/// let fp1 = fingerprint("CODE", Some(&loc), "one two three");
+/// let fp2 = fingerprint("CODE", Some(&loc), "  one   two   three  ");
+/// let fp3 = fingerprint("CODE", Some(&loc), "one\ttwo\nthree");
+/// assert_eq!(fp1, fp2);
+/// assert_eq!(fp2, fp3);
+/// ```
+///
+/// # Determinism
+///
+/// ```
+/// use lintdiff_fingerprint::fingerprint;
+///
+/// // Same inputs always produce same output
+/// let a = fingerprint("CODE", None, "message");
+/// let b = fingerprint("CODE", None, "message");
+/// assert_eq!(a, b);
+/// ```
 pub fn fingerprint(code: &str, loc: Option<&Location>, msg: &str) -> String {
     let mut h = Sha256::new();
     h.update(code.as_bytes());

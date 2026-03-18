@@ -3,6 +3,101 @@
 //! This crate is a small interoperability shim for both app/runtime and BDD
 //! wiring. Flags are intentionally normalized and centrally documented here so
 //! flag names are stable across CLI, tests, and adapters.
+//!
+//! # Overview
+//!
+//! The feature flags system provides:
+//! - A central registry of all feature flags ([`feature_flags`])
+//! - Type-safe flag identifiers ([`FeatureFlag`] enum)
+//! - Parsing utilities for flag values and assignments
+//! - Functions to apply flags to [`FeatureFlags`] instances
+//!
+//! # Available Flags
+//!
+//! | Flag | Key | Default | Description |
+//! |------|-----|---------|-------------|
+//! | `PrimarySpanMatching` | `primary_span_matching` | `true` | Prefer primary spans when choosing diagnostic spans |
+//! | `PathFilters` | `path_filters` | `true` | Apply include/exclude path filters against normalized paths |
+//!
+//! # Quick Start
+//!
+//! ```
+//! use lintdiff_feature_flags::{FeatureFlag, feature_flags, set_feature_flag};
+//! use lintdiff_types::FeatureFlags;
+//!
+//! // Create default flags
+//! let mut flags = FeatureFlags::default();
+//!
+//! // Disable a specific feature
+//! set_feature_flag(&mut flags, FeatureFlag::PathFilters, false);
+//! assert!(!flags.path_filters);
+//! ```
+//!
+//! # Parsing Flag Values
+//!
+//! The crate accepts various boolean representations:
+//!
+//! ```
+//! use lintdiff_feature_flags::parse_feature_flag_value;
+//!
+//! // All of these return Ok(true)
+//! assert_eq!(parse_feature_flag_value("true"), Ok(true));
+//! assert_eq!(parse_feature_flag_value("TRUE"), Ok(true));
+//! assert_eq!(parse_feature_flag_value("1"), Ok(true));
+//! assert_eq!(parse_feature_flag_value("on"), Ok(true));
+//! assert_eq!(parse_feature_flag_value("enabled"), Ok(true));
+//! assert_eq!(parse_feature_flag_value("yes"), Ok(true));
+//!
+//! // All of these return Ok(false)
+//! assert_eq!(parse_feature_flag_value("false"), Ok(false));
+//! assert_eq!(parse_feature_flag_value("0"), Ok(false));
+//! assert_eq!(parse_feature_flag_value("off"), Ok(false));
+//! assert_eq!(parse_feature_flag_value("disabled"), Ok(false));
+//! assert_eq!(parse_feature_flag_value("no"), Ok(false));
+//! ```
+//!
+//! # Parsing Assignments
+//!
+//! Parse `name=value` style assignments:
+//!
+//! ```
+//! use lintdiff_feature_flags::{parse_feature_flag_assignment, FeatureFlag};
+//!
+//! let (flag, enabled) = parse_feature_flag_assignment("path_filters=false").unwrap();
+//! assert_eq!(flag, FeatureFlag::PathFilters);
+//! assert!(!enabled);
+//! ```
+//!
+//! # Batch Operations
+//!
+//! Apply multiple flags at once:
+//!
+//! ```
+//! use lintdiff_feature_flags::set_feature_flags_from_assignments;
+//! use lintdiff_types::FeatureFlags;
+//!
+//! let mut flags = FeatureFlags::default();
+//! set_feature_flags_from_assignments(
+//!     &mut flags,
+//!     vec!["primary_span_matching=off", "path_filters=false"]
+//! ).unwrap();
+//!
+//! assert!(!flags.prefer_primary_spans);
+//! assert!(!flags.path_filters);
+//! ```
+//!
+//! # Case Insensitivity
+//!
+//! Flag names and values are case-insensitive:
+//!
+//! ```
+//! use lintdiff_feature_flags::{parse_flag, parse_feature_flag_value, FeatureFlag};
+//!
+//! assert_eq!(parse_flag("PRIMARY_SPAN_MATCHING"), Some(FeatureFlag::PrimarySpanMatching));
+//! assert_eq!(parse_flag("Path_Filters"), Some(FeatureFlag::PathFilters));
+//! assert_eq!(parse_feature_flag_value("FALSE"), Ok(false));
+//! assert_eq!(parse_feature_flag_value("ON"), Ok(true));
+//! ```
 
 use lintdiff_types::FeatureFlags;
 

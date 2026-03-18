@@ -1,85 +1,204 @@
-name: release
+name: Release
 
 on:
   push:
     tags:
-      - "v*"
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g., v0.1.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          # Strip 'v' prefix for version number
+          VERSION_NUM="${VERSION#v}"
+          echo "version=${VERSION_NUM}" >> $GITHUB_OUTPUT
+          echo "tag=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Determined version: ${VERSION_NUM} (tag: ${VERSION})"
+
   build:
+    needs: prepare
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-musl
+          - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             archive: tar.gz
+            strip: true
           - target: x86_64-apple-darwin
             os: macos-latest
             archive: tar.gz
+            strip: true
           - target: aarch64-apple-darwin
             os: macos-latest
             archive: tar.gz
+            strip: true
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             archive: zip
+            strip: false
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install musl tools
-        if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-${{ matrix.target }}-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-target-
+
+      - name: Install cross-compilation tools for aarch64-apple-darwin
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: |
+          rustup target add aarch64-apple-darwin
 
       - name: Build release binary
         env:
           GIT_SHA: ${{ github.sha }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: cargo build --release --target ${{ matrix.target }} -p lintdiff
+
+      - name: Strip debug symbols (Unix)
+        if: matrix.strip && matrix.archive == 'tar.gz'
+        run: |
+          strip target/${{ matrix.target }}/release/lintdiff || echo "Strip failed, continuing..."
 
       - name: Package (tar.gz)
         if: matrix.archive == 'tar.gz'
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf ../../../lintdiff-${{ matrix.target }}.tar.gz lintdiff
+          tar czf ../../../lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.tar.gz lintdiff
           cd ../../..
-          sha256sum lintdiff-${{ matrix.target }}.tar.gz > lintdiff-${{ matrix.target }}.tar.gz.sha256
+          sha256sum lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.tar.gz > lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.tar.gz.sha256
 
       - name: Package (zip)
         if: matrix.archive == 'zip'
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
-          7z a ../../../lintdiff-${{ matrix.target }}.zip lintdiff.exe
+          7z a ../../../lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.zip lintdiff.exe
           cd ../../..
-          sha256sum lintdiff-${{ matrix.target }}.zip > lintdiff-${{ matrix.target }}.zip.sha256
+          sha256sum lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.zip > lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.zip.sha256
 
       - uses: actions/upload-artifact@v4
         with:
           name: lintdiff-${{ matrix.target }}
           path: |
-            lintdiff-${{ matrix.target }}.*
+            lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.*
 
-  release:
-    needs: build
+  checksums:
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
 
+      - name: Generate combined checksums file
+        run: |
+          cat lintdiff-${{ needs.prepare.outputs.version }}-*.sha256 > checksums-${{ needs.prepare.outputs.version }}.txt
+          echo "Checksums:"
+          cat checksums-${{ needs.prepare.outputs.version }}.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: checksums-${{ needs.prepare.outputs.version }}.txt
+
+  release:
+    needs: [prepare, build, checksums]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          # Extract changelog section for this version
+          if [ -f CHANGELOG.md ]; then
+            # Get the section between this version and the next version header
+            CHANGELOG=$(sed -n "/^## \\[${VERSION}\\]/,/^## \\[/p" CHANGELOG.md | sed '$d')
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="## What's Changed\n\nSee CHANGELOG.md for full details."
+            fi
+          else
+            CHANGELOG="## What's Changed\n\nSee commit history for details."
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Release ${{ needs.prepare.outputs.tag }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ contains(needs.prepare.outputs.tag, '-') }}
           files: |
-            lintdiff-*
+            lintdiff-${{ needs.prepare.outputs.version }}-*
+            checksums-${{ needs.prepare.outputs.version }}.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          echo "## Release ${{ needs.prepare.outputs.tag }} created! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for f in lintdiff-${{ needs.prepare.outputs.version }}-*; do
+            echo "- \`$f\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- \`checksums-${{ needs.prepare.outputs.version }}.txt\`" >> $GITHUB_STEP_SUMMARY

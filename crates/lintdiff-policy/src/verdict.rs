@@ -88,9 +88,11 @@ mod tests {
     }
 
     fn cfg_with_fail_on(fail_on: FailOn) -> EffectiveConfig {
-        let mut c = LintdiffConfig::default();
-        c.fail_on = Some(fail_on);
-        c.effective()
+        LintdiffConfig {
+            fail_on: Some(fail_on),
+            ..Default::default()
+        }
+        .effective()
     }
 
     #[test]

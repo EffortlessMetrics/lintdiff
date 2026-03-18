@@ -1,0 +1,17 @@
+# Configuration for cargo-deny
+# Run: cargo deny check
+
+[advisories]
+db-path = "~/.cargo/advisory-db"
+url = "https://github.com/rustsec/advisory-db"
+
+[licenses]
+unlicensed = "deny"
+allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "0BSD", "MPL-2.0"]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "warn"

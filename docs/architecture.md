@@ -1,5 +1,15 @@
 # lintdiff architecture
 
+> **⚠️ Deprecation Notice (v0.2.0)**
+>
+> The following façade crates have been **deprecated** and will be removed in a future version:
+> - `lintdiff-domain` — use `lintdiff-ingest-core` instead
+> - `lintdiff-core` — use `lintdiff-ingest-core` instead
+> - `lintdiff-ingest` — use `lintdiff-ingest-core` instead
+>
+> These crates were intermediate façades that simply re-exported items from `lintdiff-ingest-core`.
+> See the [Migration Guide](migration-guide.md) for instructions on updating your dependencies.
+
 ## Role in the cockpit ecosystem
 
 lintdiff is a **build-truth consumer** that answers:
@@ -72,3 +82,81 @@ lintdiff is strict about not producing false confidence:
   - stable ordering
   - stable truncation semantics
   - no dependence on filesystem iteration order
+
+## Crate Architecture
+
+lintdiff follows a modular crate architecture with clear separation of concerns:
+
+### Recommended Crate (Public API)
+
+For most use cases, you should depend on **`lintdiff-ingest-core`**:
+
+```toml
+[dependencies]
+lintdiff-ingest-core = "0.2"
+```
+
+This crate provides the complete public API for:
+- Ingest pipeline for processing diagnostics and diffs
+- Policy evaluation and verdict computation
+- Finding types and report generation
+- Fingerprinting for stable finding identity
+
+### Crate Overview
+
+| Crate | Purpose | Status |
+|-------|---------|--------|
+| `lintdiff-ingest-core` | **Recommended**: Complete public API for ingestion and processing | ✅ Active |
+| `lintdiff-domain` | ~~Façade for domain types~~ | ⚠️ Deprecated |
+| `lintdiff-core` | ~~Façade for core logic~~ | ⚠️ Deprecated |
+| `lintdiff-ingest` | ~~Façade for ingestion~~ | ⚠️ Deprecated |
+| `lintdiff-types` | Configuration and report types | Internal use |
+| `lintdiff-diagnostics` | Diagnostics parsing | Internal use |
+| `lintdiff-diff` | Diff parsing | Internal use |
+| `lintdiff-match` | Matching logic (spans, paths, filters) | Internal use |
+| `lintdiff-fingerprint` | Finding fingerprint computation | Internal use |
+| `lintdiff-render` | Output rendering (markdown, annotations) | Internal use |
+| `lintdiff-app` | Application orchestration | Internal use |
+| `lintdiff-cli` | Command-line interface | Binary only |
+
+### Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Public API Surface                           │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │              lintdiff-ingest-core                        │    │
+│  │   (IngestPipeline, Policy, Verdict, Finding, Report)    │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Internal Crates                             │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
+│  │lintdiff-types│ │lintdiff-diag │ │ lintdiff-diff│             │
+│  └──────────────┘ └──────────────┘ └──────────────┘             │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
+│  │lintdiff-match│ │lintdiff-fp   │ │lintdiff-render│            │
+│  └──────────────┘ └──────────────┘ └──────────────┘             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Application Layer                           │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
+│  │ lintdiff-app │ │lintdiff-app-io│ │lintdiff-app-git│          │
+│  └──────────────┘ └──────────────┘ └──────────────┘             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Migration from Deprecated Crates
+
+If you are currently using any of the deprecated façade crates, migrate to `lintdiff-ingest-core`:
+
+```diff
+- use lintdiff_domain::IngestPipeline;
++ use lintdiff_ingest_core::IngestPipeline;
+```
+
+See the [Migration Guide](migration-guide.md) for detailed instructions.

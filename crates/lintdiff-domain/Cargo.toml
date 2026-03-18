@@ -4,7 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Compatibility façade over `lintdiff-core`."
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "DEPRECATED: Use lintdiff-ingest-core instead. Compatibility façade over lintdiff-core."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 
 [dependencies]
 lintdiff-core = { path = "../lintdiff-core" }

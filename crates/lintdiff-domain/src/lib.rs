@@ -1,7 +1,12 @@
 //! Backward-compatible `lintdiff-domain` facade.
 //!
-//! The true SRP split now lives in `lintdiff-ingest`, re-exported via
-//! `lintdiff-core` for compatibility. This crate re-exports the core API
-//! for consumers that still depend on `lintdiff-domain`.
+//! **DEPRECATED**: This crate is deprecated. Use `lintdiff-ingest-core` instead.
+//!
+//! The true SRP split now lives in `lintdiff-ingest-core`. This crate re-exports
+//! the core API for backward compatibility only.
 
+#![deprecated(since = "0.2.0", note = "use lintdiff_ingest_core instead")]
+
+#[deprecated(since = "0.2.0", note = "use lintdiff_ingest_core instead")]
+#[allow(deprecated)]
 pub use lintdiff_core::*;

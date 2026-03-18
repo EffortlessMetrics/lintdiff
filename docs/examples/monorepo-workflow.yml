@@ -1,29 +1,204 @@
-# lintdiff workflow for monorepo projects with custom configuration.
-# Add this file to .github/workflows/ in your repository.
-name: lintdiff
+# lintdiff workflow for monorepo projects with multiple crates
+# ============================================================
+# This workflow demonstrates how to use lintdiff in a monorepo setup
+# with multiple Rust crates. It uses matrix strategy to run lintdiff
+# in parallel for each crate, with conditional execution based on
+# changed paths.
+#
+# Features demonstrated:
+# - Matrix strategy for parallel crate analysis
+# - Path-based filtering to only run on changed crates
+# - Per-crate artifact naming
+# - Custom configuration per crate
+#
+# To use: Copy this file to .github/workflows/lintdiff.yml and customize
+# the CRATES variable and paths to match your monorepo structure.
+
+name: Lintdiff Monorepo
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    # Allow manual triggering with specific crates
+    inputs:
+      crates:
+        description: 'Comma-separated list of crates to check (leave empty for all)'
+        required: false
+        default: ''
+
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: lintdiff-monorepo-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
-  lintdiff:
+  # Detect which crates have changed to optimize CI resources
+  detect-changes:
+    name: Detect changed crates
     runs-on: ubuntu-latest
+    outputs:
+      crates: ${{ steps.detect.outputs.crates }}
+      any_changed: ${{ steps.detect.outputs.any_changed }}
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Detect changed crates
+        id: detect
+        run: |
+          # Define your crates here - customize this list for your monorepo
+          # Format: "crate_name:path/to/crate"
+          CRATES=("core:crates/core" "cli:crates/cli" "api:crates/api" "utils:crates/utils")
+          
+          # If manual input provided, use that instead
+          if [ -n "${{ github.event.inputs.crates }}" ]; then
+            IFS=',' read -ra SELECTED <<< "${{ github.event.inputs.crates }}"
+            CRATES=()
+            for crate in "${SELECTED[@]}"; do
+              case "$crate" in
+                core) CRATES+=("core:crates/core") ;;
+                cli) CRATES+=("cli:crates/cli") ;;
+                api) CRATES+=("api:crates/api") ;;
+                utils) CRATES+=("utils:crates/utils") ;;
+              esac
+            done
+          fi
+          
+          # Build JSON array of changed crates
+          CRATE_JSON="["
+          FIRST=true
+          ANY_CHANGED=false
+          
+          for crate_info in "${CRATES[@]}"; do
+            IFS=':' read -r CRATE_NAME CRATE_PATH <<< "$crate_info"
+            
+            # Check if any files changed in this crate's directory
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- "${CRATE_PATH}/")
+            
+            if [ -n "$CHANGED_FILES" ]; then
+              if [ "$FIRST" = true ]; then
+                FIRST=false
+              else
+                CRATE_JSON+=","
+              fi
+              CRATE_JSON+="{\"name\":\"${CRATE_NAME}\",\"path\":\"${CRATE_PATH}\"}"
+              ANY_CHANGED=true
+              echo "Changes detected in crate: ${CRATE_NAME}"
+            fi
+          done
+          
+          CRATE_JSON+="]"
+          
+          echo "crates=${CRATE_JSON}" >> "$GITHUB_OUTPUT"
+          echo "any_changed=${ANY_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo ""
+          echo "Detected crates with changes: ${CRATE_JSON}"
+
+  # Run lintdiff for each changed crate using matrix strategy
+  lintdiff:
+    name: lintdiff (${{ matrix.crate.name }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true'
+    runs-on: ubuntu-latest
+    
+    strategy:
+      # Don't fail-fast so all crates are checked even if one fails
+      fail-fast: false
+      matrix:
+        crate: ${{ fromJson(needs.detect-changes.outputs.crates) }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
 
-      - name: Run Clippy
-        working-directory: crates/my-crate
-        run: cargo clippy --message-format=json 2>/dev/null > clippy.jsonl || true
-
-      - uses: effortless-metrics/lintdiff@v0.1.0
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
         with:
-          config: lintdiff.toml
+          # Include crate path in cache key for better cache hits
+          key: ${{ runner.os }}-cargo-${{ matrix.crate.name }}-${{ hashFiles(format('{0}/Cargo.toml', matrix.crate.path)) }}
+
+      # Run clippy for this specific crate
+      - name: Run Clippy for ${{ matrix.crate.name }}
+        working-directory: ${{ matrix.crate.path }}
+        run: |
+          echo "Running clippy for ${{ matrix.crate.name }}..."
+          cargo clippy --all-features --message-format=json 2>/dev/null > clippy.jsonl || true
+          echo "Clippy diagnostics saved"
+
+      # Run lintdiff with crate-specific configuration
+      - name: Run lintdiff for ${{ matrix.crate.name }}
+        id: lintdiff
+        uses: effortless-metrics/lintdiff@v0.1.0
+        with:
+          diagnostics: ${{ matrix.crate.path }}/clippy.jsonl
+          working_directory: ${{ matrix.crate.path }}
+          # Optional: Use crate-specific config file if it exists
+          # config: ${{ matrix.crate.path }}/lintdiff.toml
           fail_on: error
-          diagnostics: crates/my-crate/clippy.jsonl
-          working_directory: crates/my-crate
+
+      # Upload report with crate-specific name for easy identification
+      - name: Upload lintdiff report for ${{ matrix.crate.name }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          # Unique name per crate to avoid conflicts
+          name: lintdiff-report-${{ matrix.crate.name }}
+          path: ${{ matrix.crate.path }}/artifacts/lintdiff/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      # Output per-crate summary
+      - name: Print summary for ${{ matrix.crate.name }}
+        if: always()
+        run: |
+          echo "## Lintdiff Results: ${{ matrix.crate.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Crate**: ${{ matrix.crate.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Path**: ${{ matrix.crate.path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Verdict**: ${{ steps.lintdiff.outputs.verdict }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Exit Code**: ${{ steps.lintdiff.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
+
+  # Aggregate results from all crates
+  aggregate:
+    name: Aggregate results
+    needs: [detect-changes, lintdiff]
+    if: always() && needs.detect-changes.outputs.any_changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check overall status
+        run: |
+          echo "## Monorepo Lintdiff Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All crate analyses completed. Check individual job results for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "Download the `lintdiff-report-*` artifacts for detailed reports per crate." >> $GITHUB_STEP_SUMMARY
+
+      # Download all artifacts for potential aggregation
+      - name: Download all reports
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lintdiff-report-*
+          path: all-reports
+          merge-multiple: false
+
+      # Optionally fail the workflow if any crate had errors
+      # This step checks the result of the matrix jobs
+      - name: Check for failures
+        if: needs.lintdiff.result == 'failure'
+        run: |
+          echo "::error::One or more crates failed lintdiff checks"
+          exit 1
