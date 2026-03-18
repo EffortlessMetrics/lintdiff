@@ -77,10 +77,7 @@ pub fn run_ingest(opts: IngestOptions) -> Result<IngestOutcome, AppError> {
     let mut cfg = load_config(&root, opts.config_path.as_deref())?;
     apply_feature_flag_overrides(&mut cfg, &opts.feature_flags)?;
     if let Some(ref fo) = opts.fail_on_override {
-        cfg.fail_on = Some(
-            fo.parse::<FailOn>()
-                .map_err(|e| AppError::Config { msg: e })?,
-        );
+        apply_fail_on_override(&mut cfg, fo)?;
     }
     let eff = cfg.effective();
 
@@ -203,10 +200,7 @@ pub fn run_and_ingest(
     let mut cfg = load_config(&root, opts.config_path.as_deref())?;
     apply_feature_flag_overrides(&mut cfg, &opts.feature_flags)?;
     if let Some(ref fo) = opts.fail_on_override {
-        cfg.fail_on = Some(
-            fo.parse::<FailOn>()
-                .map_err(|e| AppError::Config { msg: e })?,
-        );
+        apply_fail_on_override(&mut cfg, fo)?;
     }
     let eff = cfg.effective();
 
@@ -347,6 +341,19 @@ fn apply_feature_flag_overrides(
 ) -> Result<(), AppError> {
     set_feature_flags_from_assignments(&mut config.feature_flags, assignments.iter())
         .map_err(|msg| AppError::FeatureFlag { msg })
+}
+
+/// Apply fail_on override from CLI to config.
+fn apply_fail_on_override(
+    config: &mut LintdiffConfig,
+    override_value: &str,
+) -> Result<(), AppError> {
+    config.fail_on = Some(
+        override_value
+            .parse::<FailOn>()
+            .map_err(|e| AppError::Config { msg: e })?,
+    );
+    Ok(())
 }
 
 fn classify_exit_code(report: &Report) -> i32 {

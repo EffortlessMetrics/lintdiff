@@ -331,6 +331,10 @@ enum Commands {
         #[arg(long)]
         config: Option<PathBuf>,
 
+        /// Override fail_on policy (error, warn, never).
+        #[arg(long)]
+        fail_on: Option<String>,
+
         /// Override feature flags (name=value). Repeat for multiple flags.
         #[arg(long, value_name = "FLAG=VALUE")]
         feature_flags: Vec<String>,
@@ -369,6 +373,10 @@ enum Commands {
         /// lintdiff.toml path (defaults to <root>/lintdiff.toml if present).
         #[arg(long)]
         config: Option<PathBuf>,
+
+        /// Override fail_on policy (error, warn, never).
+        #[arg(long)]
+        fail_on: Option<String>,
 
         /// Override feature flags (name=value). Repeat for multiple flags.
         #[arg(long, value_name = "FLAG=VALUE")]
@@ -489,6 +497,7 @@ fn main() -> ExitCode {
             head,
             root,
             config,
+            fail_on,
             feature_flags,
             out,
             md,
@@ -515,7 +524,7 @@ fn main() -> ExitCode {
                 annotations: annotations.into(),
                 tool,
                 repro: Some(repro),
-                fail_on_override: None,
+                fail_on_override: fail_on,
             });
 
             match res {
@@ -534,6 +543,7 @@ fn main() -> ExitCode {
             head,
             root,
             config,
+            fail_on,
             feature_flags,
             out,
             md,
@@ -562,7 +572,7 @@ fn main() -> ExitCode {
                     annotations: annotations.into(),
                     tool,
                     repro,
-                    fail_on_override: None,
+                    fail_on_override: fail_on,
                 },
                 command,
             );
