@@ -375,7 +375,7 @@ mod path_formats {
         if !cfg!(windows) {
             return;
         }
-        
+
         let filters = filters_from_patterns(&["src/**/*.rs"], &[]);
 
         // Windows-style paths with backslashes should be normalized
