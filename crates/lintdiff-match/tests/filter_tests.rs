@@ -370,6 +370,12 @@ mod path_formats {
 
     #[test]
     fn windows_style_paths() {
+        // This test is only relevant on Windows where backslashes are path separators
+        // On Unix systems, backslashes are valid filename characters, not separators
+        if !cfg!(windows) {
+            return;
+        }
+        
         let filters = filters_from_patterns(&["src/**/*.rs"], &[]);
 
         // Windows-style paths with backslashes should be normalized
