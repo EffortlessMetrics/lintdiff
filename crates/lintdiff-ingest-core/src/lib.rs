@@ -656,8 +656,10 @@ diff --git a/src/lib.rs b/src/lib.rs
 {"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":3,"line_end":3,"column_start":10,"column_end":11,"is_primary":true}]}}"#;
         let diags = parse_cargo_messages(Cursor::new(jsonl)).unwrap();
 
-        let mut cfg = lintdiff_types::LintdiffConfig::default();
-        cfg.max_findings = Some(1);
+        let cfg = lintdiff_types::LintdiffConfig {
+            max_findings: Some(1),
+            ..Default::default()
+        };
         let eff = cfg.effective();
 
         let report = ingest_on_diff(IngestOnDiffParams {

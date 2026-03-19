@@ -1,25 +1,102 @@
-# Basic lintdiff workflow for Rust projects.
-# Add this file to .github/workflows/ in your repository.
-name: lintdiff
+# Basic lintdiff workflow for Rust projects
+# ===========================================
+# This workflow runs lintdiff on pull requests to identify lint issues
+# introduced by the changes in the PR.
+#
+# Features demonstrated:
+# - Complete PR lint checking with clippy
+# - Feature flags usage for conditional lint rules
+# - Report artifact upload for later analysis
+# - Clear comments explaining each step
+#
+# To use: Copy this file to .github/workflows/lintdiff.yml in your repository
+
+name: Lintdiff
 
 on:
   pull_request:
+    # Run on all PR events (opened, synchronize, reopened)
+    types: [opened, synchronize, reopened]
+  # Allow manual triggering for debugging
+  workflow_dispatch:
+
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: lintdiff-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   lintdiff:
+    name: Run lintdiff analysis
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: Checkout the repository
+      # fetch-depth: 0 is required to get full git history for diff calculation
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Step 2: Set up Rust toolchain with clippy component
+      # Using dtolnay/rust-toolchain for reliable Rust installation
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
 
-      - name: Run Clippy
-        run: cargo clippy --message-format=json 2>/dev/null > clippy.jsonl || true
-
-      - uses: effortless-metrics/lintdiff@v0.1.0
+      # Step 3: Cache cargo artifacts for faster builds
+      # This significantly speeds up subsequent workflow runs
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
         with:
+          # Cache key based on Cargo.lock hash
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # Step 4: Run clippy to generate diagnostics
+      # The --message-format=json flag outputs machine-readable diagnostics
+      # We redirect to a file for lintdiff to process
+      # The '|| true' ensures the workflow continues even if clippy finds issues
+      - name: Run Clippy
+        run: |
+          echo "Running clippy with JSON output..."
+          cargo clippy --all-features --message-format=json 2>/dev/null > clippy.jsonl || true
+          echo "Clippy diagnostics saved to clippy.jsonl"
+
+      # Step 5: Run lintdiff to filter diagnostics to changed lines
+      # This uses the effortless-metrics/lintdiff GitHub Action
+      # Feature flags example: Using --all-features to check all code paths
+      - name: Run lintdiff
+        id: lintdiff
+        uses: effortless-metrics/lintdiff@v0.1.0
+        with:
+          # Path to clippy diagnostics output
           diagnostics: clippy.jsonl
+          # Fail the workflow if errors are found in changed code
+          fail_on: error
+          # Optional: Specify a custom config file (uncomment if needed)
+          # config: lintdiff.toml
+
+      # Step 6: Upload the lintdiff report as an artifact
+      # This allows you to download and analyze the report later
+      # The report contains detailed information about all findings
+      - name: Upload lintdiff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lintdiff-report
+          path: artifacts/lintdiff/
+          # Fail silently if no report was generated (e.g., if lintdiff was skipped)
+          if-no-files-found: ignore
+          # Retain for 30 days for later analysis
+          retention-days: 30
+
+      # Step 7: Output summary (optional but helpful for debugging)
+      - name: Print summary
+        if: always()
+        run: |
+          echo "## Lintdiff Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Verdict**: ${{ steps.lintdiff.outputs.verdict }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Exit Code**: ${{ steps.lintdiff.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Report Path**: ${{ steps.lintdiff.outputs.report_path }}" >> $GITHUB_STEP_SUMMARY

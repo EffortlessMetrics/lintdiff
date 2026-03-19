@@ -1,0 +1,189 @@
+name: Deprecation Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Job 1: Verify deprecated crates still compile
+  build-deprecated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build deprecated crates
+        run: |
+          echo "Building all deprecated facade crates..."
+          cargo build -p lintdiff-domain -p lintdiff-core -p lintdiff-ingest
+          
+      - name: Check deprecated crates compile without errors
+        run: |
+          echo "Checking deprecated crates compile successfully..."
+          cargo check -p lintdiff-domain -p lintdiff-core -p lintdiff-ingest
+
+  # Job 2: Verify deprecation warnings are emitted
+  verify-warnings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Check deprecation warnings in lintdiff-domain
+        run: |
+          echo "Checking that lintdiff-domain emits deprecation warning..."
+          # Create a temporary test file that uses the deprecated crate
+          mkdir -p /tmp/deptest/src
+          cat > /tmp/deptest/Cargo.toml << 'EOF'
+          [package]
+          name = "deptest-domain"
+          version = "0.1.0"
+          edition = "2021"
+          
+          [dependencies]
+          lintdiff-domain = { path = "${{ github.workspace }}/crates/lintdiff-domain" }
+          EOF
+          
+          cat > /tmp/deptest/src/main.rs << 'EOF'
+          use lintdiff_domain::*;
+          fn main() {}
+          EOF
+          # Run cargo check and capture output
+          OUTPUT=$(cd /tmp/deptest && RUSTFLAGS="-D warnings" cargo check 2>&1 || true)
+          echo "$OUTPUT"
+          
+          # Verify deprecation warning is present
+          if echo "$OUTPUT" | grep -q "deprecated"; then
+            echo "✅ Deprecation warning found for lintdiff-domain"
+          else
+            echo "❌ No deprecation warning found for lintdiff-domain"
+            exit 1
+          fi
+
+      - name: Check deprecation warnings in lintdiff-core
+        run: |
+          echo "Checking that lintdiff-core emits deprecation warning..."
+          mkdir -p /tmp/deptest-core
+          cat > /tmp/deptest-core/Cargo.toml << 'EOF'
+          [package]
+          name = "deptest-core"
+          version = "0.1.0"
+          edition = "2021"
+          
+          [dependencies]
+          lintdiff-core = { path = "${{ github.workspace }}/crates/lintdiff-core" }
+          EOF
+          
+          mkdir -p /tmp/deptest-core/src
+          cat > /tmp/deptest-core/src/main.rs << 'EOF'
+          use lintdiff_core::*;
+          fn main() {}
+          EOF
+          
+          OUTPUT=$(cd /tmp/deptest-core && RUSTFLAGS="-D warnings" cargo check 2>&1 || true)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "deprecated"; then
+            echo "✅ Deprecation warning found for lintdiff-core"
+          else
+            echo "❌ No deprecation warning found for lintdiff-core"
+            exit 1
+          fi
+
+      - name: Check deprecation warnings in lintdiff-ingest
+        run: |
+          echo "Checking that lintdiff-ingest emits deprecation warning..."
+          mkdir -p /tmp/deptest-ingest
+          cat > /tmp/deptest-ingest/Cargo.toml << 'EOF'
+          [package]
+          name = "deptest-ingest"
+          version = "0.1.0"
+          edition = "2021"
+          
+          [dependencies]
+          lintdiff-ingest = { path = "${{ github.workspace }}/crates/lintdiff-ingest" }
+          EOF
+          
+          mkdir -p /tmp/deptest-ingest/src
+          cat > /tmp/deptest-ingest/src/main.rs << 'EOF'
+          use lintdiff_ingest::*;
+          fn main() {}
+          EOF
+          
+          OUTPUT=$(cd /tmp/deptest-ingest && RUSTFLAGS="-D warnings" cargo check 2>&1 || true)
+          echo "$OUTPUT"
+          
+          if echo "$OUTPUT" | grep -q "deprecated"; then
+            echo "✅ Deprecation warning found for lintdiff-ingest"
+          else
+            echo "❌ No deprecation warning found for lintdiff-ingest"
+            exit 1
+          fi
+
+  # Job 3: Report internal consumers of deprecated crates
+  report-consumers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Find consumers of deprecated crates
+        id: find-consumers
+        run: |
+          echo "## Internal Consumers of Deprecated Crates" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### lintdiff-domain consumers:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -r "lintdiff-domain" crates/*/Cargo.toml 2>/dev/null || echo "No consumers found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### lintdiff-core consumers:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -r "lintdiff-core" crates/*/Cargo.toml 2>/dev/null || echo "No consumers found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### lintdiff-ingest consumers:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -r "lintdiff-ingest[^-]" crates/*/Cargo.toml 2>/dev/null || echo "No consumers found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Migration Required**: Consumers listed above should migrate to \`lintdiff-ingest-core\`." >> $GITHUB_STEP_SUMMARY
+          echo "See [migration guide](docs/migration-guide.md) for details." >> $GITHUB_STEP_SUMMARY
+
+      - name: Count remaining consumers
+        id: count
+        run: |
+          DOMAIN_COUNT=$(grep -l "lintdiff-domain" crates/*/Cargo.toml 2>/dev/null | wc -l || echo 0)
+          CORE_COUNT=$(grep -l "lintdiff-core" crates/*/Cargo.toml 2>/dev/null | wc -l || echo 0)
+          INGEST_COUNT=$(grep -l "lintdiff-ingest[^-]" crates/*/Cargo.toml 2>/dev/null | wc -l || echo 0)
+          TOTAL=$((DOMAIN_COUNT + CORE_COUNT + INGEST_COUNT))
+          
+          echo "domain_consumers=$DOMAIN_COUNT" >> $GITHUB_OUTPUT
+          echo "core_consumers=$CORE_COUNT" >> $GITHUB_OUTPUT
+          echo "ingest_consumers=$INGEST_COUNT" >> $GITHUB_OUTPUT
+          echo "total_consumers=$TOTAL" >> $GITHUB_OUTPUT
+          
+          echo "Total internal consumers: $TOTAL"
+          
+      - name: Report status
+        run: |
+          echo "## Deprecation Status Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Deprecated Crate | Internal Consumers |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------------|---------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| lintdiff-domain | ${{ steps.count.outputs.domain_consumers }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| lintdiff-core | ${{ steps.count.outputs.core_consumers }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| lintdiff-ingest | ${{ steps.count.outputs.ingest_consumers }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **${{ steps.count.outputs.total_consumers }}** |" >> $GITHUB_STEP_SUMMARY

@@ -4,7 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Core receipt synthesis pipeline for lintdiff."
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "DEPRECATED: Use lintdiff-ingest-core instead. Core receipt synthesis pipeline for lintdiff."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 
 [dependencies]
 lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }

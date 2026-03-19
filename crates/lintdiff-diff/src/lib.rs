@@ -1,28 +1,75 @@
 //! Unified diff parsing into new-side changed line ranges.
+//!
+//! This crate provides a parser for unified diff format output, extracting
+//! the changed line ranges on the "new" side of the diff. It's designed to be
+//! forgiving about metadata and focuses on:
+//! - File identity (new path preferred)
+//! - Hunk boundaries
+//! - New-side line numbers for added (`+`) lines
+//!
+//! # Example
+//!
+//! ```
+//! use lintdiff_diff::parse_unified_diff;
+//!
+//! let diff = r#"
+//! diff --git a/src/lib.rs b/src/lib.rs
+//! --- a/src/lib.rs
+//! +++ b/src/lib.rs
+//! @@ -1,0 +1,3 @@
+//! +fn a() {}
+//! +fn b() {}
+//! +fn c() {}
+//! "#;
+//!
+//! let map = parse_unified_diff(diff).unwrap();
+//! assert_eq!(map.stats.files, 1);
+//! assert_eq!(map.stats.hunks, 1);
+//! assert_eq!(map.stats.added_lines, 3);
+//! ```
+//!
+//! # Data Structures
+//!
+//! - [`DiffMap`]: The main output containing changed lines per file and rename tracking
+//! - [`DiffStats`]: Statistics about the parsed diff (files, hunks, added lines)
+//! - [`DiffParseError`]: Error type for parsing failures
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use lintdiff_types::{normalize_path, LineRange, NormPath};
 use thiserror::Error;
 
+/// Statistics about a parsed diff.
 #[derive(Clone, Debug, Default)]
 pub struct DiffStats {
+    /// Number of files in the diff.
     pub files: u32,
+    /// Total number of hunks across all files.
     pub hunks: u32,
+    /// Total number of added lines across all files.
     pub added_lines: u32,
 }
 
+/// A map of file paths to their changed line ranges.
+///
+/// This is the main output of [`parse_unified_diff`]. It contains:
+/// - Changed line ranges for each file (new-side line numbers)
+/// - Rename mappings (old path -> new path)
+/// - Statistics about the diff
 #[derive(Clone, Debug, Default)]
 pub struct DiffMap {
     /// New-path -> merged changed line ranges (new-side).
     pub changed: BTreeMap<NormPath, Vec<LineRange>>,
     /// Old-path -> new-path (best effort).
     pub renames: BTreeMap<NormPath, NormPath>,
+    /// Statistics about the parsed diff.
     pub stats: DiffStats,
 }
 
+/// Error type for diff parsing failures.
 #[derive(Debug, Error)]
 pub enum DiffParseError {
+    /// The diff content was invalid at a specific line.
     #[error("unified diff parse error at line {line}: {msg}")]
     Invalid { line: usize, msg: String },
 }

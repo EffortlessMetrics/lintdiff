@@ -4,7 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Pure domain logic for lintdiff (matching + verdict + report generation)."
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "DEPRECATED: Use lintdiff-ingest-core instead. Pure domain logic for lintdiff (matching + verdict + report generation)."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 
 [dependencies]
 lintdiff-ingest = { path = "../lintdiff-ingest" }

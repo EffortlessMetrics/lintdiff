@@ -4,10 +4,19 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "CLI for lintdiff."
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "CLI for lintdiff - diff-scoped filter for rustc/Clippy diagnostics."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 
 [dependencies]
 lintdiff-app = { path = "../lintdiff-app" }
+lintdiff-app-git = { path = "../lintdiff-app-git" }
+lintdiff-app-io = { path = "../lintdiff-app-io" }
 lintdiff-render = { path = "../lintdiff-render" }
 lintdiff-types = { path = "../lintdiff-types" }
 
@@ -19,6 +28,8 @@ lintdiff-bdd = { path = "../lintdiff-bdd" }
 lintdiff-match = { path = "../lintdiff-match" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 cucumber = "0.22"
+uselesskey.workspace = true
+regex = "1"
 
 [[test]]
 name = "bdd"

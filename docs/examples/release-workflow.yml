@@ -1,0 +1,348 @@
+# Release Preparation Workflow with lintdiff
+# ===========================================
+# This workflow runs comprehensive lint analysis as part of the release
+# process. It generates detailed reports and attaches them to releases.
+#
+# Features demonstrated:
+# - Release event triggering
+# - Manual workflow dispatch with options
+# - Full project lint analysis (not just changed files)
+# - Report generation in multiple formats
+# - Release asset attachment
+# - Comprehensive summary generation
+#
+# To use: Copy this file to .github/workflows/release.yml
+
+name: Release Lint Check
+
+on:
+  release:
+    types: [created, published]
+  # Allow manual triggering for pre-release checks
+  workflow_dispatch:
+    inputs:
+      generate_report:
+        description: 'Generate comprehensive lint report'
+        required: true
+        default: true
+        type: boolean
+      fail_on_warnings:
+        description: 'Fail if warnings are found'
+        required: true
+        default: false
+        type: boolean
+      attach_to_latest_release:
+        description: 'Attach report to latest release (manual dispatch only)'
+        required: true
+        default: false
+        type: boolean
+
+# Required permissions for release assets
+permissions:
+  contents: write
+  checks: write
+
+jobs:
+  # Run full lint analysis
+  lint-analysis:
+    name: Comprehensive lint analysis
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.lintdiff.outputs.verdict }}
+      report_path: ${{ steps.lintdiff.outputs.report_path }}
+      error_count: ${{ steps.analyze.outputs.error_count }}
+      warning_count: ${{ steps.analyze.outputs.warning_count }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+
+      # Run clippy with all features and targets for comprehensive analysis
+      - name: Run Clippy (all features)
+        run: |
+          echo "Running comprehensive clippy analysis..."
+          cargo clippy \
+            --all-features \
+            --all-targets \
+            --message-format=json \
+            2>/dev/null > clippy.jsonl || true
+          
+          echo "Clippy analysis complete"
+
+      # Run lintdiff in full project mode (comparing against previous release)
+      - name: Run lintdiff analysis
+        id: lintdiff
+        uses: effortless-metrics/lintdiff@v0.1.0
+        with:
+          diagnostics: clippy.jsonl
+          # For releases, fail on any error
+          fail_on: error
+        continue-on-error: true
+
+      # Analyze the report for summary statistics
+      - name: Analyze report
+        id: analyze
+        if: always()
+        run: |
+          REPORT_PATH="${{ steps.lintdiff.outputs.report_path }}"
+          
+          if [ -f "$REPORT_PATH" ]; then
+            # Extract counts from the JSON report
+            ERROR_COUNT=$(jq '.summary.error_count // 0' "$REPORT_PATH" 2>/dev/null || echo "0")
+            WARNING_COUNT=$(jq '.summary.warning_count // 0' "$REPORT_PATH" 2>/dev/null || echo "0")
+            
+            echo "error_count=$ERROR_COUNT" >> "$GITHUB_OUTPUT"
+            echo "warning_count=$WARNING_COUNT" >> "$GITHUB_OUTPUT"
+            
+            echo "Analysis complete: $ERROR_COUNT errors, $WARNING_COUNT warnings"
+          else
+            echo "error_count=0" >> "$GITHUB_OUTPUT"
+            echo "warning_count=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Generate human-readable report
+      - name: Generate readable report
+        if: always()
+        run: |
+          REPORT_PATH="${{ steps.lintdiff.outputs.report_path }}"
+          
+          if [ -f "$REPORT_PATH" ]; then
+            # Create markdown summary
+            cat << 'EOF' > lint-report.md
+          # Lint Analysis Report
+          
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit**: ${{ github.sha }}
+          **Ref**: ${{ github.ref }}
+          
+          ## Summary
+          
+          | Metric | Count |
+          |--------|-------|
+          | Errors | ${{ steps.analyze.outputs.error_count }} |
+          | Warnings | ${{ steps.analyze.outputs.warning_count }} |
+          | Verdict | ${{ steps.lintdiff.outputs.verdict }} |
+          
+          ## Details
+          
+          EOF
+          
+            # Append findings from the JSON report if available
+            if command -v jq &> /dev/null; then
+              jq -r '.findings[]? | "### \(.code)\n\n**File**: \(.file):\(.line)\n**Message**: \(.message)\n" ' "$REPORT_PATH" >> lint-report.md 2>/dev/null || true
+            fi
+            
+            echo "Markdown report generated: lint-report.md"
+          fi
+
+      # Upload reports as artifacts
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lintdiff-report-json
+          path: artifacts/lintdiff/
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Upload markdown report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lintdiff-report-markdown
+          path: lint-report.md
+          if-no-files-found: ignore
+          retention-days: 90
+
+      # Add comprehensive workflow summary
+      - name: Add workflow summary
+        if: always()
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## Release Lint Analysis Complete
+          
+          ### Results Summary
+          
+          | Property | Value |
+          |----------|-------|
+          | Verdict | ${{ steps.lintdiff.outputs.verdict }} |
+          | Errors | ${{ steps.analyze.outputs.error_count }} |
+          | Warnings | ${{ steps.analyze.outputs.warning_count }} |
+          | Exit Code | ${{ steps.lintdiff.outputs.exit_code }} |
+          
+          ### Artifacts
+          
+          - **JSON Report**: `lintdiff-report-json` artifact
+          - **Markdown Report**: `lintdiff-report-markdown` artifact
+          
+          ### Next Steps
+          
+          EOF
+          
+          if [ "${{ steps.lintdiff.outputs.verdict }}" = "fail" ]; then
+            echo "❌ **Action Required**: Fix lint errors before release" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.lintdiff.outputs.verdict }}" = "warn" ]; then
+            echo "⚠️ **Review Recommended**: Address warnings when possible" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Ready for Release**: No lint issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # Check if we should fail based on warnings (for manual dispatch)
+      - name: Check for warnings (optional fail)
+        if: always() && github.event.inputs.fail_on_warnings == 'true' && steps.analyze.outputs.warning_count > 0
+        run: |
+          echo "::error::Found ${{ steps.analyze.outputs.warning_count }} warnings and fail_on_warnings is enabled"
+          exit 1
+
+  # Attach report to release (for release events or manual dispatch with option)
+  attach-to-release:
+    name: Attach report to release
+    needs: lint-analysis
+    if: |
+      always() && 
+      (github.event_name == 'release' || github.event.inputs.attach_to_latest_release == 'true')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download JSON report
+        uses: actions/download-artifact@v4
+        with:
+          name: lintdiff-report-json
+          path: report-json
+
+      - name: Download markdown report
+        uses: actions/download-artifact@v4
+        with:
+          name: lintdiff-report-markdown
+          path: report-markdown
+
+      - name: Prepare release assets
+        run: |
+          # Create a versioned report name
+          VERSION="${{ github.event.release.tag_name || 'latest' }}"
+          
+          # Package the reports
+          mkdir -p release-assets
+          
+          if [ -f report-json/report.json ]; then
+            cp report-json/report.json "release-assets/lintdiff-report-${VERSION}.json"
+          fi
+          
+          if [ -f report-markdown/lint-report.md ]; then
+            cp report-markdown/lint-report.md "release-assets/lintdiff-report-${VERSION}.md"
+          fi
+          
+          # Create a summary file
+          cat << EOF > release-assets/lintdiff-summary-${VERSION}.txt
+          lintdiff Analysis Summary
+          ========================
+          Version: ${VERSION}
+          Commit: ${{ github.sha }}
+          Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          Results:
+          - Verdict: ${{ needs.lint-analysis.outputs.verdict }}
+          - Errors: ${{ needs.lint-analysis.outputs.error_count }}
+          - Warnings: ${{ needs.lint-analysis.outputs.warning_count }}
+          EOF
+          
+          ls -la release-assets/
+
+      - name: Get release upload URL
+        id: get_release
+        if: github.event_name == 'release'
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload JSON report to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: release-assets/lintdiff-report-${{ github.event.release.tag_name }}.json
+          asset_name: lintdiff-report.json
+          asset_content_type: application/json
+
+      - name: Upload markdown report to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: release-assets/lintdiff-report-${{ github.event.release.tag_name }}.md
+          asset_name: lintdiff-report.md
+          asset_content_type: text/markdown
+
+      - name: Upload summary to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: release-assets/lintdiff-summary-${{ github.event.release.tag_name }}.txt
+          asset_name: lintdiff-summary.txt
+          asset_content_type: text/plain
+
+      # For manual dispatch - attach to latest release
+      - name: Attach to latest release (manual dispatch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.attach_to_latest_release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Get the latest release
+          LATEST_RELEASE=$(gh release view --json uploadUrl,tagName -q '.uploadUrl,.tagName' | head -1)
+          TAG_NAME=$(gh release view --json tagName -q '.tagName')
+          
+          echo "Attaching to latest release: $TAG_NAME"
+          
+          # Upload assets using gh CLI
+          gh release upload "$TAG_NAME" release-assets/* --clobber || true
+
+  # Final status check
+  release-status:
+    name: Release status check
+    needs: [lint-analysis, attach-to-release]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check overall status
+        run: |
+          echo "## Release Lint Check Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          VERDICT="${{ needs.lint-analysis.outputs.verdict }}"
+          
+          if [ "$VERDICT" = "fail" ]; then
+            echo "::error::Lint analysis failed. Review the reports before proceeding with release."
+            echo "❌ **Status**: Failed - Lint errors detected" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          elif [ "$VERDICT" = "warn" ]; then
+            echo "::warning::Lint analysis completed with warnings."
+            echo "⚠️ **Status**: Passed with warnings" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status**: Passed - No lint issues" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Reports have been attached to the release artifacts." >> $GITHUB_STEP_SUMMARY

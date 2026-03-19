@@ -1,0 +1,336 @@
+# Mutation Testing CI workflow for lintdiff
+# Uses cargo-mutants to verify test quality by introducing mutations
+# and checking if tests catch them
+
+name: Mutation Testing
+
+on:
+  # Scheduled run weekly on Saturday at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * 6'
+  
+  # Manual trigger with configurable options
+  workflow_dispatch:
+    inputs:
+      timeout:
+        description: 'Timeout per mutant in seconds'
+        required: false
+        default: '300'
+        type: string
+      threshold:
+        description: 'Minimum mutation score threshold (0-100)'
+        required: false
+        default: '70'
+        type: string
+  
+  # Run on push to main if core logic files changed
+  push:
+    branches:
+      - main
+    paths:
+      # Core crates that should have good mutation coverage
+      - 'crates/lintdiff-diff/**'
+      - 'crates/lintdiff-diagnostics/**'
+      - 'crates/lintdiff-match/**'
+      - 'crates/lintdiff-policy/**'
+      - 'crates/lintdiff-ingest-core/**'
+      - '.github/workflows/mutation.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Mutation score threshold below which an issue will be created
+  MUTATION_THRESHOLD: ${{ github.event.inputs.threshold || '70' }}
+
+jobs:
+  mutation:
+    name: Run Mutation Testing
+    runs-on: ubuntu-latest
+    
+    # Don't run scheduled mutation testing on forks
+    if: github.event_name != 'schedule' || github.repository_owner == github.repository_owner
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      
+      # Cache cargo registry and build artifacts for faster runs
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-mutants-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-mutants-
+            ${{ runner.os }}-cargo-
+      
+      # Install cargo-mutants for mutation testing
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants
+      
+      # Create output directory for reports
+      - name: Create output directory
+        run: mkdir -p mutants-out
+      
+      # Run mutation testing on core crates
+      # Using --timeout to prevent hanging mutants
+      # Using --output for HTML/JSON reports
+      # Using -j for parallel execution
+      # --no-fail: Don't fail on missed mutants (informational)
+      - name: Run mutation tests on lintdiff-diff
+        id: mutants-diff
+        continue-on-error: true
+        run: |
+          cargo mutants -p lintdiff-diff \
+            --timeout ${{ github.event.inputs.timeout || '300' }} \
+            --output mutants-out/lintdiff-diff \
+            -j 2 \
+            --no-fail \
+            --json
+      
+      - name: Run mutation tests on lintdiff-diagnostics
+        id: mutants-diagnostics
+        continue-on-error: true
+        run: |
+          cargo mutants -p lintdiff-diagnostics \
+            --timeout ${{ github.event.inputs.timeout || '300' }} \
+            --output mutants-out/lintdiff-diagnostics \
+            -j 2 \
+            --no-fail \
+            --json
+      
+      - name: Run mutation tests on lintdiff-match
+        id: mutants-match
+        continue-on-error: true
+        run: |
+          cargo mutants -p lintdiff-match \
+            --timeout ${{ github.event.inputs.timeout || '300' }} \
+            --output mutants-out/lintdiff-match \
+            -j 2 \
+            --no-fail \
+            --json
+      
+      - name: Run mutation tests on lintdiff-policy
+        id: mutants-policy
+        continue-on-error: true
+        run: |
+          cargo mutants -p lintdiff-policy \
+            --timeout ${{ github.event.inputs.timeout || '300' }} \
+            --output mutants-out/lintdiff-policy \
+            -j 2 \
+            --no-fail \
+            --json
+      
+      - name: Run mutation tests on lintdiff-ingest-core
+        id: mutants-ingest-core
+        continue-on-error: true
+        run: |
+          cargo mutants -p lintdiff-ingest-core \
+            --timeout ${{ github.event.inputs.timeout || '300' }} \
+            --output mutants-out/lintdiff-ingest-core \
+            -j 2 \
+            --no-fail \
+            --json
+      
+      # Aggregate results from all crates
+      - name: Aggregate mutation results
+        id: aggregate
+        run: |
+          echo "## Mutation Testing Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run Date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Initialize counters
+          TOTAL_MUTANTS=0
+          TOTAL_MISSED=0
+          TOTAL_CAUGHT=0
+          TOTAL_TIMEOUT=0
+          LOWEST_SCORE=100
+          LOWEST_CRATE=""
+          
+          # Process each crate's results
+          for crate in lintdiff-diff lintdiff-diagnostics lintdiff-match lintdiff-policy lintdiff-ingest-core; do
+            if [ -f "mutants-out/$crate/outcomes.json" ]; then
+              echo "### $crate" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Parse outcomes.json for statistics
+              MISSED=$(jq '[.[] | select(.outcome == "missed")] | length' mutants-out/$crate/outcomes.json 2>/dev/null || echo "0")
+              CAUGHT=$(jq '[.[] | select(.outcome == "caught")] | length' mutants-out/$crate/outcomes.json 2>/dev/null || echo "0")
+              TIMEOUT=$(jq '[.[] | select(.outcome == "timeout")] | length' mutants-out/$crate/outcomes.json 2>/dev/null || echo "0")
+              UNViable=$(jq '[.[] | select(.outcome == "unviable")] | length' mutants-out/$crate/outcomes.json 2>/dev/null || echo "0")
+              ERROR=$(jq '[.[] | select(.outcome == "error")] | length' mutants-out/$crate/outcomes.json 2>/dev/null || echo "0")
+              
+              TOTAL=$((MISSED + CAUGHT + TIMEOUT))
+              VIABLE=$((MISSED + CAUGHT))
+              
+              if [ "$VIABLE" -gt 0 ]; then
+                SCORE=$((CAUGHT * 100 / VIABLE))
+              else
+                SCORE=100
+              fi
+              
+              # Track lowest scoring crate
+              if [ "$SCORE" -lt "$LOWEST_SCORE" ]; then
+                LOWEST_SCORE=$SCORE
+                LOWEST_CRATE=$crate
+              fi
+              
+              # Update totals
+              TOTAL_MUTANTS=$((TOTAL_MUTANTS + TOTAL))
+              TOTAL_MISSED=$((TOTAL_MISSED + MISSED))
+              TOTAL_CAUGHT=$((TOTAL_CAUGHT + CAUGHT))
+              TOTAL_TIMEOUT=$((TOTAL_TIMEOUT + TIMEOUT))
+              
+              echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| Caught | $CAUGHT |" >> $GITHUB_STEP_SUMMARY
+              echo "| Missed | $MISSED |" >> $GITHUB_STEP_SUMMARY
+              echo "| Timeout | $TIMEOUT |" >> $GITHUB_STEP_SUMMARY
+              echo "| Unviable | $UNViable |" >> $GITHUB_STEP_SUMMARY
+              echo "| **Mutation Score** | **${SCORE}%** |" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # List missed mutants if any
+              if [ "$MISSED" -gt 0 ]; then
+                echo "#### Missed Mutants in $crate" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                jq -r '.[] | select(.outcome == "missed") | "\(.package) - \(.function // "unknown") - \(.description // "no description")"' mutants-out/$crate/outcomes.json 2>/dev/null | head -20 >> $GITHUB_STEP_SUMMARY
+                if [ "$MISSED" -gt 20 ]; then
+                  echo "... and $((MISSED - 20)) more" >> $GITHUB_STEP_SUMMARY
+                fi
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "### $crate" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ No results available (crate may have no testable mutations)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          # Calculate overall score
+          if [ "$TOTAL_MUTANTS" -gt 0 ]; then
+            VIABLE_TOTAL=$((TOTAL_MISSED + TOTAL_CAUGHT))
+            if [ "$VIABLE_TOTAL" -gt 0 ]; then
+              OVERALL_SCORE=$((TOTAL_CAUGHT * 100 / VIABLE_TOTAL))
+            else
+              OVERALL_SCORE=100
+            fi
+          else
+            OVERALL_SCORE=100
+          fi
+          
+          # Summary section
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Overall Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Mutants Tested | $TOTAL_MUTANTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Caught | $TOTAL_CAUGHT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Missed | $TOTAL_MISSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Timed Out | $TOTAL_TIMEOUT |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Overall Score** | **${OVERALL_SCORE}%** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Threshold | ${MUTATION_THRESHOLD}% |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Status indicator
+          if [ "$OVERALL_SCORE" -ge "$MUTATION_THRESHOLD" ]; then
+            echo "✅ **Mutation score meets threshold (${OVERALL_SCORE}% >= ${MUTATION_THRESHOLD}%)**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Mutation score below threshold (${OVERALL_SCORE}% < ${MUTATION_THRESHOLD}%)**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Save values for later steps
+          echo "overall_score=$OVERALL_SCORE" >> $GITHUB_OUTPUT
+          echo "total_missed=$TOTAL_MISSED" >> $GITHUB_OUTPUT
+          echo "lowest_score=$LOWEST_SCORE" >> $GITHUB_OUTPUT
+          echo "lowest_crate=$LOWEST_CRATE" >> $GITHUB_OUTPUT
+      
+      # Upload mutation reports as artifacts
+      - name: Upload mutation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-reports
+          path: mutants-out/
+          retention-days: 30
+      
+      # Create GitHub issue if mutation score drops below threshold
+      - name: Create issue for low mutation score
+        if: steps.aggregate.outputs.overall_score < env.MUTATION_THRESHOLD && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = '${{ steps.aggregate.outputs.overall_score }}';
+            const threshold = '${{ env.MUTATION_THRESHOLD }}';
+            const missed = '${{ steps.aggregate.outputs.total_missed }}';
+            const lowestScore = '${{ steps.aggregate.outputs.lowest_score }}';
+            const lowestCrate = '${{ steps.aggregate.outputs.lowest_crate }}';
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            
+            // Check if similar issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'mutation-testing'
+            });
+            
+            // Don't create duplicate issues
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Mutation score below threshold')
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🧬 Mutation score below threshold: ${score}%`,
+                body: `## Mutation Testing Alert
+                    
+            The weekly mutation testing run detected a score below the configured threshold.
+            
+            ### Summary
+            - **Overall Score**: ${score}%
+            - **Threshold**: ${threshold}%
+            - **Missed Mutants**: ${missed}
+            - **Lowest Scoring Crate**: ${lowestCrate} (${lowestScore}%)
+            
+            ### Action Required
+            1. Review the [mutation report](${runUrl})
+            2. Identify missed mutants in the affected crates
+            3. Add or improve tests to catch the mutations
+            4. Close this issue once the score improves
+            
+            ### Resources
+            - [Mutation Testing Run](${runUrl})
+            - [Testing Documentation](docs/testing.md)
+            
+            *This issue was automatically created by the mutation testing workflow.*
+            `,
+                labels: ['mutation-testing', 'quality-improvement']
+              });
+            }
+      
+      # Output final status
+      - name: Final status
+        run: |
+          echo "Mutation testing completed."
+          echo "Overall score: ${{ steps.aggregate.outputs.overall_score }}%"
+          echo "Threshold: ${{ env.MUTATION_THRESHOLD }}%"
+          if [ "${{ steps.aggregate.outputs.overall_score }}" -ge "${{ env.MUTATION_THRESHOLD }}" ]; then
+            echo "✅ Score meets threshold"
+          else
+            echo "⚠️ Score below threshold - consider improving tests"
+          fi

@@ -46,25 +46,32 @@ runs:
     - name: Determine version
       id: version
       shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
       run: |
-        if [ "${{ inputs.version }}" = "latest" ]; then
-          VERSION=$(curl -fsSL https://api.github.com/repos/effortless-metrics/lintdiff/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')
-          if [ -z "$VERSION" ]; then
+        if [ "$INPUT_VERSION" = "latest" ]; then
+          VERSION=$(curl -fsSL https://api.github.com/repos/effortless-metrics/lintdiff/releases/latest | jq -r '.tag_name')
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
             echo "::error::Failed to determine latest lintdiff version"
             exit 1
           fi
         else
-          VERSION="${{ inputs.version }}"
+          VERSION="$INPUT_VERSION"
         fi
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Download lintdiff
       shell: bash
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
-        VERSION="${{ steps.version.outputs.version }}"
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
         ARCH=$(uname -m)
 
+        # TODO: Add support for additional platforms:
+        # - linux-aarch64 (ARM64 Linux servers)
+        # - windows-x86_64 (Windows runners)
+        # These require additional release binaries to be built.
         case "${OS}-${ARCH}" in
           linux-x86_64)  TARGET="x86_64-unknown-linux-musl"  ; EXT="tar.gz" ;;
           darwin-x86_64) TARGET="x86_64-apple-darwin"         ; EXT="tar.gz" ;;
@@ -80,7 +87,7 @@ runs:
         curl -fsSL "$URL" -o "lintdiff-archive.${EXT}"
 
         if [ "$EXT" = "tar.gz" ]; then
-          tar xzf "lintdiff-archive.${EXT}"
+          tar xzf "lintdiff-archive.${EXT}" --strip-components=1
         fi
 
         chmod +x lintdiff
@@ -90,38 +97,44 @@ runs:
       id: run
       shell: bash
       working-directory: ${{ inputs.working_directory }}
+      env:
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_HEAD: ${{ inputs.head }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_FAIL_ON: ${{ inputs.fail_on }}
+        INPUT_DIAGNOSTICS: ${{ inputs.diagnostics }}
       run: |
         ARGS="ci github"
 
-        if [ -n "${{ inputs.base }}" ]; then
-          ARGS="$ARGS --base '${{ inputs.base }}'"
+        if [ -n "$INPUT_BASE" ]; then
+          ARGS="$ARGS --base \"$INPUT_BASE\""
         fi
-        if [ -n "${{ inputs.head }}" ]; then
-          ARGS="$ARGS --head '${{ inputs.head }}'"
+        if [ -n "$INPUT_HEAD" ]; then
+          ARGS="$ARGS --head \"$INPUT_HEAD\""
         fi
-        if [ -n "${{ inputs.config }}" ]; then
-          ARGS="$ARGS --config '${{ inputs.config }}'"
+        if [ -n "$INPUT_CONFIG" ]; then
+          ARGS="$ARGS --config \"$INPUT_CONFIG\""
         fi
-        if [ -n "${{ inputs.fail_on }}" ]; then
-          ARGS="$ARGS --fail-on '${{ inputs.fail_on }}'"
+        if [ -n "$INPUT_FAIL_ON" ]; then
+          ARGS="$ARGS --fail-on \"$INPUT_FAIL_ON\""
         fi
-        if [ -n "${{ inputs.diagnostics }}" ]; then
-          ARGS="$ARGS --diagnostics '${{ inputs.diagnostics }}'"
+        if [ -n "$INPUT_DIAGNOSTICS" ]; then
+          ARGS="$ARGS --diagnostics \"$INPUT_DIAGNOSTICS\""
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"
         echo "report_path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
 
         set +e
-        lintdiff $ARGS --out "$REPORT_PATH" --annotations github
+        eval "lintdiff $ARGS --out \"$REPORT_PATH\" --annotations github"
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
 
-        # Extract verdict from report
+        # Extract verdict from report using jq for cross-platform compatibility
         if [ -f "$REPORT_PATH" ]; then
-          VERDICT=$(grep -oP '"status":\s*"\K[^"]+' "$REPORT_PATH" | head -1)
+          VERDICT=$(jq -r '.status' "$REPORT_PATH" 2>/dev/null || echo "unknown")
           echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
         fi
 

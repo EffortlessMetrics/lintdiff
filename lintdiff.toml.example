@@ -16,6 +16,17 @@
 # suppress_codes = ["lintdiff.diagnostic.clippy.some_noisy_lint"]
 # deny_codes = ["lintdiff.diagnostic.rustc.E0502"]
 
+# Feature flags control runtime behavior
+# See docs/feature-flags.md for full documentation
+[features]
+# Prefer primary spans when matching diagnostics to diff lines
+# When false, all spans are considered for matching
+prefer_primary_spans = true
+
+# Apply include/exclude path filters against normalized paths
+# When false, all paths are included regardless of filter settings
+path_filters = true
+
 [provenance]
 # record_rustc = true
 # record_clippy = true

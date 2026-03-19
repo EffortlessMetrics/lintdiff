@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "steven"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      - patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+        versioning-strategy: "widen"
+      - patterns:
+          - "*"
+        update-types:
+          - "major"
+        versioning-strategy: "increase-if-necessary"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "steven"
+    labels:
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      - patterns:
+          - "*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
