@@ -68,26 +68,59 @@ runs:
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
         ARCH=$(uname -m)
 
-        # TODO: Add support for additional platforms:
-        # - linux-aarch64 (ARM64 Linux servers)
-        # - windows-x86_64 (Windows runners)
-        # These require additional release binaries to be built.
-        case "${OS}-${ARCH}" in
-          linux-x86_64)  TARGET="x86_64-unknown-linux-musl"  ; EXT="tar.gz" ;;
-          darwin-x86_64) TARGET="x86_64-apple-darwin"         ; EXT="tar.gz" ;;
-          darwin-arm64)  TARGET="aarch64-apple-darwin"        ; EXT="tar.gz" ;;
+        # Match release assets from the workflow naming convention.
+        ARTIFACT_VERSION=${VERSION#v}
+
+        case "$OS" in
+          linux)
+            case "$ARCH" in
+              x86_64)
+                TARGET="x86_64-unknown-linux-gnu"
+                EXT="tar.gz"
+                ;;
+              *)
+                echo "::error::Unsupported platform: ${OS}-${ARCH}"
+                exit 1
+                ;;
+            esac
+            ;;
+          darwin)
+            case "$ARCH" in
+              x86_64)
+                TARGET="x86_64-apple-darwin"
+                EXT="tar.gz"
+                ;;
+              arm64|aarch64)
+                TARGET="aarch64-apple-darwin"
+                EXT="tar.gz"
+                ;;
+              *)
+                echo "::error::Unsupported platform: ${OS}-${ARCH}"
+                exit 1
+                ;;
+            esac
+            ;;
+          mingw*|msys*|cygwin*)
+            TARGET="x86_64-pc-windows-msvc"
+            EXT="zip"
+            ;;
           *)
             echo "::error::Unsupported platform: ${OS}-${ARCH}"
             exit 1
             ;;
         esac
 
-        URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/lintdiff-${TARGET}.${EXT}"
+        URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/lintdiff-${ARTIFACT_VERSION}-${TARGET}.${EXT}"
         echo "Downloading lintdiff ${VERSION} for ${TARGET}..."
         curl -fsSL "$URL" -o "lintdiff-archive.${EXT}"
 
         if [ "$EXT" = "tar.gz" ]; then
           tar xzf "lintdiff-archive.${EXT}" --strip-components=1
+        elif [ "$EXT" = "zip" ]; then
+          unzip -q "lintdiff-archive.${EXT}"
+          if [ -f lintdiff.exe ]; then
+            mv lintdiff.exe lintdiff
+          fi
         fi
 
         chmod +x lintdiff
