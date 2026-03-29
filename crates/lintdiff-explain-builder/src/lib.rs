@@ -49,9 +49,15 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum ExplainSection {
     /// Plain text content.
-    Text(String),
+    Text {
+        /// The plain text content.
+        content: String,
+    },
     /// Bullet list items.
-    Bullets(Vec<String>),
+    Bullets {
+        /// Items in the bullet list.
+        items: Vec<String>,
+    },
     /// Code block with optional language.
     Code {
         /// The code content.
@@ -79,13 +85,15 @@ impl ExplainSection {
     /// Create a new text section.
     #[must_use]
     pub fn text(content: impl Into<String>) -> Self {
-        Self::Text(content.into())
+        Self::Text {
+            content: content.into(),
+        }
     }
 
     /// Create a new bullets section.
     #[must_use]
     pub const fn bullets(items: Vec<String>) -> Self {
-        Self::Bullets(items)
+        Self::Bullets { items }
     }
 
     /// Create a new code section.
@@ -116,7 +124,7 @@ impl ExplainSection {
     #[must_use]
     pub fn to_markdown(&self, config: &ExplainConfig) -> String {
         match self {
-            Self::Text(text) => {
+            Self::Text { content: text } => {
                 if config.indent > 0 {
                     let indent = " ".repeat(config.indent);
                     text.lines()
@@ -127,7 +135,7 @@ impl ExplainSection {
                     text.clone()
                 }
             }
-            Self::Bullets(items) => items
+            Self::Bullets { items } => items
                 .iter()
                 .map(|item| {
                     if config.indent > 0 {
@@ -230,7 +238,7 @@ impl ExplainSection {
     #[must_use]
     pub fn to_plain_text(&self, config: &ExplainConfig) -> String {
         match self {
-            Self::Text(text) => {
+            Self::Text { content: text } => {
                 if config.indent > 0 {
                     let indent = " ".repeat(config.indent);
                     text.lines()
@@ -241,7 +249,7 @@ impl ExplainSection {
                     text.clone()
                 }
             }
-            Self::Bullets(items) => items
+            Self::Bullets { items } => items
                 .iter()
                 .map(|item| {
                     if config.indent > 0 {
@@ -470,7 +478,7 @@ impl ExplainBuilder {
     /// Bullet points are collected and rendered as a list.
     pub fn add_bullet(&mut self, item: &str) -> &mut Self {
         // Find or create a Bullets section
-        if let Some(ExplainSection::Bullets(items)) = self.sections.last_mut() {
+        if let Some(ExplainSection::Bullets { items }) = self.sections.last_mut() {
             items.push(item.to_string());
             return self;
         }
@@ -711,7 +719,12 @@ mod tests {
     #[test]
     fn test_explain_section_text() {
         let section = ExplainSection::text("Hello, world!");
-        assert_eq!(section, ExplainSection::Text("Hello, world!".to_string()));
+        assert_eq!(
+            section,
+            ExplainSection::Text {
+                content: "Hello, world!".to_string()
+            }
+        );
     }
 
     #[test]
@@ -719,7 +732,9 @@ mod tests {
         let section = ExplainSection::bullets(vec!["a".to_string(), "b".to_string()]);
         assert_eq!(
             section,
-            ExplainSection::Bullets(vec!["a".to_string(), "b".to_string()])
+            ExplainSection::Bullets {
+                items: vec!["a".to_string(), "b".to_string()],
+            }
         );
     }
 

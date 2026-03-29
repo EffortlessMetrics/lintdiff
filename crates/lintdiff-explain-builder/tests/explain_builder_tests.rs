@@ -233,7 +233,7 @@ mod bullet_points {
 
         // Then
         assert_eq!(builder.sections().len(), 1);
-        if let ExplainSection::Bullets(items) = &builder.sections()[0] {
+        if let ExplainSection::Bullets { items } = &builder.sections()[0] {
             assert_eq!(items.len(), 2);
         } else {
             panic!("Expected Bullets section");
@@ -262,7 +262,7 @@ mod bullet_points {
         builder.add_bullet("");
 
         // Then
-        if let ExplainSection::Bullets(items) = &builder.sections()[0] {
+        if let ExplainSection::Bullets { items } = &builder.sections()[0] {
             assert_eq!(items[0], "");
         } else {
             panic!("Expected Bullets section");
@@ -280,7 +280,7 @@ mod bullet_points {
         }
 
         // Then
-        if let ExplainSection::Bullets(items) = &builder.sections()[0] {
+        if let ExplainSection::Bullets { items } = &builder.sections()[0] {
             assert_eq!(items.len(), 100);
         } else {
             panic!("Expected Bullets section");
