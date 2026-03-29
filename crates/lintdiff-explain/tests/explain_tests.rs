@@ -74,7 +74,7 @@ fn disposition_hash() {
     set.insert(Disposition::Included);
     set.insert(Disposition::OutsideDiff);
     set.insert(Disposition::Included); // Duplicate
-    
+
     assert_eq!(set.len(), 2);
 }
 
@@ -99,16 +99,14 @@ fn explanation_new_with_string() {
 
 #[test]
 fn explanation_with_code() {
-    let explanation = Explanation::new(Disposition::Suppressed, "Test")
-        .with_code("dead_code");
+    let explanation = Explanation::new(Disposition::Suppressed, "Test").with_code("dead_code");
     assert_eq!(explanation.code, Some("dead_code".to_string()));
 }
 
 #[test]
 fn explanation_with_code_string() {
     let code = String::from("clippy::all");
-    let explanation = Explanation::new(Disposition::Suppressed, "Test")
-        .with_code(code);
+    let explanation = Explanation::new(Disposition::Suppressed, "Test").with_code(code);
     assert_eq!(explanation.code, Some("clippy::all".to_string()));
 }
 
@@ -208,7 +206,7 @@ fn explanation_eq() {
     let a = Explanation::included("Test");
     let b = Explanation::included("Test");
     let c = Explanation::included("Different");
-    
+
     assert_eq!(a, b);
     assert_ne!(a, c);
 }

@@ -11,8 +11,8 @@
 //! 8. Property-based tests with proptest (10 tests)
 
 use lintdiff_range_merge::{
-    compare_by_end, compare_by_start, expand_to_include, gap_between, is_adjacent,
-    merge_lines, merge_overlapping, overlaps_or_adjacent, range_contains, range_contains_range,
+    compare_by_end, compare_by_start, expand_to_include, gap_between, is_adjacent, merge_lines,
+    merge_overlapping, overlaps_or_adjacent, range_contains, range_contains_range,
     range_intersection, range_len, range_union, ranges_intersect, LineRange,
 };
 use std::cmp::Ordering;
@@ -624,9 +624,9 @@ proptest! {
         let mut sorted = lines;
         sorted.sort();
         sorted.dedup();
-        
+
         let ranges = merge_lines(&sorted);
-        
+
         // Check that ranges don't overlap
         for i in 0..ranges.len().saturating_sub(1) {
             prop_assert!(!ranges[i].overlaps_or_adjacent(&ranges[i + 1]));
@@ -638,7 +638,7 @@ proptest! {
         ranges in prop::collection::vec(arb_range(), 0..50)
     ) {
         let merged = merge_overlapping(&ranges);
-        
+
         // Check that merged ranges don't overlap
         for i in 0..merged.len().saturating_sub(1) {
             for j in (i + 1)..merged.len() {
@@ -681,7 +681,7 @@ fn line_range_equality_works() {
     let a = LineRange::new(1, 10);
     let b = LineRange::new(1, 10);
     let c = LineRange::new(1, 11);
-    
+
     assert_eq!(a, b);
     assert_ne!(a, c);
 }
@@ -691,7 +691,7 @@ fn line_range_ordering_by_start_then_end() {
     let a = LineRange::new(1, 10);
     let b = LineRange::new(2, 5);
     let c = LineRange::new(2, 10);
-    
+
     assert!(a < b); // Lower start comes first
     assert!(b < c); // Same start, lower end comes first
 }
@@ -700,14 +700,14 @@ fn line_range_ordering_by_start_then_end() {
 fn merge_lines_preserves_all_input_lines() {
     let lines = vec![1, 2, 3, 5, 7, 8, 9, 12];
     let ranges = merge_lines(&lines);
-    
+
     let mut reconstructed = Vec::new();
     for range in &ranges {
         for line in range.start..=range.end {
             reconstructed.push(line);
         }
     }
-    
+
     assert_eq!(lines, reconstructed);
 }
 
@@ -718,9 +718,9 @@ fn merge_overlapping_preserves_coverage() {
         LineRange::new(5, 15),
         LineRange::new(20, 30),
     ];
-    
+
     let merged = merge_overlapping(&ranges);
-    
+
     // Every line in original ranges should be in merged ranges
     for range in &ranges {
         for line in range.start..=range.end {

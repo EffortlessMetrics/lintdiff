@@ -574,8 +574,7 @@ pub fn is_expired_at(info: &RunInfo, max_age: &Duration, reference_time: OffsetD
 ///
 /// Returns [`RunInfoError::InvalidDuration`] if the string cannot be parsed.
 pub fn parse_timestamp(s: &str) -> Result<OffsetDateTime, RunInfoError> {
-    OffsetDateTime::parse(s, &Rfc3339)
-        .map_err(|e| RunInfoError::invalid_duration(e.to_string()))
+    OffsetDateTime::parse(s, &Rfc3339).map_err(|e| RunInfoError::invalid_duration(e.to_string()))
 }
 
 /// Create a duration from seconds.
@@ -741,20 +740,17 @@ mod tests {
 
     #[test]
     fn test_format_duration_negative() {
-        assert_eq!(
-            format_duration(&Duration::milliseconds(-125)),
-            "-125ms"
-        );
-        assert_eq!(
-            format_duration(&Duration::seconds(-90)),
-            "-1m30s"
-        );
+        assert_eq!(format_duration(&Duration::milliseconds(-125)), "-125ms");
+        assert_eq!(format_duration(&Duration::seconds(-90)), "-1m30s");
     }
 
     #[test]
     fn test_format_duration_short() {
         assert_eq!(format_duration_short(&Duration::seconds(0)), "0.000s");
-        assert_eq!(format_duration_short(&Duration::milliseconds(125)), "0.125s");
+        assert_eq!(
+            format_duration_short(&Duration::milliseconds(125)),
+            "0.125s"
+        );
         assert_eq!(format_duration_short(&Duration::seconds(90)), "90.000s");
         assert_eq!(format_duration_short(&Duration::seconds(4530)), "4530.000s");
     }

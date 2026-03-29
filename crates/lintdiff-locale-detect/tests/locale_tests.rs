@@ -1,6 +1,6 @@
 //! Comprehensive tests for the lintdiff-locale-detect crate.
 
-use lintdiff_locale_detect::{Locale, default_locale, detect_system_locale, parse_locale};
+use lintdiff_locale_detect::{default_locale, detect_system_locale, parse_locale, Locale};
 
 // ============================================================================
 // Locale Creation Tests
@@ -18,7 +18,7 @@ fn test_locale_new_creates_language_only_locale() {
 fn test_locale_new_normalizes_to_lowercase() {
     let locale = Locale::new("EN");
     assert_eq!(locale.language, "en");
-    
+
     let locale = Locale::new("En");
     assert_eq!(locale.language, "en");
 }
@@ -138,7 +138,7 @@ fn test_matches_language_returns_false_for_different_language() {
 fn test_matches_language_ignores_region() {
     let locale = Locale::with_region("en", "GB");
     assert!(locale.matches_language("en"));
-    
+
     let locale = Locale::with_region("en", "US");
     assert!(locale.matches_language("en"));
 }
@@ -263,11 +263,11 @@ fn test_parse_locale_posix_various_locales() {
     let locale = parse_locale("es_ES").unwrap();
     assert_eq!(locale.language, "es");
     assert_eq!(locale.region, Some("ES".to_string()));
-    
+
     let locale = parse_locale("fr_FR").unwrap();
     assert_eq!(locale.language, "fr");
     assert_eq!(locale.region, Some("FR".to_string()));
-    
+
     let locale = parse_locale("de_DE").unwrap();
     assert_eq!(locale.language, "de");
     assert_eq!(locale.region, Some("DE".to_string()));

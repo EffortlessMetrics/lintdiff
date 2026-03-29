@@ -10,7 +10,9 @@
 //! 7. DispositionWithReason Display (5 tests)
 //! 8. Edge cases (4 tests)
 
-use lintdiff_disposition::{Disposition, DispositionParseError, DispositionReason, DispositionWithReason};
+use lintdiff_disposition::{
+    Disposition, DispositionParseError, DispositionReason, DispositionWithReason,
+};
 
 // =============================================================================
 // 1. Disposition classification methods (10 tests)
@@ -230,14 +232,8 @@ mod disposition_parsing {
 
     #[test]
     fn test_parse_skipped() {
-        assert_eq!(
-            Disposition::parse("skipped").unwrap(),
-            Disposition::Skipped
-        );
-        assert_eq!(
-            Disposition::parse("SKIPPED").unwrap(),
-            Disposition::Skipped
-        );
+        assert_eq!(Disposition::parse("skipped").unwrap(), Disposition::Skipped);
+        assert_eq!(Disposition::parse("SKIPPED").unwrap(), Disposition::Skipped);
     }
 
     #[test]

@@ -198,7 +198,10 @@ impl FileSummary {
     pub fn add_finding(&mut self, severity: &str, disposition: &str, line: Option<usize>) {
         self.finding_count += 1;
         *self.by_severity.entry(severity.to_string()).or_insert(0) += 1;
-        *self.by_disposition.entry(disposition.to_string()).or_insert(0) += 1;
+        *self
+            .by_disposition
+            .entry(disposition.to_string())
+            .or_insert(0) += 1;
         if let Some(l) = line {
             self.lines_affected.insert(l);
         }
@@ -465,10 +468,7 @@ impl SummaryBuilder {
 
         for (path, severity, disposition, line) in &self.findings {
             summary.total_findings += 1;
-            *summary
-                .by_severity
-                .entry(severity.clone())
-                .or_insert(0) += 1;
+            *summary.by_severity.entry(severity.clone()).or_insert(0) += 1;
             *summary
                 .by_disposition
                 .entry(disposition.clone())
@@ -520,7 +520,9 @@ pub fn aggregate_summaries(summaries: &[ExplainSummary]) -> ExplainSummary {
 
 /// Create a map of file paths to file summaries from findings.
 #[must_use]
-pub fn summarize_by_file<F: FindingLike + ?Sized>(findings: &[&F]) -> HashMap<PathBuf, FileSummary> {
+pub fn summarize_by_file<F: FindingLike + ?Sized>(
+    findings: &[&F],
+) -> HashMap<PathBuf, FileSummary> {
     let mut result: HashMap<PathBuf, FileSummary> = HashMap::new();
 
     for finding in findings {
@@ -555,19 +557,19 @@ pub fn summarize_by_disposition(summary: &ExplainSummary) -> HashMap<String, usi
 pub fn format_summary_markdown(summary: &ExplainSummary) -> String {
     use std::fmt::Write;
     let mut output = String::new();
-    
+
     let _ = writeln!(output, "# Explain Summary\n");
- 
+
     // Timestamp
     if let Some(ref ts) = summary.timestamp {
         let _ = writeln!(output, "**Timestamp:** {ts}\n");
     }
- 
+
     // Overview
     let _ = writeln!(output, "## Overview\n");
     let _ = writeln!(output, "- **Total Findings:** {}", summary.total_findings);
     let _ = writeln!(output, "- **Files Affected:** {}\n", summary.files_affected);
- 
+
     // By Severity
     if !summary.by_severity.is_empty() {
         let _ = writeln!(output, "## By Severity\n");
@@ -577,7 +579,7 @@ pub fn format_summary_markdown(summary: &ExplainSummary) -> String {
             let _ = writeln!(output, "- **{severity}:** {count}");
         }
     }
- 
+
     // By Disposition
     if !summary.by_disposition.is_empty() {
         let _ = writeln!(output, "\n## By Disposition\n");
@@ -587,7 +589,7 @@ pub fn format_summary_markdown(summary: &ExplainSummary) -> String {
             let _ = writeln!(output, "- **{disposition}:** {count}");
         }
     }
- 
+
     // By File
     if !summary.by_file.is_empty() {
         let _ = writeln!(output, "\n## By File\n");
@@ -635,10 +637,10 @@ pub fn format_summary_json(_summary: &ExplainSummary) -> String {
 pub fn format_file_summary_markdown(file_summary: &FileSummary) -> String {
     use std::fmt::Write;
     let mut output = String::new();
-    
+
     let _ = writeln!(output, "## {}\n", file_summary.path.display());
     let _ = writeln!(output, "- **Findings:** {}\n", file_summary.finding_count);
-    
+
     if !file_summary.by_severity.is_empty() {
         let _ = writeln!(output, "### By Severity\n");
         let mut severities: Vec<_> = file_summary.by_severity.iter().collect();
@@ -647,7 +649,7 @@ pub fn format_file_summary_markdown(file_summary: &FileSummary) -> String {
             let _ = writeln!(output, "- **{severity}:** {count}\n");
         }
     }
-    
+
     if !file_summary.by_disposition.is_empty() {
         let _ = writeln!(output, "### By Disposition\n");
         let mut dispositions: Vec<_> = file_summary.by_disposition.iter().collect();
@@ -656,13 +658,13 @@ pub fn format_file_summary_markdown(file_summary: &FileSummary) -> String {
             let _ = writeln!(output, "- **{disposition}:** {count}\n");
         }
     }
-    
+
     if !file_summary.lines_affected.is_empty() {
         let mut lines: Vec<_> = file_summary.lines_affected.iter().copied().collect();
         lines.sort_unstable();
         let _ = writeln!(output, "\n### Lines Affected\n\n{}\n", lines.len());
     }
-    
+
     output
 }
 
@@ -714,7 +716,7 @@ pub fn is_info_only(summary: &ExplainSummary) -> bool {
 pub fn filter_by_disposition(summary: &ExplainSummary, disposition: &str) -> ExplainSummary {
     let mut result = ExplainSummary::new();
     result.timestamp.clone_from(&summary.timestamp);
-    
+
     for (path, file_summary) in &summary.by_file {
         let count = file_summary.disposition_count(disposition);
         if count > 0 {
@@ -728,20 +730,22 @@ pub fn filter_by_disposition(summary: &ExplainSummary, disposition: &str) -> Exp
             new_file_summary
                 .by_disposition
                 .insert(disposition.to_string(), count);
-            new_file_summary.lines_affected.clone_from(&file_summary.lines_affected);
+            new_file_summary
+                .lines_affected
+                .clone_from(&file_summary.lines_affected);
             result.by_file.insert(path.clone(), new_file_summary);
         }
     }
-    
+
     result.total_findings = summary.disposition_count(disposition);
     result
         .by_disposition
         .insert(disposition.to_string(), result.total_findings);
     result.files_affected = result.by_file.len();
-    
+
     // Copy severity counts proportionally
     result.by_severity.clone_from(&summary.by_severity);
-    
+
     result
 }
 

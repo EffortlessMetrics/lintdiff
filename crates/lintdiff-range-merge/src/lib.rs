@@ -235,7 +235,10 @@ impl LineRange {
         if !self.overlaps_or_adjacent(other) {
             return None;
         }
-        Some(Self::new(min(self.start, other.start), max(self.end, other.end)))
+        Some(Self::new(
+            min(self.start, other.start),
+            max(self.end, other.end),
+        ))
     }
 
     /// Get the intersection of this range with another.
@@ -257,7 +260,10 @@ impl LineRange {
         if !self.intersects(other) {
             return None;
         }
-        Some(Self::new(max(self.start, other.start), min(self.end, other.end)))
+        Some(Self::new(
+            max(self.start, other.start),
+            min(self.end, other.end),
+        ))
     }
 }
 
@@ -342,7 +348,7 @@ pub fn merge_lines(lines: &[usize]) -> Vec<LineRange> {
     }
 
     let mut result = Vec::new();
-    
+
     // Get the first line to start - safe because we checked is_empty above
     let (first, rest) = lines.split_first().unwrap_or((&0, &[]));
     let mut current_start = *first;
@@ -363,7 +369,7 @@ pub fn merge_lines(lines: &[usize]) -> Vec<LineRange> {
 
     // Don't forget the last range
     result.push(LineRange::new(current_start, current_end));
-    
+
     result
 }
 
@@ -418,10 +424,7 @@ pub fn merge_overlapping(ranges: &[LineRange]) -> Vec<LineRange> {
     for next in sorted.iter().skip(1) {
         if current.overlaps_or_adjacent(next) {
             // Merge the ranges
-            current = LineRange::new(
-                min(current.start, next.start),
-                max(current.end, next.end),
-            );
+            current = LineRange::new(min(current.start, next.start), max(current.end, next.end));
         } else {
             result.push(current);
             current = *next;
@@ -623,10 +626,7 @@ pub const fn overlaps_or_adjacent(a: &LineRange, b: &LineRange) -> bool {
 /// ```
 #[must_use]
 pub fn expand_to_include(range: &LineRange, line: usize) -> LineRange {
-    LineRange::new(
-        min(range.start, line),
-        max(range.end, line),
-    )
+    LineRange::new(min(range.start, line), max(range.end, line))
 }
 
 /// Check if one range fully contains another.
@@ -670,7 +670,7 @@ pub const fn gap_between(a: &LineRange, b: &LineRange) -> Option<usize> {
     if a.overlaps_or_adjacent(b) {
         return None;
     }
-    
+
     if a.end < b.start {
         Some(b.start - a.end - 1)
     } else {
@@ -750,10 +750,7 @@ mod tests {
 
     #[test]
     fn merge_overlapping_overlapping_ranges_merge() {
-        let ranges = vec![
-            LineRange::new(1, 5),
-            LineRange::new(3, 7),
-        ];
+        let ranges = vec![LineRange::new(1, 5), LineRange::new(3, 7)];
         let result = merge_overlapping(&ranges);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], LineRange::new(1, 7));
@@ -761,10 +758,7 @@ mod tests {
 
     #[test]
     fn merge_overlapping_adjacent_ranges_merge() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(11, 20),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(11, 20)];
         let result = merge_overlapping(&ranges);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], LineRange::new(1, 20));

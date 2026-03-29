@@ -301,10 +301,9 @@ impl TimestampFormatter {
                 format_timestamp_millis(dt)
             } else {
                 // Format without timezone
-                const FORMAT: &[time::format_description::BorrowedFormatItem<'static>] =
-                    time::macros::format_description!(
-                        "[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond digits:3]"
-                    );
+                const FORMAT: &[time::format_description::BorrowedFormatItem<'static>] = time::macros::format_description!(
+                    "[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond digits:3]"
+                );
                 dt.format(FORMAT)
                     .unwrap_or_else(|_| "1970-01-01T00:00:00.000".to_string())
             }
@@ -312,9 +311,7 @@ impl TimestampFormatter {
             format_timestamp(dt)
         } else {
             const FORMAT: &[time::format_description::BorrowedFormatItem<'static>] =
-                time::macros::format_description!(
-                    "[year]-[month]-[day]T[hour]:[minute]:[second]"
-                );
+                time::macros::format_description!("[year]-[month]-[day]T[hour]:[minute]:[second]");
             dt.format(FORMAT)
                 .unwrap_or_else(|_| "1970-01-01T00:00:00".to_string())
         }
@@ -567,7 +564,11 @@ impl std::fmt::Display for Date {
 /// assert!(!timestamps_approx_equal(&a, &b, Duration::milliseconds(50)));
 /// ```
 #[must_use]
-pub fn timestamps_approx_equal(a: &OffsetDateTime, b: &OffsetDateTime, tolerance: Duration) -> bool {
+pub fn timestamps_approx_equal(
+    a: &OffsetDateTime,
+    b: &OffsetDateTime,
+    tolerance: Duration,
+) -> bool {
     let diff = if a > b { *a - *b } else { *b - *a };
     diff <= tolerance
 }

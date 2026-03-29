@@ -11,7 +11,7 @@
 //! 8. parse_location function (10 tests)
 //! 9. Error cases (3 tests)
 
-use lintdiff_location::{Location, LocationParseError, LocationRange, parse_location};
+use lintdiff_location::{parse_location, Location, LocationParseError, LocationRange};
 
 // =============================================================================
 // 1. Location creation methods (10 tests)

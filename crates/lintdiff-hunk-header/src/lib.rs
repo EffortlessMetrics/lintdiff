@@ -102,7 +102,12 @@ impl HunkHeader {
     /// assert_eq!(header.new_count(), 5);
     /// ```
     #[must_use]
-    pub const fn new(old_start: usize, old_count: usize, new_start: usize, new_count: usize) -> Self {
+    pub const fn new(
+        old_start: usize,
+        old_count: usize,
+        new_start: usize,
+        new_count: usize,
+    ) -> Self {
         Self {
             old_start,
             old_count,
@@ -480,7 +485,9 @@ pub fn parse_hunk_header(s: &str) -> Result<Option<HunkHeader>, HunkHeaderError>
     let (old_start, old_count) = parse_range(minus_seg, true)?;
     let (new_start, new_count) = parse_range(plus_seg, false)?;
 
-    Ok(Some(HunkHeader::new(old_start, old_count, new_start, new_count)))
+    Ok(Some(HunkHeader::new(
+        old_start, old_count, new_start, new_count,
+    )))
 }
 
 /// Parse a range segment like "1,4" or "1".

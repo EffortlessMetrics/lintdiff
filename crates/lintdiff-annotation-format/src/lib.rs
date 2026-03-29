@@ -457,11 +457,18 @@ pub fn format_github_annotation(annotation: &Annotation) -> String {
     let message = escape_github_message(&annotation.message);
 
     annotation.column.map_or_else(
-        || format!("::{} file={},line={}::{}", level, annotation.path, annotation.line, message),
-        |col| format!(
-            "::{} file={},line={},col={}::{}",
-            level, annotation.path, annotation.line, col, message
-        ),
+        || {
+            format!(
+                "::{} file={},line={}::{}",
+                level, annotation.path, annotation.line, message
+            )
+        },
+        |col| {
+            format!(
+                "::{} file={},line={},col={}::{}",
+                level, annotation.path, annotation.line, col, message
+            )
+        },
     )
 }
 
@@ -555,11 +562,18 @@ pub fn format_circleci_annotation(annotation: &Annotation) -> String {
     let message = &annotation.message;
 
     annotation.column.map_or_else(
-        || format!("{}:{}: {}: {}", annotation.path, annotation.line, level, message),
-        |col| format!(
-            "{}:{}:{}: {}: {}",
-            annotation.path, annotation.line, col, level, message
-        ),
+        || {
+            format!(
+                "{}:{}: {}: {}",
+                annotation.path, annotation.line, level, message
+            )
+        },
+        |col| {
+            format!(
+                "{}:{}:{}: {}: {}",
+                annotation.path, annotation.line, col, level, message
+            )
+        },
     )
 }
 
@@ -586,9 +600,7 @@ pub fn format_circleci_annotation(annotation: &Annotation) -> String {
 #[must_use]
 pub fn format_default_annotation(annotation: &Annotation) -> String {
     let severity = format!("{:?}", annotation.severity);
-    let col_str = annotation
-        .column
-        .map_or(String::new(), |c| format!(":{c}"));
+    let col_str = annotation.column.map_or(String::new(), |c| format!(":{c}"));
 
     format!(
         "{}:{}{}: {}: {}",
@@ -658,8 +670,14 @@ mod tests {
                 CiPlatform::TravisCI.annotation_format(),
                 AnnotationFormat::Default
             );
-            assert_eq!(CiPlatform::Jenkins.annotation_format(), AnnotationFormat::Default);
-            assert_eq!(CiPlatform::Unknown.annotation_format(), AnnotationFormat::Default);
+            assert_eq!(
+                CiPlatform::Jenkins.annotation_format(),
+                AnnotationFormat::Default
+            );
+            assert_eq!(
+                CiPlatform::Unknown.annotation_format(),
+                AnnotationFormat::Default
+            );
         }
     }
 
@@ -675,7 +693,10 @@ mod tests {
                 AnnotationFormat::CircleCI.resolve(),
                 AnnotationFormat::CircleCI
             );
-            assert_eq!(AnnotationFormat::Default.resolve(), AnnotationFormat::Default);
+            assert_eq!(
+                AnnotationFormat::Default.resolve(),
+                AnnotationFormat::Default
+            );
         }
 
         #[test]
@@ -816,13 +837,8 @@ mod tests {
 
         #[test]
         fn format_annotation_circleci_with_column() {
-            let annotation = Annotation::new(
-                "test.rs",
-                100,
-                Some(5),
-                AnnotationSeverity::Notice,
-                "Note",
-            );
+            let annotation =
+                Annotation::new("test.rs", 100, Some(5), AnnotationSeverity::Notice, "Note");
 
             let output = format_annotation(AnnotationFormat::CircleCI, &annotation);
             assert!(output.starts_with("test.rs:100:5:"));
@@ -899,14 +915,10 @@ mod tests {
 
         #[test]
         fn format_gitlab_uses_correct_severity() {
-            let fatal =
-                Annotation::simple("f.rs", 1, AnnotationSeverity::Fatal, "fatal");
-            let error =
-                Annotation::simple("e.rs", 1, AnnotationSeverity::Error, "error");
-            let warning =
-                Annotation::simple("w.rs", 1, AnnotationSeverity::Warning, "warning");
-            let notice =
-                Annotation::simple("n.rs", 1, AnnotationSeverity::Notice, "notice");
+            let fatal = Annotation::simple("f.rs", 1, AnnotationSeverity::Fatal, "fatal");
+            let error = Annotation::simple("e.rs", 1, AnnotationSeverity::Error, "error");
+            let warning = Annotation::simple("w.rs", 1, AnnotationSeverity::Warning, "warning");
+            let notice = Annotation::simple("n.rs", 1, AnnotationSeverity::Notice, "notice");
 
             assert!(format_gitlab_annotation(&fatal).contains("critical"));
             assert!(format_gitlab_annotation(&error).contains("error"));
@@ -954,7 +966,8 @@ mod tests {
 
         #[test]
         fn format_circleci_includes_column_when_present() {
-            let annotation = Annotation::new("test.rs", 10, Some(5), AnnotationSeverity::Error, "E");
+            let annotation =
+                Annotation::new("test.rs", 10, Some(5), AnnotationSeverity::Error, "E");
 
             let output = format_circleci_annotation(&annotation);
             assert!(output.starts_with("test.rs:10:5:"));
@@ -994,8 +1007,7 @@ mod tests {
 
         #[test]
         fn format_default_without_column() {
-            let annotation =
-                Annotation::simple("lib.rs", 5, AnnotationSeverity::Warning, "Warn");
+            let annotation = Annotation::simple("lib.rs", 5, AnnotationSeverity::Warning, "Warn");
 
             let output = format_default_annotation(&annotation);
             assert!(output.starts_with("lib.rs:5:"));
@@ -1008,8 +1020,7 @@ mod tests {
 
         #[test]
         fn empty_message() {
-            let annotation =
-                Annotation::simple("empty.rs", 1, AnnotationSeverity::Notice, "");
+            let annotation = Annotation::simple("empty.rs", 1, AnnotationSeverity::Notice, "");
 
             let github = format_github_annotation(&annotation);
             assert!(github.ends_with("::")); // Empty message after ::
@@ -1070,7 +1081,8 @@ mod tests {
 
         #[test]
         fn column_number_one() {
-            let annotation = Annotation::new("first.rs", 1, Some(1), AnnotationSeverity::Error, "E");
+            let annotation =
+                Annotation::new("first.rs", 1, Some(1), AnnotationSeverity::Error, "E");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("col=1"));

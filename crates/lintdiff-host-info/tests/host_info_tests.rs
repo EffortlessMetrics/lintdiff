@@ -9,8 +9,8 @@
 //! - Property-based tests with proptest
 
 use lintdiff_host_info::{
-    detect_arch, detect_host, detect_os, format_host_info, format_oci_platform,
-    format_rust_target, get_hostname, ArchType, HostInfo, OsType,
+    detect_arch, detect_host, detect_os, format_host_info, format_oci_platform, format_rust_target,
+    get_hostname, ArchType, HostInfo, OsType,
 };
 use proptest::prelude::*;
 
@@ -133,7 +133,7 @@ fn arch_type_detect_returns_valid_variant() {
 #[test]
 fn host_info_new_creates_instance_with_all_fields() {
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some("testhost".to_string()));
-    
+
     assert_eq!(info.os, OsType::Linux);
     assert_eq!(info.arch, ArchType::X64);
     assert_eq!(info.hostname, Some("testhost".to_string()));
@@ -142,7 +142,7 @@ fn host_info_new_creates_instance_with_all_fields() {
 #[test]
 fn host_info_new_accepts_none_hostname() {
     let info = HostInfo::new(OsType::Windows, ArchType::Arm64, None);
-    
+
     assert_eq!(info.os, OsType::Windows);
     assert_eq!(info.arch, ArchType::Arm64);
     assert_eq!(info.hostname, None);
@@ -151,7 +151,7 @@ fn host_info_new_accepts_none_hostname() {
 #[test]
 fn host_info_without_hostname_creates_instance_with_none_hostname() {
     let info = HostInfo::without_hostname(OsType::MacOS, ArchType::Arm64);
-    
+
     assert_eq!(info.os, OsType::MacOS);
     assert_eq!(info.arch, ArchType::Arm64);
     assert_eq!(info.hostname, None);
@@ -160,21 +160,17 @@ fn host_info_without_hostname_creates_instance_with_none_hostname() {
 #[test]
 fn host_info_detect_returns_valid_info() {
     let info = HostInfo::detect();
-    
+
     // OS and arch should be valid detected values
-    assert!(
-        ["windows", "linux", "macos", "freebsd", "other"].contains(&info.os.as_str())
-    );
-    assert!(
-        ["x86", "x64", "arm", "arm64", "other"].contains(&info.arch.as_str())
-    );
+    assert!(["windows", "linux", "macos", "freebsd", "other"].contains(&info.os.as_str()));
+    assert!(["x86", "x64", "arm", "arm64", "other"].contains(&info.arch.as_str()));
 }
 
 #[test]
 fn host_info_default_returns_detected_info() {
     let info = HostInfo::default();
     let detected = HostInfo::detect();
-    
+
     assert_eq!(info.os, detected.os);
     assert_eq!(info.arch, detected.arch);
 }
@@ -183,7 +179,7 @@ fn host_info_default_returns_detected_info() {
 fn host_info_is_cloneable() {
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some("host".to_string()));
     let cloned = info.clone();
-    
+
     assert_eq!(info, cloned);
 }
 
@@ -204,7 +200,7 @@ fn detect_arch_function_returns_same_as_type_method() {
 #[test]
 fn detect_host_function_returns_complete_info() {
     let info = detect_host();
-    
+
     assert_eq!(info.os, detect_os());
     assert_eq!(info.arch, detect_arch());
 }
@@ -223,21 +219,21 @@ fn get_hostname_function_returns_string_or_none() {
 #[test]
 fn format_host_info_with_hostname_includes_hostname() {
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some("myhost".to_string()));
-    
+
     assert_eq!(format_host_info(&info), "myhost (linux/x64)");
 }
 
 #[test]
 fn format_host_info_without_hostname_omits_hostname() {
     let info = HostInfo::without_hostname(OsType::Windows, ArchType::X64);
-    
+
     assert_eq!(format_host_info(&info), "windows/x64");
 }
 
 #[test]
 fn format_host_info_with_empty_hostname_treated_as_none() {
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some(String::new()));
-    
+
     // Empty hostname is still displayed
     assert_eq!(format_host_info(&info), " (linux/x64)");
 }
@@ -392,7 +388,7 @@ fn format_oci_platform_all_architectures() {
 fn host_info_with_very_long_hostname() {
     let long_hostname = "a".repeat(256);
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some(long_hostname.clone()));
-    
+
     assert_eq!(info.hostname, Some(long_hostname));
 }
 
@@ -400,7 +396,7 @@ fn host_info_with_very_long_hostname() {
 fn host_info_with_unicode_hostname() {
     let unicode_hostname = "主机名-ホストネーム-🏠".to_string();
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some(unicode_hostname.clone()));
-    
+
     assert_eq!(info.hostname, Some(unicode_hostname));
 }
 
@@ -408,7 +404,7 @@ fn host_info_with_unicode_hostname() {
 fn format_host_info_preserves_unicode() {
     let unicode_hostname = "тест".to_string();
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some(unicode_hostname));
-    
+
     let formatted = format_host_info(&info);
     assert!(formatted.contains("тест"));
 }
@@ -437,7 +433,7 @@ fn os_type_can_be_used_in_hashset() {
     set.insert(OsType::Linux);
     set.insert(OsType::Windows);
     set.insert(OsType::Linux); // Duplicate
-    
+
     assert_eq!(set.len(), 2);
     assert!(set.contains(&OsType::Linux));
     assert!(set.contains(&OsType::Windows));
@@ -449,7 +445,7 @@ fn arch_type_can_be_used_in_hashset() {
     set.insert(ArchType::X64);
     set.insert(ArchType::Arm64);
     set.insert(ArchType::X64); // Duplicate
-    
+
     assert_eq!(set.len(), 2);
     assert!(set.contains(&ArchType::X64));
     assert!(set.contains(&ArchType::Arm64));
@@ -491,7 +487,7 @@ proptest! {
             3 => OsType::FreeBSD,
             _ => OsType::Other,
         };
-        
+
         let arch_type = match arch % 5 {
             0 => ArchType::X86,
             1 => ArchType::X64,
@@ -499,11 +495,11 @@ proptest! {
             3 => ArchType::Arm64,
             _ => ArchType::Other,
         };
-        
+
         let info = HostInfo::new(os_type, arch_type, hostname);
         let _formatted = format_host_info(&info);
     }
-    
+
     #[test]
     fn format_rust_target_never_panics(
         os in 0..5usize,
@@ -516,7 +512,7 @@ proptest! {
             3 => OsType::FreeBSD,
             _ => OsType::Other,
         };
-        
+
         let arch_type = match arch % 5 {
             0 => ArchType::X86,
             1 => ArchType::X64,
@@ -524,11 +520,11 @@ proptest! {
             3 => ArchType::Arm64,
             _ => ArchType::Other,
         };
-        
+
         let info = HostInfo::without_hostname(os_type, arch_type);
         let _target = format_rust_target(&info);
     }
-    
+
     #[test]
     fn format_oci_platform_never_panics(
         os in 0..5usize,
@@ -541,7 +537,7 @@ proptest! {
             3 => OsType::FreeBSD,
             _ => OsType::Other,
         };
-        
+
         let arch_type = match arch % 5 {
             0 => ArchType::X86,
             1 => ArchType::X64,
@@ -549,11 +545,11 @@ proptest! {
             3 => ArchType::Arm64,
             _ => ArchType::Other,
         };
-        
+
         let info = HostInfo::without_hostname(os_type, arch_type);
         let _platform = format_oci_platform(&info);
     }
-    
+
     #[test]
     fn os_type_as_str_returns_non_empty_string(os in 0..5usize) {
         let os_type = match os % 5 {
@@ -563,11 +559,11 @@ proptest! {
             3 => OsType::FreeBSD,
             _ => OsType::Other,
         };
-        
+
         let s = os_type.as_str();
         prop_assert!(!s.is_empty());
     }
-    
+
     #[test]
     fn arch_type_as_str_returns_non_empty_string(arch in 0..5usize) {
         let arch_type = match arch % 5 {
@@ -577,7 +573,7 @@ proptest! {
             3 => ArchType::Arm64,
             _ => ArchType::Other,
         };
-        
+
         let s = arch_type.as_str();
         prop_assert!(!s.is_empty());
     }
@@ -591,7 +587,7 @@ proptest! {
 fn format_rust_target_contains_arch_and_os() {
     let info = HostInfo::without_hostname(OsType::Linux, ArchType::X64);
     let target = format_rust_target(&info);
-    
+
     assert!(target.contains("x86_64") || target.contains("x64"));
     assert!(target.contains("linux"));
 }
@@ -600,7 +596,7 @@ fn format_rust_target_contains_arch_and_os() {
 fn format_oci_platform_has_correct_format() {
     let info = HostInfo::without_hostname(OsType::Linux, ArchType::Arm64);
     let platform = format_oci_platform(&info);
-    
+
     // Should be in format "os/arch"
     let parts: Vec<&str> = platform.split('/').collect();
     assert_eq!(parts.len(), 2);
@@ -612,7 +608,7 @@ fn format_oci_platform_has_correct_format() {
 fn format_host_info_with_hostname_has_parens() {
     let info = HostInfo::new(OsType::Linux, ArchType::X64, Some("host".to_string()));
     let formatted = format_host_info(&info);
-    
+
     assert!(formatted.contains('('));
     assert!(formatted.contains(')'));
     assert!(formatted.contains('/'));
@@ -622,7 +618,7 @@ fn format_host_info_with_hostname_has_parens() {
 fn format_host_info_without_hostname_has_no_parens() {
     let info = HostInfo::without_hostname(OsType::Linux, ArchType::X64);
     let formatted = format_host_info(&info);
-    
+
     assert!(!formatted.contains('('));
     assert!(!formatted.contains(')'));
     assert!(formatted.contains('/'));

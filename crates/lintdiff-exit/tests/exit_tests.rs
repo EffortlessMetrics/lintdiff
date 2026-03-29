@@ -142,8 +142,7 @@ mod from_verdict {
 
         #[test]
         fn returns_success_with_reasons() {
-            let verdict =
-                make_verdict_with_reasons(VerdictStatus::Warn, vec!["Found 3 warnings"]);
+            let verdict = make_verdict_with_reasons(VerdictStatus::Warn, vec!["Found 3 warnings"]);
             assert_eq!(
                 ExitCode::from_verdict(&verdict, FailOn::Error),
                 ExitCode::Success

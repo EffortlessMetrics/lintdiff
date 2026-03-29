@@ -508,9 +508,18 @@ fn format_duration_short_formats_zero_duration() {
 
 #[test]
 fn format_duration_short_formats_milliseconds_as_decimal_seconds() {
-    assert_eq!(format_duration_short(&Duration::milliseconds(125)), "0.125s");
-    assert_eq!(format_duration_short(&Duration::milliseconds(500)), "0.500s");
-    assert_eq!(format_duration_short(&Duration::milliseconds(999)), "0.999s");
+    assert_eq!(
+        format_duration_short(&Duration::milliseconds(125)),
+        "0.125s"
+    );
+    assert_eq!(
+        format_duration_short(&Duration::milliseconds(500)),
+        "0.500s"
+    );
+    assert_eq!(
+        format_duration_short(&Duration::milliseconds(999)),
+        "0.999s"
+    );
 }
 
 #[test]
@@ -523,7 +532,10 @@ fn format_duration_short_formats_seconds_with_decimal() {
 #[test]
 fn format_duration_short_formats_large_durations_in_seconds() {
     assert_eq!(format_duration_short(&Duration::seconds(3600)), "3600.000s");
-    assert_eq!(format_duration_short(&Duration::seconds(86400)), "86400.000s");
+    assert_eq!(
+        format_duration_short(&Duration::seconds(86400)),
+        "86400.000s"
+    );
 }
 
 #[test]
@@ -719,10 +731,7 @@ fn duration_from_secs_creates_duration_from_seconds() {
 
 #[test]
 fn duration_from_millis_creates_duration_from_milliseconds() {
-    assert_eq!(
-        duration_from_millis(1000),
-        Duration::milliseconds(1000)
-    );
+    assert_eq!(duration_from_millis(1000), Duration::milliseconds(1000));
     assert_eq!(duration_from_millis(500), Duration::milliseconds(500));
 }
 

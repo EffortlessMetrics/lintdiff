@@ -426,9 +426,7 @@ impl DiffPaths {
     #[must_use]
     pub fn is_rename(&self) -> bool {
         match (self.old_path_normalized(), self.new_path_normalized()) {
-            (Some(old), Some(new)) => {
-                !is_dev_null(old) && !is_dev_null(new) && old != new
-            }
+            (Some(old), Some(new)) => !is_dev_null(old) && !is_dev_null(new) && old != new,
             _ => false,
         }
     }
@@ -449,9 +447,7 @@ impl DiffPaths {
     #[must_use]
     pub fn is_modification(&self) -> bool {
         match (self.old_path_normalized(), self.new_path_normalized()) {
-            (Some(old), Some(new)) => {
-                !is_dev_null(old) && !is_dev_null(new) && old == new
-            }
+            (Some(old), Some(new)) => !is_dev_null(old) && !is_dev_null(new) && old == new,
             _ => false,
         }
     }
@@ -530,8 +526,14 @@ impl DiffPaths {
     #[must_use]
     pub fn strip_diff_prefixes(&self) -> Self {
         Self {
-            old_path: self.old_path.as_ref().map(|p| normalize_path(p).into_owned()),
-            new_path: self.new_path.as_ref().map(|p| normalize_path(p).into_owned()),
+            old_path: self
+                .old_path
+                .as_ref()
+                .map(|p| normalize_path(p).into_owned()),
+            new_path: self
+                .new_path
+                .as_ref()
+                .map(|p| normalize_path(p).into_owned()),
             old_timestamp: self.old_timestamp.clone(),
             new_timestamp: self.new_timestamp.clone(),
         }
@@ -582,7 +584,7 @@ impl DiffPaths {
     #[must_use]
     pub fn matches_path(&self, pattern: &str) -> bool {
         let normalized_pattern = strip_diff_prefix(pattern);
-        
+
         self.old_path_normalized() == Some(normalized_pattern)
             || self.new_path_normalized() == Some(normalized_pattern)
     }
@@ -602,7 +604,8 @@ impl DiffPaths {
     pub fn path_ends_with(&self, suffix: &str) -> bool {
         self.old_path_normalized()
             .is_some_and(|p| p.ends_with(suffix))
-            || self.new_path_normalized()
+            || self
+                .new_path_normalized()
                 .is_some_and(|p| p.ends_with(suffix))
     }
 }
@@ -631,7 +634,7 @@ pub fn strip_diff_prefix(path: &str) -> &str {
     if is_dev_null(path) {
         return path;
     }
-    
+
     // Strip diff prefixes (a/, b/, i/) from the start of the path
     // Only strip once to avoid over-stripping paths like "a/a/b"
     path.strip_prefix("a/")
@@ -677,18 +680,18 @@ pub fn normalize_path(path: &str) -> std::borrow::Cow<'_, str> {
     if is_dev_null(path) {
         return std::borrow::Cow::Borrowed(path);
     }
-    
+
     // First convert backslashes to forward slashes
     let converted = if path.contains('\\') {
         std::borrow::Cow::Owned(path.replace('\\', "/"))
     } else {
         std::borrow::Cow::Borrowed(path)
     };
-    
+
     // Then strip diff prefixes recursively until none remain
     let mut stripped = strip_diff_prefix(&converted);
     let mut prev_len = converted.len();
-    
+
     loop {
         let next = strip_diff_prefix(stripped);
         if next.len() >= prev_len {
@@ -698,7 +701,7 @@ pub fn normalize_path(path: &str) -> std::borrow::Cow<'_, str> {
         prev_len = stripped.len();
         stripped = next;
     }
-    
+
     if stripped.len() == converted.len() {
         // No prefix was stripped, return the converted version
         converted
@@ -734,12 +737,12 @@ fn split_path_and_timestamp(s: &str) -> (&str, Option<&str>) {
     if let Some(idx) = s.find('\t') {
         return (&s[..idx], Some(&s[idx + 1..]));
     }
-    
+
     // Then try double-space separated (some formats use this)
     if let Some(idx) = s.find("  ") {
         return (&s[..idx], Some(s[idx + 2..].trim()));
     }
-    
+
     (s, None)
 }
 
@@ -940,7 +943,7 @@ mod tests {
     fn test_diff_paths_parse_standard() {
         let header = "--- a/src/lib.rs\n+++ b/src/lib.rs\n";
         let paths = DiffPaths::parse(header).unwrap().unwrap();
-        
+
         assert_eq!(paths.old_path, Some("a/src/lib.rs".to_string()));
         assert_eq!(paths.new_path, Some("b/src/lib.rs".to_string()));
         assert!(paths.is_modification());
@@ -950,7 +953,7 @@ mod tests {
     fn test_diff_paths_parse_creation() {
         let header = "--- /dev/null\n+++ b/new_file.rs\n";
         let paths = DiffPaths::parse(header).unwrap().unwrap();
-        
+
         assert!(paths.is_creation());
         assert_eq!(paths.canonical_path(), Some("b/new_file.rs"));
     }
@@ -959,7 +962,7 @@ mod tests {
     fn test_diff_paths_parse_deletion() {
         let header = "--- a/old_file.rs\n+++ /dev/null\n";
         let paths = DiffPaths::parse(header).unwrap().unwrap();
-        
+
         assert!(paths.is_deletion());
         assert_eq!(paths.canonical_path(), Some("a/old_file.rs"));
     }
@@ -982,7 +985,7 @@ mod tests {
             .unwrap()
             .unwrap();
         let stripped = paths.strip_prefix("a/");
-        
+
         assert_eq!(stripped.old_path, Some("src/lib.rs".to_string()));
         // b/ prefix not stripped since we only asked for a/
         assert_eq!(stripped.new_path, Some("b/src/lib.rs".to_string()));
@@ -994,7 +997,7 @@ mod tests {
             .unwrap()
             .unwrap();
         let normalized = paths.strip_diff_prefixes();
-        
+
         assert_eq!(normalized.old_path, Some("src/lib.rs".to_string()));
         assert_eq!(normalized.new_path, Some("src/lib.rs".to_string()));
     }
@@ -1003,7 +1006,7 @@ mod tests {
     fn test_parse_with_timestamp() {
         let header = "--- a/file.rs\t2024-01-01 12:00:00\n+++ b/file.rs\t2024-01-02 13:00:00\n";
         let paths = DiffPaths::parse(header).unwrap().unwrap();
-        
+
         assert_eq!(paths.old_timestamp, Some("2024-01-01 12:00:00".to_string()));
         assert_eq!(paths.new_timestamp, Some("2024-01-02 13:00:00".to_string()));
     }
@@ -1012,7 +1015,7 @@ mod tests {
     fn test_error_display() {
         let err = DiffPathsError::new("test error");
         assert_eq!(format!("{}", err), "test error");
-        
+
         let err_with_line = DiffPathsError::with_line("test error", "bad line");
         assert_eq!(format!("{}", err_with_line), "test error: \"bad line\"");
     }

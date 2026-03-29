@@ -42,12 +42,18 @@ mod output_format_tests {
 
     #[test]
     fn parse_actions_alias() {
-        assert_eq!(OutputFormat::parse("actions").unwrap(), OutputFormat::GitHub);
+        assert_eq!(
+            OutputFormat::parse("actions").unwrap(),
+            OutputFormat::GitHub
+        );
     }
 
     #[test]
     fn parse_markdown_format() {
-        assert_eq!(OutputFormat::parse("markdown").unwrap(), OutputFormat::Markdown);
+        assert_eq!(
+            OutputFormat::parse("markdown").unwrap(),
+            OutputFormat::Markdown
+        );
     }
 
     #[test]
@@ -59,7 +65,10 @@ mod output_format_tests {
     fn parse_case_insensitive() {
         assert_eq!(OutputFormat::parse("JSON").unwrap(), OutputFormat::Json);
         assert_eq!(OutputFormat::parse("Text").unwrap(), OutputFormat::Text);
-        assert_eq!(OutputFormat::parse("MARKDOWN").unwrap(), OutputFormat::Markdown);
+        assert_eq!(
+            OutputFormat::parse("MARKDOWN").unwrap(),
+            OutputFormat::Markdown
+        );
     }
 
     #[test]

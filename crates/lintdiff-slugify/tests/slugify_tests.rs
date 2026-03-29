@@ -59,10 +59,7 @@ mod basic_slugify_tests {
 
     #[test]
     fn test_multiple_words() {
-        assert_eq!(
-            slugify("This is a long title"),
-            "this-is-a-long-title"
-        );
+        assert_eq!(slugify("This is a long title"), "this-is-a-long-title");
     }
 }
 
@@ -273,7 +270,10 @@ mod preserve_special_tests {
     #[test]
     fn test_preserve_at_symbol() {
         let options = preserve_options();
-        assert_eq!(slugify_with_options("test@example", &options), "test@example");
+        assert_eq!(
+            slugify_with_options("test@example", &options),
+            "test@example"
+        );
     }
 
     #[test]
@@ -392,9 +392,7 @@ mod separator_tests {
 
     #[test]
     fn test_separator_with_max_length() {
-        let options = SlugOptions::new()
-            .with_separator('_')
-            .with_max_length(15);
+        let options = SlugOptions::new().with_separator('_').with_max_length(15);
         assert_eq!(
             slugify_with_options("One Two Three Four Five", &options),
             "one_two_three"
@@ -424,7 +422,10 @@ mod max_length_tests {
     #[test]
     fn test_max_length_truncation() {
         let options = SlugOptions::new().with_max_length(10);
-        assert_eq!(slugify_with_options("Very Long String", &options), "very-long");
+        assert_eq!(
+            slugify_with_options("Very Long String", &options),
+            "very-long"
+        );
     }
 
     #[test]
@@ -459,10 +460,7 @@ mod max_length_tests {
     #[test]
     fn test_max_length_no_truncation_needed() {
         let options = SlugOptions::new().with_max_length(100);
-        assert_eq!(
-            slugify_with_options("Short", &options),
-            "short"
-        );
+        assert_eq!(slugify_with_options("Short", &options), "short");
     }
 }
 
@@ -563,33 +561,25 @@ mod builder_tests {
 
     #[test]
     fn test_builder_with_lowercase() {
-        let slugifier = SlugifierBuilder::new()
-            .with_lowercase(false)
-            .build();
+        let slugifier = SlugifierBuilder::new().with_lowercase(false).build();
         assert_eq!(slugifier.slugify("Hello World"), "Hello-World");
     }
 
     #[test]
     fn test_builder_with_separator() {
-        let slugifier = SlugifierBuilder::new()
-            .with_separator('_')
-            .build();
+        let slugifier = SlugifierBuilder::new().with_separator('_').build();
         assert_eq!(slugifier.slugify("Hello World"), "hello_world");
     }
 
     #[test]
     fn test_builder_with_max_length() {
-        let slugifier = SlugifierBuilder::new()
-            .with_max_length(10)
-            .build();
+        let slugifier = SlugifierBuilder::new().with_max_length(10).build();
         assert_eq!(slugifier.slugify("Very Long String"), "very-long");
     }
 
     #[test]
     fn test_builder_with_preserve_special() {
-        let slugifier = SlugifierBuilder::new()
-            .with_preserve_special(true)
-            .build();
+        let slugifier = SlugifierBuilder::new().with_preserve_special(true).build();
         assert_eq!(slugifier.slugify("test@example"), "test@example");
     }
 
@@ -600,10 +590,7 @@ mod builder_tests {
             .with_separator('_')
             .with_max_length(20)
             .build();
-        assert_eq!(
-            slugifier.slugify("Hello World Test"),
-            "Hello_World_Test"
-        );
+        assert_eq!(slugifier.slugify("Hello World Test"), "Hello_World_Test");
     }
 
     #[test]
@@ -788,7 +775,9 @@ mod combination_tests {
         let input = "This is a COMPLEX Test String!!! With @ Special # Characters $";
         let result = slugify_with_options(input, &options);
         assert!(result.len() <= 50);
-        assert!(result.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'));
+        assert!(result
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'));
     }
 }
 
@@ -817,10 +806,7 @@ mod real_world_tests {
 
     #[test]
     fn test_url_path() {
-        assert_eq!(
-            slugify("/api/v1/users/123"),
-            "api-v1-users-123"
-        );
+        assert_eq!(slugify("/api/v1/users/123"), "api-v1-users-123");
     }
 
     #[test]
@@ -833,10 +819,7 @@ mod real_world_tests {
 
     #[test]
     fn test_code_identifier() {
-        assert_eq!(
-            slugify("myFunctionName"),
-            "myfunctionname"
-        );
+        assert_eq!(slugify("myFunctionName"), "myfunctionname");
     }
 
     #[test]
@@ -849,18 +832,12 @@ mod real_world_tests {
 
     #[test]
     fn test_markdown_header() {
-        assert_eq!(
-            slugify("## Introduction to Rust"),
-            "introduction-to-rust"
-        );
+        assert_eq!(slugify("## Introduction to Rust"), "introduction-to-rust");
     }
 
     #[test]
     fn test_version_string() {
-        assert_eq!(
-            slugify("v1.2.3-beta.1"),
-            "v1-2-3-beta-1"
-        );
+        assert_eq!(slugify("v1.2.3-beta.1"), "v1-2-3-beta-1");
     }
 
     #[test]
@@ -873,10 +850,7 @@ mod real_world_tests {
 
     #[test]
     fn test_package_name() {
-        assert_eq!(
-            slugify("@scope/package-name"),
-            "scope-package-name"
-        );
+        assert_eq!(slugify("@scope/package-name"), "scope-package-name");
     }
 }
 
@@ -1068,7 +1042,10 @@ mod truncate_boundary_tests {
     #[test]
     fn test_truncate_preserves_readability() {
         let options = SlugOptions::new().with_max_length(20);
-        let result = slugify_with_options("This is a very long sentence that needs truncation", &options);
+        let result = slugify_with_options(
+            "This is a very long sentence that needs truncation",
+            &options,
+        );
         assert!(result.len() <= 20);
         // Should not end with a separator
         assert!(!result.ends_with('-'));

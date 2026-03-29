@@ -261,7 +261,10 @@ fn test_paths_cmp_less() {
 
 #[test]
 fn test_paths_cmp_greater() {
-    assert_eq!(paths_cmp("src/b.rs", "src/a.rs"), std::cmp::Ordering::Greater);
+    assert_eq!(
+        paths_cmp("src/b.rs", "src/a.rs"),
+        std::cmp::Ordering::Greater
+    );
 }
 
 // =============================================================================
@@ -354,10 +357,7 @@ fn test_join_empty() {
 
 #[test]
 fn test_join_multiple_components() {
-    assert_eq!(
-        join(&["a", "b", "c", "d", "e.rs"]),
-        "a/b/c/d/e.rs"
-    );
+    assert_eq!(join(&["a", "b", "c", "d", "e.rs"]), "a/b/c/d/e.rs");
 }
 
 // =============================================================================

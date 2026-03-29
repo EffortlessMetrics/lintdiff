@@ -3,8 +3,8 @@
 //! These tests follow the Given-When-Then pattern to describe behavior.
 
 use lintdiff_report_builder::{
-    FileResult, Finding, GitInfo, ReportBuilder, ReportBuilderError, ReportSummary,
-    Severity, ToolInfo, quick_report,
+    quick_report, FileResult, Finding, GitInfo, ReportBuilder, ReportBuilderError, ReportSummary,
+    Severity, ToolInfo,
 };
 use proptest::prelude::*;
 
@@ -630,8 +630,7 @@ mod validation {
     #[test]
     fn given_no_tool_name_when_validate_then_missing_tool_name_error() {
         // Given
-        let builder = ReportBuilder::new()
-            .with_timestamp("2024-01-15T10:30:00Z");
+        let builder = ReportBuilder::new().with_timestamp("2024-01-15T10:30:00Z");
 
         // When
         let err = builder.validate().unwrap_err();
@@ -674,8 +673,7 @@ mod validation {
     #[test]
     fn given_no_timestamp_when_validate_then_missing_timestamp_error() {
         // Given
-        let builder = ReportBuilder::new()
-            .with_tool_info("lintdiff", "1.0.0");
+        let builder = ReportBuilder::new().with_tool_info("lintdiff", "1.0.0");
 
         // When
         let err = builder.validate().unwrap_err();
@@ -1182,9 +1180,7 @@ mod serde_tests {
 
     #[test]
     fn test_finding_serde() {
-        let finding = Finding::error("test error")
-            .with_code("E001")
-            .with_line(42);
+        let finding = Finding::error("test error").with_code("E001").with_line(42);
 
         let json = serde_json::to_string(&finding).unwrap();
         assert!(json.contains("test error"));

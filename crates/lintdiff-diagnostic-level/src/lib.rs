@@ -599,8 +599,7 @@ impl DiagnosticLevelParser {
     /// assert_eq!(parser.parse("severe"), DiagnosticLevel::Error);
     /// ```
     pub fn with_custom_mapping(&mut self, from: &str, to: DiagnosticLevel) -> &mut Self {
-        self.custom_mappings
-            .insert(from.to_lowercase(), to);
+        self.custom_mappings.insert(from.to_lowercase(), to);
         self
     }
 
@@ -623,12 +622,12 @@ impl DiagnosticLevelParser {
     #[must_use]
     pub fn parse(&self, s: &str) -> DiagnosticLevel {
         let lower = s.to_lowercase();
-        
+
         // Check custom mappings first
         if let Some(&level) = self.custom_mappings.get(&lower) {
             return level;
         }
-        
+
         // Fall back to default parsing
         parse_level(s)
     }

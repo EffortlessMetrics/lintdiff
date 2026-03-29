@@ -371,7 +371,10 @@ mod truncate_words_tests {
     #[test]
     fn basic_word_truncation() {
         // Words are normalized with single spaces
-        assert_eq!(truncate_words("Hello beautiful world", 2), "Hello beautiful...");
+        assert_eq!(
+            truncate_words("Hello beautiful world", 2),
+            "Hello beautiful..."
+        );
     }
 
     #[test]
@@ -872,7 +875,8 @@ mod integration_tests {
 
     #[test]
     fn full_workflow_custom_options() {
-        let message = "Error: Something went wrong. Please try again later. Contact support if needed.";
+        let message =
+            "Error: Something went wrong. Please try again later. Contact support if needed.";
         let options = TruncateOptions::new(50)
             .with_ellipsis("…")
             .with_preserve_sentences(true);

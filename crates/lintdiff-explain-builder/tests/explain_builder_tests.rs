@@ -3,7 +3,10 @@
 //! These tests follow the Given-When-Then pattern to ensure comprehensive
 //! coverage of the builder functionality.
 
-use lintdiff_explain_builder::{ExplainBuilder, ExplainConfig, ExplainSection, explain_simple, format_as_markdown, format_as_plain_text};
+use lintdiff_explain_builder::{
+    explain_simple, format_as_markdown, format_as_plain_text, ExplainBuilder, ExplainConfig,
+    ExplainSection,
+};
 
 // =============================================================================
 // Feature: ExplainBuilder Creation
@@ -16,10 +19,10 @@ mod builder_creation {
     fn given_new_builder_when_checked_then_is_empty() {
         // Given
         let builder = ExplainBuilder::new();
-        
+
         // When
         let is_empty = builder.is_empty();
-        
+
         // Then
         assert!(is_empty);
     }
@@ -28,10 +31,10 @@ mod builder_creation {
     fn given_default_builder_when_checked_then_is_empty() {
         // Given
         let builder = ExplainBuilder::default();
-        
+
         // When
         let is_empty = builder.is_empty();
-        
+
         // Then
         assert!(is_empty);
     }
@@ -40,10 +43,10 @@ mod builder_creation {
     fn given_builder_with_config_when_created_then_has_config() {
         // Given
         let config = ExplainConfig::new().with_indent(4);
-        
+
         // When
         let builder = ExplainBuilder::with_config(config);
-        
+
         // Then
         assert_eq!(builder.config().indent, 4);
     }
@@ -52,10 +55,10 @@ mod builder_creation {
     fn given_new_builder_when_title_set_then_not_empty() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_title("Title");
-        
+
         // Then
         assert!(!builder.is_empty());
     }
@@ -64,10 +67,10 @@ mod builder_creation {
     fn given_new_builder_when_summary_set_then_not_empty() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_summary("Summary");
-        
+
         // Then
         assert!(!builder.is_empty());
     }
@@ -76,10 +79,10 @@ mod builder_creation {
     fn given_new_builder_when_bullet_added_then_not_empty() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_bullet("Item");
-        
+
         // Then
         assert!(!builder.is_empty());
     }
@@ -96,10 +99,10 @@ mod title_management {
     fn given_builder_when_title_set_then_can_retrieve() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_title("My Title");
-        
+
         // Then
         assert_eq!(builder.title(), Some("My Title"));
     }
@@ -109,10 +112,10 @@ mod title_management {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Title");
-        
+
         // When
         builder.clear();
-        
+
         // Then
         assert!(builder.title().is_none());
     }
@@ -122,10 +125,10 @@ mod title_management {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Old Title");
-        
+
         // When
         builder.with_title("New Title");
-        
+
         // Then
         assert_eq!(builder.title(), Some("New Title"));
     }
@@ -134,10 +137,10 @@ mod title_management {
     fn given_empty_title_when_set_then_is_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_title("");
-        
+
         // Then
         assert_eq!(builder.title(), Some(""));
     }
@@ -146,10 +149,10 @@ mod title_management {
     fn given_unicode_title_when_set_then_is_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_title("日本語タイトル 🦀");
-        
+
         // Then
         assert_eq!(builder.title(), Some("日本語タイトル 🦀"));
     }
@@ -166,10 +169,10 @@ mod summary_management {
     fn given_builder_when_summary_set_then_can_retrieve() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.with_summary("My summary text");
-        
+
         // Then
         assert_eq!(builder.summary(), Some("My summary text"));
     }
@@ -179,10 +182,10 @@ mod summary_management {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_summary("Summary");
-        
+
         // When
         builder.clear();
-        
+
         // Then
         assert!(builder.summary().is_none());
     }
@@ -192,10 +195,10 @@ mod summary_management {
         // Given
         let mut builder = ExplainBuilder::new();
         let summary = "Line 1\nLine 2\nLine 3";
-        
+
         // When
         builder.with_summary(summary);
-        
+
         // Then
         assert_eq!(builder.summary(), Some(summary));
     }
@@ -212,10 +215,10 @@ mod bullet_points {
     fn given_builder_when_single_bullet_added_then_has_one_section() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_bullet("Item 1");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 1);
     }
@@ -224,10 +227,10 @@ mod bullet_points {
     fn given_builder_when_two_bullets_added_consecutively_then_single_bullets_section() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_bullet("Item 1").add_bullet("Item 2");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 1);
         if let ExplainSection::Bullets(items) = &builder.sections()[0] {
@@ -242,10 +245,10 @@ mod bullet_points {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_bullet("A1");
-        
+
         // When
         builder.add_text("Separator").add_bullet("B1");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 3);
     }
@@ -254,10 +257,10 @@ mod bullet_points {
     fn given_empty_bullet_when_added_then_is_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_bullet("");
-        
+
         // Then
         if let ExplainSection::Bullets(items) = &builder.sections()[0] {
             assert_eq!(items[0], "");
@@ -270,12 +273,12 @@ mod bullet_points {
     fn given_many_bullets_when_added_then_all_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         for i in 0..100 {
             builder.add_bullet(&format!("Item {}", i));
         }
-        
+
         // Then
         if let ExplainSection::Bullets(items) = &builder.sections()[0] {
             assert_eq!(items.len(), 100);
@@ -296,10 +299,10 @@ mod code_blocks {
     fn given_code_block_when_added_then_has_code_section() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_code_block("fn main() {}", "rust");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 1);
         if let ExplainSection::Code { code, language } = &builder.sections()[0] {
@@ -314,10 +317,10 @@ mod code_blocks {
     fn given_code_block_empty_language_when_added_then_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_code_block("code", "");
-        
+
         // Then
         if let ExplainSection::Code { language, .. } = &builder.sections()[0] {
             assert_eq!(language, "");
@@ -331,12 +334,15 @@ mod code_blocks {
         // Given
         let mut builder = ExplainBuilder::new();
         let code = "fn a() {}\nfn b() {}\nfn c() {}";
-        
+
         // When
         builder.add_code_block(code, "rust");
-        
+
         // Then
-        if let ExplainSection::Code { code: stored_code, .. } = &builder.sections()[0] {
+        if let ExplainSection::Code {
+            code: stored_code, ..
+        } = &builder.sections()[0]
+        {
             assert!(stored_code.contains("fn a()"));
             assert!(stored_code.contains("fn b()"));
             assert!(stored_code.contains("fn c()"));
@@ -349,12 +355,12 @@ mod code_blocks {
     fn given_multiple_code_blocks_when_added_then_separate_sections() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder
             .add_code_block("code1", "rust")
             .add_code_block("code2", "python");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 2);
     }
@@ -371,10 +377,10 @@ mod tables {
     fn given_table_when_added_then_has_table_section() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_table(&["A", "B"], &[&["1", "2"]]);
-        
+
         // Then
         assert_eq!(builder.sections().len(), 1);
         if let ExplainSection::Table { headers, rows } = &builder.sections()[0] {
@@ -389,10 +395,10 @@ mod tables {
     fn given_table_no_rows_when_added_then_headers_preserved() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_table(&["Col1", "Col2"], &[]);
-        
+
         // Then
         if let ExplainSection::Table { headers, rows } = &builder.sections()[0] {
             assert_eq!(headers.len(), 2);
@@ -406,10 +412,10 @@ mod tables {
     fn given_table_no_headers_when_added_then_empty_table() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_table(&[], &[&["1", "2"]]);
-        
+
         // Then
         if let ExplainSection::Table { headers, .. } = &builder.sections()[0] {
             assert!(headers.is_empty());
@@ -422,15 +428,23 @@ mod tables {
     fn given_table_many_rows_when_added_then_all_preserved() {
         // Given
         let mut builder = ExplainBuilder::new();
-        let row_data: Vec<[String; 2]> = (0..50).map(|i| [i.to_string(), "val".to_string()]).collect();
-        let row_refs: Vec<[&str; 2]> = row_data.iter().map(|r| [&r[0] as &str, &r[1] as &str]).collect();
+        let row_data: Vec<[String; 2]> = (0..50)
+            .map(|i| [i.to_string(), "val".to_string()])
+            .collect();
+        let row_refs: Vec<[&str; 2]> = row_data
+            .iter()
+            .map(|r| [&r[0] as &str, &r[1] as &str])
+            .collect();
         let row_slices: Vec<&[&str]> = row_refs.iter().map(|r| &r[..]).collect();
-        
+
         // When
         builder.add_table(&["ID", "Value"], &row_slices);
-        
+
         // Then
-        if let ExplainSection::Table { rows: stored_rows, .. } = &builder.sections()[0] {
+        if let ExplainSection::Table {
+            rows: stored_rows, ..
+        } = &builder.sections()[0]
+        {
             assert_eq!(stored_rows.len(), 50);
         } else {
             panic!("Expected Table section");
@@ -441,10 +455,10 @@ mod tables {
     fn given_table_uneven_rows_when_added_then_preserved_as_is() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_table(&["A", "B", "C"], &[&["1", "2"]]);
-        
+
         // Then
         if let ExplainSection::Table { rows, .. } = &builder.sections()[0] {
             assert_eq!(rows[0].len(), 2);
@@ -465,10 +479,10 @@ mod sections {
     fn given_section_when_added_then_has_section_item() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_section("Heading", "Content");
-        
+
         // Then
         if let ExplainSection::Section { heading, content } = &builder.sections()[0] {
             assert_eq!(heading, "Heading");
@@ -482,10 +496,10 @@ mod sections {
     fn given_section_empty_content_when_added_then_stored() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder.add_section("Heading", "");
-        
+
         // Then
         if let ExplainSection::Section { content, .. } = &builder.sections()[0] {
             assert_eq!(content, "");
@@ -498,12 +512,12 @@ mod sections {
     fn given_multiple_sections_when_added_then_all_preserved() {
         // Given
         let mut builder = ExplainBuilder::new();
-        
+
         // When
         builder
             .add_section("First", "Content 1")
             .add_section("Second", "Content 2");
-        
+
         // Then
         assert_eq!(builder.sections().len(), 2);
     }
@@ -521,10 +535,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("My Title");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("# My Title"));
     }
@@ -534,10 +548,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_summary("Summary text");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("*Summary text*"));
     }
@@ -547,10 +561,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_bullet("Item 1").add_bullet("Item 2");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("- Item 1"));
         assert!(output.contains("- Item 2"));
@@ -561,10 +575,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_code_block("fn main() {}", "rust");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("```rust"));
         assert!(output.contains("fn main() {}"));
@@ -576,10 +590,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_table(&["A", "B"], &[&["1", "2"]]);
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("| A |"));
         assert!(output.contains("| 1 |"));
@@ -590,10 +604,10 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_section("Heading", "Content");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("## Heading"));
         assert!(output.contains("Content"));
@@ -610,10 +624,10 @@ mod markdown_output {
             .add_bullet("Bullet")
             .add_code_block("code", "rust")
             .add_table(&["H"], &[&["D"]]);
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("# Title"));
         assert!(output.contains("*Summary*"));
@@ -627,10 +641,10 @@ mod markdown_output {
     fn given_empty_builder_when_build_markdown_then_empty_or_newline() {
         // Given
         let builder = ExplainBuilder::new();
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.is_empty() || output == "\n");
     }
@@ -640,11 +654,11 @@ mod markdown_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Title");
-        
+
         // When
         let output1 = builder.build_markdown();
         let output2 = format_as_markdown(&builder);
-        
+
         // Then
         assert_eq!(output1, output2);
     }
@@ -662,10 +676,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Title");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("Title"));
         assert!(output.contains("====="));
@@ -676,10 +690,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_summary("Summary");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("Summary"));
         assert!(!output.contains("*Summary*"));
@@ -690,10 +704,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_bullet("Item");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("* Item"));
         assert!(!output.contains("- Item"));
@@ -704,10 +718,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_code_block("code", "rust");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("[rust]"));
         assert!(output.contains("code"));
@@ -718,10 +732,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_code_block("code", "");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(!output.contains("[]"));
     }
@@ -731,10 +745,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_table(&["A", "B"], &[&["1", "2"]]);
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("A | B"));
         assert!(output.contains("-+-"));
@@ -745,10 +759,10 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_section("Heading", "Content");
-        
+
         // When
         let output = builder.build_plain_text();
-        
+
         // Then
         assert!(output.contains("[Heading]"));
         assert!(output.contains("Content"));
@@ -759,11 +773,11 @@ mod plain_text_output {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Title");
-        
+
         // When
         let output1 = builder.build_plain_text();
         let output2 = format_as_plain_text(&builder);
-        
+
         // Then
         assert_eq!(output1, output2);
     }
@@ -780,7 +794,7 @@ mod configuration {
     fn given_default_config_when_created_then_has_defaults() {
         // Given/When
         let config = ExplainConfig::default();
-        
+
         // Then
         assert_eq!(config.indent, 0);
         assert_eq!(config.line_width, 80);
@@ -793,10 +807,10 @@ mod configuration {
         let config = ExplainConfig::new().with_indent(4);
         let mut builder = ExplainBuilder::with_config(config);
         builder.add_text("Text");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("    Text"));
     }
@@ -807,10 +821,10 @@ mod configuration {
         let config = ExplainConfig::new().with_color(true);
         let mut builder = ExplainBuilder::with_config(config);
         builder.with_title("Title");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(output.contains("\x1b["));
     }
@@ -821,10 +835,10 @@ mod configuration {
         let config = ExplainConfig::new().with_color(false);
         let mut builder = ExplainBuilder::with_config(config);
         builder.with_title("Title");
-        
+
         // When
         let output = builder.build_markdown();
-        
+
         // Then
         assert!(!output.contains("\x1b["));
     }
@@ -834,10 +848,10 @@ mod configuration {
         // Given
         let mut builder = ExplainBuilder::new();
         let config = ExplainConfig::new().with_indent(8);
-        
+
         // When
         builder.set_config(config);
-        
+
         // Then
         assert_eq!(builder.config().indent, 8);
     }
@@ -861,10 +875,10 @@ mod indentation {
         // Given
         let section = ExplainSection::text("Hello");
         let config = ExplainConfig::new().with_indent(2);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert_eq!(output, "  Hello");
     }
@@ -874,10 +888,10 @@ mod indentation {
         // Given
         let section = ExplainSection::bullets(vec!["Item".to_string()]);
         let config = ExplainConfig::new().with_indent(3);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert_eq!(output, "   - Item");
     }
@@ -887,10 +901,10 @@ mod indentation {
         // Given
         let section = ExplainSection::code("code", "rust");
         let config = ExplainConfig::new().with_indent(4);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.contains("    ```rust"));
         assert!(output.contains("    code"));
@@ -901,10 +915,10 @@ mod indentation {
         // Given
         let section = ExplainSection::table(vec!["A".to_string()], vec![]);
         let config = ExplainConfig::new().with_indent(2);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.starts_with("  |"));
     }
@@ -914,10 +928,10 @@ mod indentation {
         // Given
         let section = ExplainSection::section("H", "C");
         let config = ExplainConfig::new().with_indent(2);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.contains("  ## H"));
     }
@@ -927,10 +941,10 @@ mod indentation {
         // Given
         let section = ExplainSection::text("Line1\nLine2\nLine3");
         let config = ExplainConfig::new().with_indent(2);
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.contains("  Line1"));
         assert!(output.contains("  Line2"));
@@ -949,7 +963,7 @@ mod convenience_functions {
     fn given_explain_simple_when_called_then_has_title_and_content() {
         // When
         let output = explain_simple("Title", "Content");
-        
+
         // Then
         assert!(output.contains("# Title"));
         assert!(output.contains("Content"));
@@ -959,7 +973,7 @@ mod convenience_functions {
     fn given_explain_simple_empty_content_then_has_title() {
         // When
         let output = explain_simple("Title", "");
-        
+
         // Then
         assert!(output.contains("# Title"));
     }
@@ -977,10 +991,10 @@ mod edge_cases {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Title with <special> & \"chars\"");
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains("<special>"));
         assert!(output.contains("&"));
@@ -992,10 +1006,10 @@ mod edge_cases {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("日本語").add_bullet("項目");
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains("日本語"));
         assert!(output.contains("項目"));
@@ -1007,10 +1021,10 @@ mod edge_cases {
         let mut builder = ExplainBuilder::new();
         let long_title = "A".repeat(1000);
         builder.with_title(&long_title);
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains(&long_title));
     }
@@ -1021,10 +1035,10 @@ mod edge_cases {
         let mut builder = ExplainBuilder::new();
         let long_bullet = "B".repeat(1000);
         builder.add_bullet(&long_bullet);
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains(&long_bullet));
     }
@@ -1034,10 +1048,10 @@ mod edge_cases {
         // Given
         let section = ExplainSection::table(vec![], vec![]);
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.is_empty());
     }
@@ -1047,10 +1061,10 @@ mod edge_cases {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.add_text("Line1\nLine2\nLine3");
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains("Line1"));
         assert!(output.contains("Line2"));
@@ -1062,11 +1076,11 @@ mod edge_cases {
         // Given
         let mut builder = ExplainBuilder::new();
         builder.with_title("Old").add_bullet("Old Item");
-        
+
         // When
         builder.clear();
         builder.with_title("New").add_bullet("New Item");
-        
+
         // Then
         let output = builder.build();
         assert!(output.contains("# New"));
@@ -1081,10 +1095,10 @@ mod edge_cases {
         for i in 0..100 {
             builder.add_section(&format!("Section {}", i), &format!("Content {}", i));
         }
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains("Section 0"));
         assert!(output.contains("Section 99"));
@@ -1103,10 +1117,10 @@ mod section_types {
         // Given
         let section = ExplainSection::text("Hello");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert_eq!(output, "Hello");
     }
@@ -1116,10 +1130,10 @@ mod section_types {
         // Given
         let section = ExplainSection::bullets(vec!["A".to_string(), "B".to_string()]);
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert_eq!(output, "- A\n- B");
     }
@@ -1129,10 +1143,10 @@ mod section_types {
         // Given
         let section = ExplainSection::code("code", "rust");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.starts_with("```rust"));
         assert!(output.ends_with("```"));
@@ -1142,15 +1156,12 @@ mod section_types {
     #[test]
     fn given_table_section_when_to_markdown_then_markdown_table() {
         // Given
-        let section = ExplainSection::table(
-            vec!["H".to_string()],
-            vec![vec!["D".to_string()]],
-        );
+        let section = ExplainSection::table(vec!["H".to_string()], vec![vec!["D".to_string()]]);
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.contains("| H |"));
         assert!(output.contains("| D |"));
@@ -1161,10 +1172,10 @@ mod section_types {
         // Given
         let section = ExplainSection::section("Head", "Body");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_markdown(&config);
-        
+
         // Then
         assert!(output.contains("## Head"));
         assert!(output.contains("Body"));
@@ -1175,10 +1186,10 @@ mod section_types {
         // Given
         let section = ExplainSection::text("Hello");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_plain_text(&config);
-        
+
         // Then
         assert_eq!(output, "Hello");
     }
@@ -1188,10 +1199,10 @@ mod section_types {
         // Given
         let section = ExplainSection::bullets(vec!["A".to_string(), "B".to_string()]);
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_plain_text(&config);
-        
+
         // Then
         assert_eq!(output, "* A\n* B");
     }
@@ -1201,10 +1212,10 @@ mod section_types {
         // Given
         let section = ExplainSection::code("code", "rust");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_plain_text(&config);
-        
+
         // Then
         assert!(output.contains("[rust]"));
         assert!(output.contains("    code"));
@@ -1213,15 +1224,12 @@ mod section_types {
     #[test]
     fn given_table_section_when_to_plain_text_then_text_table() {
         // Given
-        let section = ExplainSection::table(
-            vec!["H".to_string()],
-            vec![vec!["D".to_string()]],
-        );
+        let section = ExplainSection::table(vec!["H".to_string()], vec![vec!["D".to_string()]]);
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_plain_text(&config);
-        
+
         // Then
         assert!(output.contains("H"));
         assert!(output.contains("-"));
@@ -1233,10 +1241,10 @@ mod section_types {
         // Given
         let section = ExplainSection::section("Head", "Body");
         let config = ExplainConfig::default();
-        
+
         // When
         let output = section.to_plain_text(&config);
-        
+
         // Then
         assert!(output.contains("[Head]"));
         assert!(output.contains("Body"));
@@ -1262,7 +1270,7 @@ mod builder_chaining {
             .add_code_block("code", "rust")
             .add_table(&["H"], &[&["D"]])
             .add_text("T");
-        
+
         // Then
         assert_eq!(builder.title(), Some("T"));
         assert_eq!(builder.summary(), Some("S"));
@@ -1277,10 +1285,10 @@ mod builder_chaining {
             .with_title("Title")
             .with_summary("Summary")
             .add_bullet("Bullet");
-        
+
         // When
         let output = builder.build();
-        
+
         // Then
         assert!(output.contains("# Title"));
         assert!(output.contains("*Summary*"));
@@ -1300,10 +1308,10 @@ mod serde_support {
     fn given_explain_config_when_serialized_then_valid_json() {
         // Given
         let config = ExplainConfig::new().with_indent(4).with_color(true);
-        
+
         // When
         let json = serde_json::to_string(&config).unwrap();
-        
+
         // Then
         assert!(json.contains("\"indent\":4"));
         assert!(json.contains("\"color\":true"));
@@ -1313,10 +1321,10 @@ mod serde_support {
     fn given_json_when_deserialized_then_valid_config() {
         // Given
         let json = r#"{"indent":2,"line_width":100,"color":true}"#;
-        
+
         // When
         let config: ExplainConfig = serde_json::from_str(json).unwrap();
-        
+
         // Then
         assert_eq!(config.indent, 2);
         assert_eq!(config.line_width, 100);
@@ -1327,10 +1335,10 @@ mod serde_support {
     fn given_explain_section_text_when_serialized_then_valid_json() {
         // Given
         let section = ExplainSection::text("Hello");
-        
+
         // When
         let json = serde_json::to_string(&section).unwrap();
-        
+
         // Then
         assert!(json.contains("\"type\":\"text\""));
         assert!(json.contains("Hello"));
@@ -1340,10 +1348,10 @@ mod serde_support {
     fn given_explain_section_bullets_when_serialized_then_valid_json() {
         // Given
         let section = ExplainSection::bullets(vec!["A".to_string(), "B".to_string()]);
-        
+
         // When
         let json = serde_json::to_string(&section).unwrap();
-        
+
         // Then
         assert!(json.contains("\"type\":\"bullets\""));
         assert!(json.contains("A"));
@@ -1354,10 +1362,10 @@ mod serde_support {
     fn given_explain_section_code_when_serialized_then_valid_json() {
         // Given
         let section = ExplainSection::code("fn main() {}", "rust");
-        
+
         // When
         let json = serde_json::to_string(&section).unwrap();
-        
+
         // Then
         assert!(json.contains("\"type\":\"code\""));
         assert!(json.contains("fn main() {}"));
@@ -1367,14 +1375,11 @@ mod serde_support {
     #[test]
     fn given_explain_section_table_when_serialized_then_valid_json() {
         // Given
-        let section = ExplainSection::table(
-            vec!["A".to_string()],
-            vec![vec!["1".to_string()]],
-        );
-        
+        let section = ExplainSection::table(vec!["A".to_string()], vec![vec!["1".to_string()]]);
+
         // When
         let json = serde_json::to_string(&section).unwrap();
-        
+
         // Then
         assert!(json.contains("\"type\":\"table\""));
         assert!(json.contains("headers"));
@@ -1537,10 +1542,7 @@ mod additional_coverage {
 
     #[test]
     fn test_markdown_table_separator() {
-        let section = ExplainSection::table(
-            vec!["A".to_string(), "B".to_string()],
-            vec![],
-        );
+        let section = ExplainSection::table(vec!["A".to_string(), "B".to_string()], vec![]);
         let config = ExplainConfig::default();
         let output = section.to_markdown(&config);
         // Should have header row and separator
@@ -1550,10 +1552,7 @@ mod additional_coverage {
 
     #[test]
     fn test_plain_text_table_separator() {
-        let section = ExplainSection::table(
-            vec!["A".to_string(), "B".to_string()],
-            vec![],
-        );
+        let section = ExplainSection::table(vec!["A".to_string(), "B".to_string()], vec![]);
         let config = ExplainConfig::default();
         let output = section.to_plain_text(&config);
         assert!(output.contains("-+-"));
@@ -1581,10 +1580,7 @@ mod additional_coverage {
 
     #[test]
     fn test_indent_plain_text_table() {
-        let section = ExplainSection::table(
-            vec!["A".to_string()],
-            vec![vec!["1".to_string()]],
-        );
+        let section = ExplainSection::table(vec!["A".to_string()], vec![vec!["1".to_string()]]);
         let config = ExplainConfig::new().with_indent(2);
         let output = section.to_plain_text(&config);
         assert!(output.starts_with("  "));
@@ -1638,14 +1634,14 @@ mod additional_coverage {
             .add_bullet("B2")
             .add_code_block("code", "rust")
             .add_bullet("B3");
-        
+
         let output = builder.build();
         let b1_pos = output.find("B1").unwrap();
         let text_pos = output.find("Text").unwrap();
         let b2_pos = output.find("B2").unwrap();
         let code_pos = output.find("code").unwrap();
         let b3_pos = output.find("B3").unwrap();
-        
+
         assert!(b1_pos < text_pos);
         assert!(text_pos < b2_pos);
         assert!(b2_pos < code_pos);

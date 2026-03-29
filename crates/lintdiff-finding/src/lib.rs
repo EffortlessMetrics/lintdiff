@@ -181,7 +181,8 @@ impl Finding {
     /// Check if this is a multi-line finding.
     #[must_use]
     pub fn is_multiline(&self) -> bool {
-        self.end_line.is_some_and(|end| end != self.line.unwrap_or(0))
+        self.end_line
+            .is_some_and(|end| end != self.line.unwrap_or(0))
     }
 
     /// Check if this finding has a span (line and column).

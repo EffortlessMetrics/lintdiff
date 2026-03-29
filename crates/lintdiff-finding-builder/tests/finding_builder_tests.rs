@@ -52,7 +52,9 @@ fn fully_configured_finding() {
         .with_col(15)
         .with_check_id("clippy::unnecessary_allocation")
         .with_help("Use `&str` instead of `String`")
-        .with_url("https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_allocation")
+        .with_url(
+            "https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_allocation",
+        )
         .with_fingerprint("a1b2c3d4e5f6")
         .with_data(json!({ "suggestion": "&str", "complexity": "O(1)" }))
         .build()
@@ -67,8 +69,14 @@ fn fully_configured_finding() {
     assert_eq!(loc.line, Some(42));
     assert_eq!(loc.col, Some(15));
 
-    assert_eq!(finding.check_id, Some("clippy::unnecessary_allocation".to_string()));
-    assert_eq!(finding.help, Some("Use `&str` instead of `String`".to_string()));
+    assert_eq!(
+        finding.check_id,
+        Some("clippy::unnecessary_allocation".to_string())
+    );
+    assert_eq!(
+        finding.help,
+        Some("Use `&str` instead of `String`".to_string())
+    );
     assert!(finding.url.is_some());
     assert_eq!(finding.fingerprint, Some("a1b2c3d4e5f6".to_string()));
     assert!(finding.data.is_some());
@@ -80,9 +88,7 @@ fn fully_configured_finding() {
 
 #[test]
 fn missing_code_returns_error() {
-    let result = FindingBuilder::new()
-        .with_message("Some message")
-        .build();
+    let result = FindingBuilder::new().with_message("Some message").build();
 
     assert!(result.is_err());
     assert_eq!(result.unwrap_err(), BuildError::MissingCode);
@@ -90,9 +96,7 @@ fn missing_code_returns_error() {
 
 #[test]
 fn missing_message_returns_error() {
-    let result = FindingBuilder::new()
-        .with_code("CODE001")
-        .build();
+    let result = FindingBuilder::new().with_code("CODE001").build();
 
     assert!(result.is_err());
     assert_eq!(result.unwrap_err(), BuildError::MissingMessage);
@@ -305,7 +309,10 @@ fn url_is_optional() {
         .build()
         .unwrap();
 
-    assert_eq!(finding.url, Some("https://docs.example.com/errors/CODE".to_string()));
+    assert_eq!(
+        finding.url,
+        Some("https://docs.example.com/errors/CODE".to_string())
+    );
 }
 
 #[test]

@@ -89,7 +89,11 @@ impl Locale {
     /// assert_eq!(locale.script, Some("Cyrl".to_string()));
     /// ```
     #[must_use]
-    pub fn with_script(language: impl Into<String>, region: impl Into<String>, script: impl Into<String>) -> Self {
+    pub fn with_script(
+        language: impl Into<String>,
+        region: impl Into<String>,
+        script: impl Into<String>,
+    ) -> Self {
         Self {
             language: language.into().to_lowercase(),
             region: Some(region.into().to_uppercase()),
@@ -115,15 +119,15 @@ impl Locale {
     #[must_use]
     pub fn to_bcp47(&self) -> String {
         let mut parts = vec![self.language.clone()];
-        
+
         if let Some(script) = &self.script {
             parts.push(script.clone());
         }
-        
+
         if let Some(region) = &self.region {
             parts.push(region.clone());
         }
-        
+
         parts.join("-")
     }
 
@@ -240,26 +244,26 @@ pub fn default_locale() -> Locale {
 #[must_use]
 pub fn parse_locale(s: &str) -> Option<Locale> {
     let s = s.trim();
-    
+
     if s.is_empty() {
         return None;
     }
-    
+
     // Handle encoding suffix (e.g., "en_US.UTF-8")
     let s = s.split('.').next()?.trim();
-    
+
     // Try BCP47 format first (language-Script-Region or language-Region)
     if s.contains('-') {
         let parts: Vec<&str> = s.split('-').collect();
         return parse_bcp47_parts(&parts);
     }
-    
+
     // Try POSIX format (language_Script_Region or language_Region)
     if s.contains('_') {
         let parts: Vec<&str> = s.split('_').collect();
         return parse_posix_parts(&parts);
     }
-    
+
     // Just a language code
     if is_valid_language_code(s) {
         Some(Locale::new(s))
@@ -273,12 +277,12 @@ fn parse_bcp47_parts(parts: &[&str]) -> Option<Locale> {
     if parts.is_empty() {
         return None;
     }
-    
+
     let language = parts[0];
     if !is_valid_language_code(language) {
         return None;
     }
-    
+
     match parts.len() {
         1 => Some(Locale::new(language)),
         2 => {
@@ -299,7 +303,7 @@ fn parse_bcp47_parts(parts: &[&str]) -> Option<Locale> {
         3 => {
             let second = parts[1];
             let third = parts[2];
-            
+
             // Format: language-script-region
             if is_valid_script_code(second) && is_valid_region_code(third) {
                 Some(Locale::with_script(language, third, second))
@@ -316,12 +320,12 @@ fn parse_posix_parts(parts: &[&str]) -> Option<Locale> {
     if parts.is_empty() {
         return None;
     }
-    
+
     let language = parts[0];
     if !is_valid_language_code(language) {
         return None;
     }
-    
+
     match parts.len() {
         1 => Some(Locale::new(language)),
         2 => {
@@ -342,7 +346,7 @@ fn parse_posix_parts(parts: &[&str]) -> Option<Locale> {
         3 => {
             let second = parts[1];
             let third = parts[2];
-            
+
             // Format: language_script_region
             if is_valid_script_code(second) && is_valid_region_code(third) {
                 Some(Locale::with_script(language, third, second))
@@ -412,7 +416,10 @@ mod tests {
     fn test_to_bcp47() {
         assert_eq!(Locale::new("en").to_bcp47(), "en");
         assert_eq!(Locale::with_region("en", "US").to_bcp47(), "en-US");
-        assert_eq!(Locale::with_script("zh", "CN", "Hans").to_bcp47(), "zh-Hans-CN");
+        assert_eq!(
+            Locale::with_script("zh", "CN", "Hans").to_bcp47(),
+            "zh-Hans-CN"
+        );
     }
 
     #[test]

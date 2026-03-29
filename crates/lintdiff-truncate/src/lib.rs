@@ -261,7 +261,9 @@ pub fn truncate_lines(lines: &[String], config: &TruncateConfig) -> Vec<String> 
     }
 
     // Calculate how much to allocate per line on average
-    let available = config.max_length.saturating_sub(config.ellipsis.len() * lines.len());
+    let available = config
+        .max_length
+        .saturating_sub(config.ellipsis.len() * lines.len());
     let per_line = available / lines.len().max(1);
     let per_line = per_line.max(config.ellipsis.len());
 
@@ -273,7 +275,10 @@ pub fn truncate_lines(lines: &[String], config: &TruncateConfig) -> Vec<String> 
     };
 
     // Truncate each line
-    lines.iter().map(|line| truncate_owned(line, &line_config)).collect()
+    lines
+        .iter()
+        .map(|line| truncate_owned(line, &line_config))
+        .collect()
 }
 
 /// Check if a string would be truncated.
@@ -333,7 +338,8 @@ fn find_word_boundary(s: &str, target_bytes: usize) -> usize {
         // Only use the word boundary if it's not at the very start
         if last_space > 0 {
             // Return the position after the whitespace
-            let after_space = last_space + s[last_space..].chars().next().map_or(0, |c| c.len_utf8());
+            let after_space =
+                last_space + s[last_space..].chars().next().map_or(0, |c| c.len_utf8());
             return after_space.min(target);
         }
     }

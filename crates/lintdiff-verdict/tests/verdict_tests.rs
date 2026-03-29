@@ -597,14 +597,18 @@ mod edge_cases {
     #[test]
     fn combine_multiple_verdicts() {
         let verdicts = [Verdict::Pass, Verdict::Warn, Verdict::Pass, Verdict::Fail];
-        let combined = verdicts.iter().fold(Verdict::Pass, |acc, &v| acc.combine(v));
+        let combined = verdicts
+            .iter()
+            .fold(Verdict::Pass, |acc, &v| acc.combine(v));
         assert_eq!(combined, Verdict::Fail);
     }
 
     #[test]
     fn combine_empty_iterator() {
         let verdicts: [Verdict; 0] = [];
-        let combined = verdicts.iter().fold(Verdict::Pass, |acc, &v| acc.combine(v));
+        let combined = verdicts
+            .iter()
+            .fold(Verdict::Pass, |acc, &v| acc.combine(v));
         assert_eq!(combined, Verdict::Pass);
     }
 

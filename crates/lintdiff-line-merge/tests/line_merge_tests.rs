@@ -547,9 +547,8 @@ mod merge_ranges_inplace_feature {
 
         #[test]
         fn it_preserves_capacity_for_large_inputs() {
-            let mut ranges: Vec<(usize, usize)> = (0..1000)
-                .map(|i| (i * 20, i * 20 + 10))
-                .collect();
+            let mut ranges: Vec<(usize, usize)> =
+                (0..1000).map(|i| (i * 20, i * 20 + 10)).collect();
 
             merge_ranges_inplace(&mut ranges);
 
@@ -561,9 +560,7 @@ mod merge_ranges_inplace_feature {
 
         #[test]
         fn it_dramatically_reduces_size_for_overlapping() {
-            let mut ranges: Vec<(usize, usize)> = (0..1000)
-                .map(|i| (1, i + 10))
-                .collect();
+            let mut ranges: Vec<(usize, usize)> = (0..1000).map(|i| (1, i + 10)).collect();
 
             merge_ranges_inplace(&mut ranges);
 
@@ -986,10 +983,10 @@ mod integration_tests {
     fn diff_hunk_merging_scenario() {
         // Simulate diff hunks from a file
         let hunks = vec![
-            (10, 20),  // First change
-            (15, 25),  // Overlapping change
-            (50, 60),  // Separate change
-            (55, 65),  // Overlapping with third
+            (10, 20),   // First change
+            (15, 25),   // Overlapping change
+            (50, 60),   // Separate change
+            (55, 65),   // Overlapping with third
             (100, 110), // Separate change
         ];
 
@@ -1057,9 +1054,7 @@ mod integration_tests {
     #[test]
     fn worst_case_merge_scenario() {
         // All ranges overlap - worst case for merge algorithm
-        let ranges: Vec<(usize, usize)> = (0..100)
-            .map(|i| (1, 100 + i))
-            .collect();
+        let ranges: Vec<(usize, usize)> = (0..100).map(|i| (1, 100 + i)).collect();
 
         let merged = merge_ranges(&ranges);
 

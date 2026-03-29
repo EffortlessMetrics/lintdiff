@@ -176,17 +176,19 @@ impl ExplainSection {
                 let header_row: String = headers
                     .iter()
                     .enumerate()
-                    .map(|(i, h)| format!(" {} ", pad_right(h, widths.get(i).copied().unwrap_or(0))))
+                    .map(|(i, h)| {
+                        format!(" {} ", pad_right(h, widths.get(i).copied().unwrap_or(0)))
+                    })
                     .collect::<Vec<_>>()
                     .join("|");
-                
+
                 // Build separator
                 let separator: String = widths
                     .iter()
                     .map(|&w| format!("{}{}{}", "-".repeat(w + 2), "", ""))
                     .collect::<Vec<_>>()
                     .join("|");
-                
+
                 // Build data rows
                 let data_rows: String = rows
                     .iter()
@@ -195,7 +197,10 @@ impl ExplainSection {
                             .iter()
                             .enumerate()
                             .map(|(i, cell)| {
-                                format!(" {} ", pad_right(cell, widths.get(i).copied().unwrap_or(0)))
+                                format!(
+                                    " {} ",
+                                    pad_right(cell, widths.get(i).copied().unwrap_or(0))
+                                )
                             })
                             .collect::<Vec<_>>()
                             .join("|");
@@ -469,7 +474,8 @@ impl ExplainBuilder {
             items.push(item.to_string());
             return self;
         }
-        self.sections.push(ExplainSection::bullets(vec![item.to_string()]));
+        self.sections
+            .push(ExplainSection::bullets(vec![item.to_string()]));
         self
     }
 
@@ -477,8 +483,7 @@ impl ExplainBuilder {
     ///
     /// The language is used for syntax highlighting in markdown.
     pub fn add_code_block(&mut self, code: &str, language: &str) -> &mut Self {
-        self.sections
-            .push(ExplainSection::code(code, language));
+        self.sections.push(ExplainSection::code(code, language));
         self
     }
 
@@ -1000,10 +1005,7 @@ mod tests {
 
     #[test]
     fn test_section_to_markdown_table() {
-        let section = ExplainSection::table(
-            vec!["A".to_string()],
-            vec![vec!["1".to_string()]],
-        );
+        let section = ExplainSection::table(vec!["A".to_string()], vec![vec!["1".to_string()]]);
         let config = ExplainConfig::default();
         let output = section.to_markdown(&config);
         assert!(output.contains("| A |"));
@@ -1037,10 +1039,7 @@ mod tests {
 
     #[test]
     fn test_section_to_plain_text_table() {
-        let section = ExplainSection::table(
-            vec!["A".to_string()],
-            vec![vec!["1".to_string()]],
-        );
+        let section = ExplainSection::table(vec!["A".to_string()], vec![vec!["1".to_string()]]);
         let config = ExplainConfig::default();
         let output = section.to_plain_text(&config);
         assert!(output.contains("A"));
@@ -1090,7 +1089,7 @@ mod tests {
             .add_bullet("Bullet")
             .add_code_block("code", "rust")
             .add_table(&["H"], &[&["D"]]);
-        
+
         assert_eq!(builder.title(), Some("Title"));
         assert_eq!(builder.summary(), Some("Summary"));
         assert_eq!(builder.sections().len(), 4);
@@ -1132,7 +1131,7 @@ mod tests {
         builder.add_bullet("A2");
         builder.add_text("Separator");
         builder.add_bullet("B1");
-        
+
         // Should have 3 sections: Bullets, Text, Bullets
         assert_eq!(builder.sections().len(), 3);
     }

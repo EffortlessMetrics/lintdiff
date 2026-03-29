@@ -1,6 +1,8 @@
 //! Comprehensive tests for markdown rendering functionality.
 
-use lintdiff_render_markdown::{render_finding_markdown, render_markdown, render_summary, MarkdownConfig};
+use lintdiff_render_markdown::{
+    render_finding_markdown, render_markdown, render_summary, MarkdownConfig,
+};
 use lintdiff_stats::Stats;
 use lintdiff_types::{Finding, Location, NormPath, Severity};
 
@@ -153,7 +155,11 @@ fn finding_with_column_in_location() {
 
 #[test]
 fn finding_without_location_shows_dash() {
-    let findings = vec![create_finding_no_location(Severity::Error, "E001", "No location")];
+    let findings = vec![create_finding_no_location(
+        Severity::Error,
+        "E001",
+        "No location",
+    )];
     let md = render_markdown(&findings, &MarkdownConfig::default());
 
     assert!(md.contains("`-`"));
@@ -461,9 +467,15 @@ fn summary_codes_sorted_by_count() {
     let summary = render_summary(&stats, &MarkdownConfig::default());
 
     // HIGH_COUNT should appear before MID_COUNT and LOW_COUNT
-    let high_pos = summary.find("HIGH_COUNT").expect("HIGH_COUNT should be present");
-    let mid_pos = summary.find("MID_COUNT").expect("MID_COUNT should be present");
-    let low_pos = summary.find("LOW_COUNT").expect("LOW_COUNT should be present");
+    let high_pos = summary
+        .find("HIGH_COUNT")
+        .expect("HIGH_COUNT should be present");
+    let mid_pos = summary
+        .find("MID_COUNT")
+        .expect("MID_COUNT should be present");
+    let low_pos = summary
+        .find("LOW_COUNT")
+        .expect("LOW_COUNT should be present");
 
     assert!(high_pos < mid_pos);
     assert!(mid_pos < low_pos);
@@ -572,7 +584,13 @@ fn empty_message_renders() {
 
 #[test]
 fn empty_code_renders() {
-    let findings = vec![create_finding(Severity::Warn, "src/lib.rs", 1, "", "Message")];
+    let findings = vec![create_finding(
+        Severity::Warn,
+        "src/lib.rs",
+        1,
+        "",
+        "Message",
+    )];
     let md = render_markdown(&findings, &MarkdownConfig::default());
 
     // Should still render the row

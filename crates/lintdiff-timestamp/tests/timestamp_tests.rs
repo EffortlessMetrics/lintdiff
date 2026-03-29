@@ -1045,7 +1045,14 @@ mod property_tests {
     use super::*;
     use time::{Date, Month, Time, UtcOffset};
 
-    fn create_datetime(year: i32, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> Option<OffsetDateTime> {
+    fn create_datetime(
+        year: i32,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minute: u8,
+        second: u8,
+    ) -> Option<OffsetDateTime> {
         let date = Date::from_calendar_date(year, Month::try_from(month).ok()?, day).ok()?;
         let time = Time::from_hms(hour, minute, second).ok()?;
         Some(date.with_time(time).assume_offset(UtcOffset::UTC))
@@ -1189,8 +1196,16 @@ mod now_utc {
         let parsed = parse_timestamp(&formatted).unwrap();
         let after = now_utc();
 
-        assert!(timestamps_approx_equal(&parsed, &before, Duration::seconds(2)));
-        assert!(timestamps_approx_equal(&parsed, &after, Duration::seconds(2)));
+        assert!(timestamps_approx_equal(
+            &parsed,
+            &before,
+            Duration::seconds(2)
+        ));
+        assert!(timestamps_approx_equal(
+            &parsed,
+            &after,
+            Duration::seconds(2)
+        ));
     }
 }
 

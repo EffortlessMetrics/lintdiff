@@ -453,8 +453,7 @@ impl PolicyEvaluator {
             let matches = self.match_pattern(rule, code);
             if !matches.is_empty() {
                 results.push(
-                    PolicyResult::new(rule.clone(), matches, rule.policy)
-                        .with_file_path(path),
+                    PolicyResult::new(rule.clone(), matches, rule.policy).with_file_path(path),
                 );
             }
         }
@@ -504,20 +503,16 @@ impl PolicyEvaluator {
             // Calculate the actual line end position (including newline if present)
             let line_len = line.len();
             let line_end = line_start + line_len;
-            
+
             // Check if there's a newline character after this line
             let has_newline = if line_end < code.len() {
                 code.as_bytes()[line_end] == b'\n'
             } else {
                 false
             };
-            
+
             // The actual line end in the original code
-            let actual_line_end = if has_newline {
-                line_end + 1
-            } else {
-                line_end
-            };
+            let actual_line_end = if has_newline { line_end + 1 } else { line_end };
 
             // Check if the glob pattern matches this line
             if glob.is_match(line) {
@@ -552,18 +547,15 @@ impl PolicyEvaluator {
             .collect();
 
         let mut matches = Vec::new();
-        
+
         // Empty pattern matches at position 0
         if pattern.is_empty() {
             let line_num = 1;
             let line_start = 0;
             let line_end = code.find('\n').map_or(code.len(), |i| i);
             let line_text = code[line_start..line_end].to_string();
-            
-            matches.push(
-                Match::new(0, 0, line_num, line_text)
-                    .with_column(1),
-            );
+
+            matches.push(Match::new(0, 0, line_num, line_text).with_column(1));
             return matches;
         }
 
@@ -667,7 +659,7 @@ pub fn find_matching_lines(glob: &str, code: &str) -> Result<Vec<Match>, PolicyE
     } else {
         format!("*{glob}*")
     };
-    
+
     let compiled = Glob::new(&glob_pattern)?;
     let mut matches = Vec::new();
     let mut line_start = 0;
@@ -677,23 +669,24 @@ pub fn find_matching_lines(glob: &str, code: &str) -> Result<Vec<Match>, PolicyE
         // Calculate the actual line end position (including newline if present)
         let line_len = line.len();
         let line_end = line_start + line_len;
-        
+
         // Check if there's a newline character after this line
         let has_newline = if line_end < code.len() {
             code.as_bytes()[line_end] == b'\n'
         } else {
             false
         };
-        
+
         // The actual line end in the original code
-        let actual_line_end = if has_newline {
-            line_end + 1
-        } else {
-            line_end
-        };
+        let actual_line_end = if has_newline { line_end + 1 } else { line_end };
 
         if compiled.is_match(line) {
-            matches.push(Match::new(line_start, actual_line_end, line_num, line.to_string()));
+            matches.push(Match::new(
+                line_start,
+                actual_line_end,
+                line_num,
+                line.to_string(),
+            ));
         }
 
         line_start = actual_line_end;
@@ -728,16 +721,12 @@ pub fn count_matching_lines(glob: &str, code: &str) -> Result<usize, PolicyError
 pub fn line_number_at(text: &str, byte_pos: usize) -> usize {
     // Clamp the position to the text length
     let pos = byte_pos.min(text.len());
-    
+
     // Find the nearest character boundary before or at the position
     // This prevents panics when byte_pos is in the middle of a multi-byte character
     let safe_pos = text.floor_char_boundary(pos);
-    
-    text[..safe_pos]
-        .chars()
-        .filter(|&c| c == '\n')
-        .count()
-        + 1
+
+    text[..safe_pos].chars().filter(|&c| c == '\n').count() + 1
 }
 
 /// Get the column number for a byte position in text (within its line).
@@ -745,10 +734,10 @@ pub fn line_number_at(text: &str, byte_pos: usize) -> usize {
 pub fn column_number_at(text: &str, byte_pos: usize) -> usize {
     // Clamp the position to the text length
     let pos = byte_pos.min(text.len());
-    
+
     // Find the nearest character boundary before or at the position
     let safe_pos = text.floor_char_boundary(pos);
-    
+
     let line_start = text[..safe_pos].rfind('\n').map_or(0, |i| i + 1);
     safe_pos - line_start + 1
 }

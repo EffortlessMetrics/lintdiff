@@ -150,13 +150,14 @@ mod from_findings {
 
     #[test]
     fn code_is_counted_correctly() {
-        let findings = vec![create_finding(Severity::Error, "clippy::unwrap_used", "src/lib.rs")];
+        let findings = vec![create_finding(
+            Severity::Error,
+            "clippy::unwrap_used",
+            "src/lib.rs",
+        )];
         let stats = Stats::from_findings(&findings);
 
-        assert_eq!(
-            stats.by_code.get("clippy::unwrap_used"),
-            Some(&1)
-        );
+        assert_eq!(stats.by_code.get("clippy::unwrap_used"), Some(&1));
     }
 
     #[test]
@@ -350,14 +351,8 @@ mod merge {
             total_diagnostics: 100,
             matched_diagnostics: 60,
             filtered_diagnostics: 40,
-            by_severity: HashMap::from([
-                ("error".to_string(), 20),
-                ("warning".to_string(), 40),
-            ]),
-            by_code: HashMap::from([
-                ("E001".to_string(), 10),
-                ("W001".to_string(), 30),
-            ]),
+            by_severity: HashMap::from([("error".to_string(), 20), ("warning".to_string(), 40)]),
+            by_code: HashMap::from([("E001".to_string(), 10), ("W001".to_string(), 30)]),
             files_affected: 15,
         };
 
@@ -365,14 +360,8 @@ mod merge {
             total_diagnostics: 50,
             matched_diagnostics: 30,
             filtered_diagnostics: 20,
-            by_severity: HashMap::from([
-                ("error".to_string(), 10),
-                ("info".to_string(), 20),
-            ]),
-            by_code: HashMap::from([
-                ("E001".to_string(), 5),
-                ("I001".to_string(), 15),
-            ]),
+            by_severity: HashMap::from([("error".to_string(), 10), ("info".to_string(), 20)]),
+            by_code: HashMap::from([("E001".to_string(), 5), ("I001".to_string(), 15)]),
             files_affected: 20,
         };
 
@@ -542,10 +531,7 @@ mod serialization {
     #[test]
     fn stats_serializes_severity_map() {
         let mut stats = Stats::new();
-        stats.by_severity = HashMap::from([
-            ("error".to_string(), 5),
-            ("warning".to_string(), 3),
-        ]);
+        stats.by_severity = HashMap::from([("error".to_string(), 5), ("warning".to_string(), 3)]);
 
         let json = serde_json::to_string(&stats).unwrap();
 
@@ -557,10 +543,7 @@ mod serialization {
     #[test]
     fn stats_serializes_code_map() {
         let mut stats = Stats::new();
-        stats.by_code = HashMap::from([
-            ("E001".to_string(), 10),
-            ("W001".to_string(), 5),
-        ]);
+        stats.by_code = HashMap::from([("E001".to_string(), 10), ("W001".to_string(), 5)]);
 
         let json = serde_json::to_string(&stats).unwrap();
 

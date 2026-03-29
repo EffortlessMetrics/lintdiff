@@ -357,32 +357,50 @@ mod canonical_severity_conversion {
 
     #[test]
     fn hint_to_canonical_is_info() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Hint), CanonicalSeverity::Info);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Hint),
+            CanonicalSeverity::Info
+        );
     }
 
     #[test]
     fn note_to_canonical_is_info() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Note), CanonicalSeverity::Info);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Note),
+            CanonicalSeverity::Info
+        );
     }
 
     #[test]
     fn warning_to_canonical_is_warning() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Warning), CanonicalSeverity::Warning);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Warning),
+            CanonicalSeverity::Warning
+        );
     }
 
     #[test]
     fn error_to_canonical_is_error() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Error), CanonicalSeverity::Error);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Error),
+            CanonicalSeverity::Error
+        );
     }
 
     #[test]
     fn fatal_to_canonical_is_error() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Fatal), CanonicalSeverity::Error);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Fatal),
+            CanonicalSeverity::Error
+        );
     }
 
     #[test]
     fn unknown_to_canonical_is_unknown() {
-        assert_eq!(to_canonical(&DiagnosticLevel::Unknown), CanonicalSeverity::Unknown);
+        assert_eq!(
+            to_canonical(&DiagnosticLevel::Unknown),
+            CanonicalSeverity::Unknown
+        );
     }
 
     #[test]
@@ -660,10 +678,7 @@ mod edge_cases {
     fn diagnostic_level_parse_returns_error_for_invalid() {
         let result = DiagnosticLevel::parse("invalid");
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().input(),
-            "invalid"
-        );
+        assert_eq!(result.unwrap_err().input(), "invalid");
     }
 
     #[test]

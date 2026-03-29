@@ -248,16 +248,36 @@ impl fmt::Display for VerdictReason {
         match self {
             Self::NoChanges => write!(f, "No diagnostic changes detected"),
             Self::AddedWarnings { count } => {
-                write!(f, "Added {} warning{}", count, if *count == 1 { "" } else { "s" })
+                write!(
+                    f,
+                    "Added {} warning{}",
+                    count,
+                    if *count == 1 { "" } else { "s" }
+                )
             }
             Self::AddedErrors { count } => {
-                write!(f, "Added {} error{}", count, if *count == 1 { "" } else { "s" })
+                write!(
+                    f,
+                    "Added {} error{}",
+                    count,
+                    if *count == 1 { "" } else { "s" }
+                )
             }
             Self::RemovedWarnings { count } => {
-                write!(f, "Fixed {} warning{}", count, if *count == 1 { "" } else { "s" })
+                write!(
+                    f,
+                    "Fixed {} warning{}",
+                    count,
+                    if *count == 1 { "" } else { "s" }
+                )
             }
             Self::RemovedErrors { count } => {
-                write!(f, "Fixed {} error{}", count, if *count == 1 { "" } else { "s" })
+                write!(
+                    f,
+                    "Fixed {} error{}",
+                    count,
+                    if *count == 1 { "" } else { "s" }
+                )
             }
             Self::OnlyUnchanged => write!(f, "Only unchanged diagnostics found"),
             Self::ThresholdExceeded { limit, actual } => {
@@ -729,18 +749,32 @@ pub fn format_reason_short(reason: &VerdictReason) -> String {
 #[must_use]
 pub fn format_reason_markdown(reason: &VerdictReason) -> String {
     match reason {
-        VerdictReason::NoChanges => "**✅ No Changes** - No diagnostic changes detected".to_string(),
+        VerdictReason::NoChanges => {
+            "**✅ No Changes** - No diagnostic changes detected".to_string()
+        }
         VerdictReason::AddedWarnings { count } => {
-            format!("**⚠️ Added Warnings** - {count} new warning{} introduced", if *count == 1 { "" } else { "s" })
+            format!(
+                "**⚠️ Added Warnings** - {count} new warning{} introduced",
+                if *count == 1 { "" } else { "s" }
+            )
         }
         VerdictReason::AddedErrors { count } => {
-            format!("**❌ Added Errors** - {count} new error{} introduced", if *count == 1 { "" } else { "s" })
+            format!(
+                "**❌ Added Errors** - {count} new error{} introduced",
+                if *count == 1 { "" } else { "s" }
+            )
         }
         VerdictReason::RemovedWarnings { count } => {
-            format!("**🩹 Fixed Warnings** - {count} warning{} resolved", if *count == 1 { "" } else { "s" })
+            format!(
+                "**🩹 Fixed Warnings** - {count} warning{} resolved",
+                if *count == 1 { "" } else { "s" }
+            )
         }
         VerdictReason::RemovedErrors { count } => {
-            format!("**🔧 Fixed Errors** - {count} error{} resolved", if *count == 1 { "" } else { "s" })
+            format!(
+                "**🔧 Fixed Errors** - {count} error{} resolved",
+                if *count == 1 { "" } else { "s" }
+            )
         }
         VerdictReason::OnlyUnchanged => {
             "**⏳ Only Unchanged** - Only pre-existing diagnostics found".to_string()
@@ -867,8 +901,7 @@ pub fn merge_reasons(reasons: &[VerdictReason]) -> VerdictReason {
             }
             VerdictReason::ThresholdExceeded { limit, actual } => {
                 let excess = actual.saturating_sub(*limit);
-                let current_excess = threshold_exceeded
-                    .map_or(0, |(l, a)| a.saturating_sub(l));
+                let current_excess = threshold_exceeded.map_or(0, |(l, a)| a.saturating_sub(l));
                 if excess > current_excess {
                     threshold_exceeded = Some((*limit, *actual));
                 }
@@ -953,13 +986,14 @@ mod tests {
         );
         assert_eq!(VerdictReason::OnlyUnchanged.as_str(), "only-unchanged");
         assert_eq!(
-            VerdictReason::ThresholdExceeded { limit: 10, actual: 15 }.as_str(),
+            VerdictReason::ThresholdExceeded {
+                limit: 10,
+                actual: 15
+            }
+            .as_str(),
             "threshold-exceeded"
         );
-        assert_eq!(
-            VerdictReason::Custom("test".to_string()).as_str(),
-            "custom"
-        );
+        assert_eq!(VerdictReason::Custom("test".to_string()).as_str(), "custom");
     }
 
     #[test]
@@ -1031,16 +1065,16 @@ mod tests {
 
     #[test]
     fn test_format_reason_short() {
-        assert_eq!(
-            format_reason_short(&VerdictReason::NoChanges),
-            "no-changes"
-        );
+        assert_eq!(format_reason_short(&VerdictReason::NoChanges), "no-changes");
         assert_eq!(
             format_reason_short(&VerdictReason::AddedWarnings { count: 5 }),
             "added-warnings:5"
         );
         assert_eq!(
-            format_reason_short(&VerdictReason::ThresholdExceeded { limit: 10, actual: 15 }),
+            format_reason_short(&VerdictReason::ThresholdExceeded {
+                limit: 10,
+                actual: 15
+            }),
             "threshold-exceeded:15/10"
         );
     }
@@ -1048,33 +1082,49 @@ mod tests {
     #[test]
     fn test_is_failure_reason() {
         assert!(is_failure_reason(&VerdictReason::AddedErrors { count: 1 }));
-        assert!(is_failure_reason(&VerdictReason::AddedWarnings { count: 1 }));
+        assert!(is_failure_reason(&VerdictReason::AddedWarnings {
+            count: 1
+        }));
         assert!(is_failure_reason(&VerdictReason::ThresholdExceeded {
             limit: 10,
             actual: 15
         }));
-        assert!(is_failure_reason(&VerdictReason::Custom("test".to_string())));
+        assert!(is_failure_reason(&VerdictReason::Custom(
+            "test".to_string()
+        )));
 
         assert!(!is_failure_reason(&VerdictReason::NoChanges));
-        assert!(!is_failure_reason(&VerdictReason::RemovedErrors { count: 1 }));
-        assert!(!is_failure_reason(&VerdictReason::RemovedWarnings { count: 1 }));
+        assert!(!is_failure_reason(&VerdictReason::RemovedErrors {
+            count: 1
+        }));
+        assert!(!is_failure_reason(&VerdictReason::RemovedWarnings {
+            count: 1
+        }));
         assert!(!is_failure_reason(&VerdictReason::OnlyUnchanged));
     }
 
     #[test]
     fn test_is_success_reason() {
         assert!(is_success_reason(&VerdictReason::NoChanges));
-        assert!(is_success_reason(&VerdictReason::RemovedErrors { count: 1 }));
-        assert!(is_success_reason(&VerdictReason::RemovedWarnings { count: 1 }));
+        assert!(is_success_reason(&VerdictReason::RemovedErrors {
+            count: 1
+        }));
+        assert!(is_success_reason(&VerdictReason::RemovedWarnings {
+            count: 1
+        }));
         assert!(is_success_reason(&VerdictReason::OnlyUnchanged));
 
         assert!(!is_success_reason(&VerdictReason::AddedErrors { count: 1 }));
-        assert!(!is_success_reason(&VerdictReason::AddedWarnings { count: 1 }));
+        assert!(!is_success_reason(&VerdictReason::AddedWarnings {
+            count: 1
+        }));
         assert!(!is_success_reason(&VerdictReason::ThresholdExceeded {
             limit: 10,
             actual: 15
         }));
-        assert!(!is_success_reason(&VerdictReason::Custom("test".to_string())));
+        assert!(!is_success_reason(&VerdictReason::Custom(
+            "test".to_string()
+        )));
     }
 
     #[test]

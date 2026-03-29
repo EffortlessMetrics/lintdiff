@@ -198,12 +198,7 @@ impl JsonDiff {
 
 impl fmt::Display for JsonDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}: {}",
-            self.path_string(),
-            self.kind
-        )
+        write!(f, "{}: {}", self.path_string(), self.kind)
     }
 }
 
@@ -228,14 +223,10 @@ fn diff_json_at_path(a: &Value, b: &Value, path: &JsonPath) -> Vec<JsonDiff> {
         }
 
         // Both objects
-        (Value::Object(obj_a), Value::Object(obj_b)) => {
-            diff_objects(obj_a, obj_b, path)
-        }
+        (Value::Object(obj_a), Value::Object(obj_b)) => diff_objects(obj_a, obj_b, path),
 
         // Both arrays
-        (Value::Array(arr_a), Value::Array(arr_b)) => {
-            diff_arrays(arr_a, arr_b, path)
-        }
+        (Value::Array(arr_a), Value::Array(arr_b)) => diff_arrays(arr_a, arr_b, path),
 
         // Mixed types (object/array vs primitive)
         _ => vec![JsonDiff::changed(path.clone(), a.clone(), Value::Null)],
@@ -542,7 +533,10 @@ pub fn json_eq_ignore_order(a: &Value, b: &Value) -> bool {
             if arr_a.len() != arr_b.len() {
                 return false;
             }
-            arr_a.iter().zip(arr_b.iter()).all(|(a, b)| json_eq_ignore_order(a, b))
+            arr_a
+                .iter()
+                .zip(arr_b.iter())
+                .all(|(a, b)| json_eq_ignore_order(a, b))
         }
         _ => a == b,
     }
@@ -628,7 +622,11 @@ pub fn get_at_path(value: &Value, path: &[PathSegment]) -> Option<Value> {
 /// # Errors
 ///
 /// Returns an error if the path is invalid for the given structure.
-pub fn set_at_path(value: &mut Value, path: &[PathSegment], new_value: Value) -> Result<(), String> {
+pub fn set_at_path(
+    value: &mut Value,
+    path: &[PathSegment],
+    new_value: Value,
+) -> Result<(), String> {
     if path.is_empty() {
         *value = new_value;
         return Ok(());
@@ -644,7 +642,9 @@ pub fn set_at_path(value: &mut Value, path: &[PathSegment], new_value: Value) ->
                     obj.insert(k.clone(), new_value);
                     return Ok(());
                 }
-                current = obj.get_mut(k).ok_or_else(|| format!("Key not found: {k}"))?;
+                current = obj
+                    .get_mut(k)
+                    .ok_or_else(|| format!("Key not found: {k}"))?;
             }
             (Value::Array(arr), PathSegment::Index(idx)) => {
                 if is_last {
@@ -654,7 +654,9 @@ pub fn set_at_path(value: &mut Value, path: &[PathSegment], new_value: Value) ->
                     }
                     return Err(format!("Index out of bounds: {idx}"));
                 }
-                current = arr.get_mut(*idx).ok_or_else(|| format!("Index out of bounds: {idx}"))?;
+                current = arr
+                    .get_mut(*idx)
+                    .ok_or_else(|| format!("Index out of bounds: {idx}"))?;
             }
             _ => return Err(format!("Invalid path segment at position {i}")),
         }
@@ -797,9 +799,15 @@ mod tests {
 
         assert!(paths.contains(&vec![]));
         assert!(paths.contains(&vec![PathSegment::key("a".to_string())]));
-        assert!(paths.contains(&vec![PathSegment::key("a".to_string()), PathSegment::key("b".to_string())]));
+        assert!(paths.contains(&vec![
+            PathSegment::key("a".to_string()),
+            PathSegment::key("b".to_string())
+        ]));
         assert!(paths.contains(&vec![PathSegment::key("c".to_string())]));
-        assert!(paths.contains(&vec![PathSegment::key("c".to_string()), PathSegment::index(0)]));
+        assert!(paths.contains(&vec![
+            PathSegment::key("c".to_string()),
+            PathSegment::index(0)
+        ]));
     }
 
     #[test]
@@ -809,7 +817,14 @@ mod tests {
         let result = get_at_path(&value, &[PathSegment::key("a".to_string())]);
         assert_eq!(result, Some(json!({"b": [1, 2, 3]})));
 
-        let result = get_at_path(&value, &[PathSegment::key("a".to_string()), PathSegment::key("b".to_string()), PathSegment::index(1)]);
+        let result = get_at_path(
+            &value,
+            &[
+                PathSegment::key("a".to_string()),
+                PathSegment::key("b".to_string()),
+                PathSegment::index(1),
+            ],
+        );
         assert_eq!(result, Some(json!(2)));
 
         let result = get_at_path(&value, &[PathSegment::key("x".to_string())]);

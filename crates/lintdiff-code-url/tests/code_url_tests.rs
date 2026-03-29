@@ -36,14 +36,20 @@ mod github_tests {
     fn github_file_url_with_line_range() {
         let config = CodeUrlConfig::new("https://github.com/user/repo", "main");
         let url = config.file_url("src/lib.rs", Some(10), Some(20));
-        assert_eq!(url, "https://github.com/user/repo/blob/main/src/lib.rs#L10-L20");
+        assert_eq!(
+            url,
+            "https://github.com/user/repo/blob/main/src/lib.rs#L10-L20"
+        );
     }
 
     #[test]
     fn github_file_url_with_commit_sha() {
         let config = CodeUrlConfig::new("https://github.com/user/repo", "abc123def456");
         let url = config.file_url("src/lib.rs", Some(1), None);
-        assert_eq!(url, "https://github.com/user/repo/blob/abc123def456/src/lib.rs#L1");
+        assert_eq!(
+            url,
+            "https://github.com/user/repo/blob/abc123def456/src/lib.rs#L1"
+        );
     }
 
     #[test]
@@ -67,21 +73,30 @@ mod github_tests {
     fn github_builder_file_url() {
         let builder = CodeUrlBuilder::github("owner", "repo", "develop");
         let url = builder.file_url("src/main.rs");
-        assert_eq!(url, "https://github.com/owner/repo/blob/develop/src/main.rs");
+        assert_eq!(
+            url,
+            "https://github.com/owner/repo/blob/develop/src/main.rs"
+        );
     }
 
     #[test]
     fn github_builder_line_url() {
         let builder = CodeUrlBuilder::github("owner", "repo", "main");
         let url = builder.line_url("src/lib.rs", 42);
-        assert_eq!(url, "https://github.com/owner/repo/blob/main/src/lib.rs#L42");
+        assert_eq!(
+            url,
+            "https://github.com/owner/repo/blob/main/src/lib.rs#L42"
+        );
     }
 
     #[test]
     fn github_builder_range_url() {
         let builder = CodeUrlBuilder::github("owner", "repo", "main");
         let url = builder.range_url("src/lib.rs", 10, 20);
-        assert_eq!(url, "https://github.com/owner/repo/blob/main/src/lib.rs#L10-L20");
+        assert_eq!(
+            url,
+            "https://github.com/owner/repo/blob/main/src/lib.rs#L10-L20"
+        );
     }
 
     #[test]
@@ -104,7 +119,10 @@ mod github_tests {
         let builder = CodeUrlBuilder::github("user", "repo", "main");
         let location = CodeLocation::file("src/lib.rs").with_line_range(5, 15);
         let url = builder.url(&location);
-        assert_eq!(url, "https://github.com/user/repo/blob/main/src/lib.rs#L5-L15");
+        assert_eq!(
+            url,
+            "https://github.com/user/repo/blob/main/src/lib.rs#L5-L15"
+        );
     }
 }
 
@@ -126,21 +144,30 @@ mod gitlab_tests {
     fn gitlab_file_url_with_line() {
         let config = CodeUrlConfig::new("https://gitlab.com/user/repo", "main");
         let url = config.file_url("src/lib.rs", Some(42), None);
-        assert_eq!(url, "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L42");
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L42"
+        );
     }
 
     #[test]
     fn gitlab_file_url_with_line_range() {
         let config = CodeUrlConfig::new("https://gitlab.com/user/repo", "main");
         let url = config.file_url("src/lib.rs", Some(10), Some(20));
-        assert_eq!(url, "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L10-L20");
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L10-L20"
+        );
     }
 
     #[test]
     fn gitlab_file_url_with_tag() {
         let config = CodeUrlConfig::new("https://gitlab.com/user/repo", "v1.0.0");
         let url = config.file_url("src/lib.rs", Some(1), None);
-        assert_eq!(url, "https://gitlab.com/user/repo/-/blob/v1.0.0/src/lib.rs#L1");
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/blob/v1.0.0/src/lib.rs#L1"
+        );
     }
 
     #[test]
@@ -154,21 +181,30 @@ mod gitlab_tests {
     fn gitlab_builder_file_url() {
         let builder = CodeUrlBuilder::gitlab("owner", "repo", "develop");
         let url = builder.file_url("src/main.rs");
-        assert_eq!(url, "https://gitlab.com/owner/repo/-/blob/develop/src/main.rs");
+        assert_eq!(
+            url,
+            "https://gitlab.com/owner/repo/-/blob/develop/src/main.rs"
+        );
     }
 
     #[test]
     fn gitlab_builder_line_url() {
         let builder = CodeUrlBuilder::gitlab("owner", "repo", "main");
         let url = builder.line_url("src/lib.rs", 42);
-        assert_eq!(url, "https://gitlab.com/owner/repo/-/blob/main/src/lib.rs#L42");
+        assert_eq!(
+            url,
+            "https://gitlab.com/owner/repo/-/blob/main/src/lib.rs#L42"
+        );
     }
 
     #[test]
     fn gitlab_builder_range_url() {
         let builder = CodeUrlBuilder::gitlab("owner", "repo", "main");
         let url = builder.range_url("src/lib.rs", 10, 20);
-        assert_eq!(url, "https://gitlab.com/owner/repo/-/blob/main/src/lib.rs#L10-L20");
+        assert_eq!(
+            url,
+            "https://gitlab.com/owner/repo/-/blob/main/src/lib.rs#L10-L20"
+        );
     }
 
     #[test]
@@ -183,7 +219,10 @@ mod gitlab_tests {
         let builder = CodeUrlBuilder::gitlab("user", "repo", "main");
         let location = CodeLocation::file("src/lib.rs").with_line(42);
         let url = builder.url(&location);
-        assert_eq!(url, "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L42");
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/blob/main/src/lib.rs#L42"
+        );
     }
 }
 
@@ -205,7 +244,10 @@ mod bitbucket_tests {
     fn bitbucket_file_url_with_line() {
         let config = CodeUrlConfig::new("https://bitbucket.org/user/repo", "main");
         let url = config.file_url("src/lib.rs", Some(42), None);
-        assert_eq!(url, "https://bitbucket.org/user/repo/src/main/src/lib.rs#lines-42");
+        assert_eq!(
+            url,
+            "https://bitbucket.org/user/repo/src/main/src/lib.rs#lines-42"
+        );
     }
 
     #[test]
@@ -239,7 +281,10 @@ mod bitbucket_tests {
     fn bitbucket_builder_file_url() {
         let builder = CodeUrlBuilder::bitbucket("owner", "repo", "develop");
         let url = builder.file_url("src/main.rs");
-        assert_eq!(url, "https://bitbucket.org/owner/repo/src/develop/src/main.rs");
+        assert_eq!(
+            url,
+            "https://bitbucket.org/owner/repo/src/develop/src/main.rs"
+        );
     }
 
     #[test]
@@ -290,8 +335,7 @@ mod azure_devops_tests {
 
     #[test]
     fn azure_file_url_no_line() {
-        let config =
-            CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
+        let config = CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
         let url = config.file_url("src/lib.rs", None, None);
         assert_eq!(
             url,
@@ -301,8 +345,7 @@ mod azure_devops_tests {
 
     #[test]
     fn azure_file_url_with_line() {
-        let config =
-            CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
+        let config = CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
         let url = config.file_url("src/lib.rs", Some(42), None);
         assert_eq!(
             url,
@@ -312,8 +355,7 @@ mod azure_devops_tests {
 
     #[test]
     fn azure_file_url_with_line_range() {
-        let config =
-            CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
+        let config = CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
         let url = config.file_url("src/lib.rs", Some(10), Some(20));
         assert_eq!(
             url,
@@ -323,8 +365,7 @@ mod azure_devops_tests {
 
     #[test]
     fn azure_commit_url() {
-        let config =
-            CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
+        let config = CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
         let url = config.commit_url("abc123def456");
         assert_eq!(
             url,
@@ -495,7 +536,9 @@ mod code_location_tests {
 
     #[test]
     fn code_location_with_column() {
-        let location = CodeLocation::file("src/lib.rs").with_line(42).with_column(5);
+        let location = CodeLocation::file("src/lib.rs")
+            .with_line(42)
+            .with_column(5);
         assert_eq!(location.path, "src/lib.rs");
         assert_eq!(location.line, Some(42));
         assert_eq!(location.column, Some(5));
@@ -557,7 +600,10 @@ mod edge_case_tests {
         // Even though URL looks like GitHub, explicit provider should be used
         assert_eq!(config.detect_provider(), UrlProvider::GitLab);
         let url = config.file_url("src/lib.rs", Some(42), None);
-        assert_eq!(url, "https://github.com/user/repo/-/blob/main/src/lib.rs#L42");
+        assert_eq!(
+            url,
+            "https://github.com/user/repo/-/blob/main/src/lib.rs#L42"
+        );
     }
 }
 
@@ -572,14 +618,20 @@ mod additional_tests {
     fn github_with_tag_ref() {
         let config = CodeUrlConfig::new("https://github.com/user/repo", "v2.0.0");
         let url = config.file_url("src/lib.rs", Some(1), None);
-        assert_eq!(url, "https://github.com/user/repo/blob/v2.0.0/src/lib.rs#L1");
+        assert_eq!(
+            url,
+            "https://github.com/user/repo/blob/v2.0.0/src/lib.rs#L1"
+        );
     }
 
     #[test]
     fn gitlab_with_tag_ref() {
         let config = CodeUrlConfig::new("https://gitlab.com/user/repo", "v2.0.0");
         let url = config.file_url("src/lib.rs", Some(1), None);
-        assert_eq!(url, "https://gitlab.com/user/repo/-/blob/v2.0.0/src/lib.rs#L1");
+        assert_eq!(
+            url,
+            "https://gitlab.com/user/repo/-/blob/v2.0.0/src/lib.rs#L1"
+        );
     }
 
     #[test]
@@ -634,8 +686,7 @@ mod additional_tests {
 
     #[test]
     fn special_chars_in_path() {
-        let config =
-            CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
+        let config = CodeUrlConfig::new("https://dev.azure.com/org/project/_git/repo", "main");
         // Azure DevOps uses query params, so path should be URL-encoded (but not slashes)
         let url = config.file_url("src/my file.rs", None, None);
         assert_eq!(

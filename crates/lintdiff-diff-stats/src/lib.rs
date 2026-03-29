@@ -99,7 +99,12 @@ pub struct FileDiffStats {
 impl FileDiffStats {
     /// Create new file diff stats.
     #[must_use]
-    pub fn new(path: impl Into<String>, lines_added: usize, lines_removed: usize, change_type: ChangeType) -> Self {
+    pub fn new(
+        path: impl Into<String>,
+        lines_added: usize,
+        lines_removed: usize,
+        change_type: ChangeType,
+    ) -> Self {
         Self {
             path: path.into(),
             lines_added,
@@ -393,11 +398,16 @@ pub fn format_stats(stats: &DiffStats) -> String {
     let mut parts = Vec::new();
 
     // Files summary
-    parts.push(format!("{} file{} changed", stats.files_changed, if stats.files_changed == 1 { "" } else { "s" }));
+    parts.push(format!(
+        "{} file{} changed",
+        stats.files_changed,
+        if stats.files_changed == 1 { "" } else { "s" }
+    ));
 
     // Line changes
     if stats.lines_added > 0 || stats.lines_removed > 0 {
-        parts.push(format!("{} insertion{}, {} deletion{}",
+        parts.push(format!(
+            "{} insertion{}, {} deletion{}",
             stats.lines_added,
             if stats.lines_added == 1 { "" } else { "s" },
             stats.lines_removed,
@@ -430,7 +440,10 @@ pub fn format_stats_short(stats: &DiffStats) -> String {
         return "0".to_string();
     }
 
-    format!("+{}-{} files:{}", stats.lines_added, stats.lines_removed, stats.files_changed)
+    format!(
+        "+{}-{} files:{}",
+        stats.lines_added, stats.lines_removed, stats.files_changed
+    )
 }
 
 /// Format diff stats as a markdown table.

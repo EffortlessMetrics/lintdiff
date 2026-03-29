@@ -254,7 +254,11 @@ pub fn truncate_words(s: &str, max_words: usize) -> String {
     }
 
     // Take only max_words words and join them
-    let result: String = words.into_iter().take(max_words).collect::<Vec<_>>().join(" ");
+    let result: String = words
+        .into_iter()
+        .take(max_words)
+        .collect::<Vec<_>>()
+        .join(" ");
 
     if result.is_empty() {
         return DEFAULT_ELLIPSIS.to_string();
@@ -465,7 +469,10 @@ mod tests {
 
     #[test]
     fn test_truncate_words_basic() {
-        assert_eq!(truncate_words("Hello beautiful world", 2), "Hello beautiful...");
+        assert_eq!(
+            truncate_words("Hello beautiful world", 2),
+            "Hello beautiful..."
+        );
         assert_eq!(truncate_words("One two", 5), "One two");
     }
 

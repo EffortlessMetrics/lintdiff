@@ -22,7 +22,6 @@
 //! assert_eq!(url, "https://github.com/user/repo/blob/main/src/lib.rs#L42");
 //! ```
 
-
 /// Configuration for generating source code URLs.
 #[derive(Debug, Clone)]
 pub struct CodeUrlConfig {
@@ -81,7 +80,8 @@ impl CodeUrlConfig {
     /// ```
     #[must_use]
     pub fn detect_provider(&self) -> UrlProvider {
-        self.provider.unwrap_or_else(|| UrlProvider::from_url(&self.base_url))
+        self.provider
+            .unwrap_or_else(|| UrlProvider::from_url(&self.base_url))
     }
 
     /// Generate a URL to a specific file and line.
@@ -374,11 +374,8 @@ impl CodeUrlBuilder {
     #[must_use]
     pub fn github(owner: &str, repo: &str, git_ref: &str) -> Self {
         Self {
-            config: CodeUrlConfig::new(
-                format!("https://github.com/{owner}/{repo}"),
-                git_ref,
-            )
-            .with_provider(UrlProvider::GitHub),
+            config: CodeUrlConfig::new(format!("https://github.com/{owner}/{repo}"), git_ref)
+                .with_provider(UrlProvider::GitHub),
         }
     }
 
@@ -395,11 +392,8 @@ impl CodeUrlBuilder {
     #[must_use]
     pub fn gitlab(owner: &str, repo: &str, git_ref: &str) -> Self {
         Self {
-            config: CodeUrlConfig::new(
-                format!("https://gitlab.com/{owner}/{repo}"),
-                git_ref,
-            )
-            .with_provider(UrlProvider::GitLab),
+            config: CodeUrlConfig::new(format!("https://gitlab.com/{owner}/{repo}"), git_ref)
+                .with_provider(UrlProvider::GitLab),
         }
     }
 
@@ -416,11 +410,8 @@ impl CodeUrlBuilder {
     #[must_use]
     pub fn bitbucket(owner: &str, repo: &str, git_ref: &str) -> Self {
         Self {
-            config: CodeUrlConfig::new(
-                format!("https://bitbucket.org/{owner}/{repo}"),
-                git_ref,
-            )
-            .with_provider(UrlProvider::Bitbucket),
+            config: CodeUrlConfig::new(format!("https://bitbucket.org/{owner}/{repo}"), git_ref)
+                .with_provider(UrlProvider::Bitbucket),
         }
     }
 
@@ -580,8 +571,17 @@ mod tests {
 
     #[test]
     fn test_add_line_fragment() {
-        assert_eq!(add_line_fragment("http://example.com", None, None), "http://example.com");
-        assert_eq!(add_line_fragment("http://example.com", Some(42), None), "http://example.com#L42");
-        assert_eq!(add_line_fragment("http://example.com", Some(10), Some(20)), "http://example.com#L10-L20");
+        assert_eq!(
+            add_line_fragment("http://example.com", None, None),
+            "http://example.com"
+        );
+        assert_eq!(
+            add_line_fragment("http://example.com", Some(42), None),
+            "http://example.com#L42"
+        );
+        assert_eq!(
+            add_line_fragment("http://example.com", Some(10), Some(20)),
+            "http://example.com#L10-L20"
+        );
     }
 }

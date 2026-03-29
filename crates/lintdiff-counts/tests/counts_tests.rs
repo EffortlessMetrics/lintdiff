@@ -47,7 +47,13 @@ fn severity_counts_total_sums_all_fields() {
 
 #[test]
 fn severity_counts_total_handles_large_values() {
-    let counts = SeverityCounts::from_values(u64::MAX / 5, u64::MAX / 5, u64::MAX / 5, u64::MAX / 5, u64::MAX / 5);
+    let counts = SeverityCounts::from_values(
+        u64::MAX / 5,
+        u64::MAX / 5,
+        u64::MAX / 5,
+        u64::MAX / 5,
+        u64::MAX / 5,
+    );
     assert!(counts.total() > 0);
 }
 
@@ -290,7 +296,7 @@ fn file_counts_multiple_files_with_different_counts() {
     fc.add_file("a.rs", SeverityCounts::from_values(1, 0, 0, 0, 0));
     fc.add_file("b.rs", SeverityCounts::from_values(0, 2, 0, 0, 0));
     fc.add_file("c.rs", SeverityCounts::from_values(0, 0, 3, 0, 0));
-    
+
     assert_eq!(fc.file_count(), 3);
     assert_eq!(fc.total().hints, 1);
     assert_eq!(fc.total().notes, 2);
@@ -392,7 +398,7 @@ fn category_counts_multiple_categories_with_different_counts() {
     cc.add_category("cat1", SeverityCounts::from_values(1, 0, 0, 0, 0));
     cc.add_category("cat2", SeverityCounts::from_values(0, 2, 0, 0, 0));
     cc.add_category("cat3", SeverityCounts::from_values(0, 0, 3, 0, 0));
-    
+
     assert_eq!(cc.category_count(), 3);
     assert_eq!(cc.total().hints, 1);
     assert_eq!(cc.total().notes, 2);
@@ -446,18 +452,21 @@ fn count_summary_record_increases_total() {
 fn count_summary_record_updates_all_components() {
     let mut summary = CountSummary::new();
     summary.record("a.rs", "cat", SeverityLevel::Error);
-    
+
     // Check severity counts
     assert_eq!(summary.severity.errors, 1);
-    
+
     // Check file counts
     assert_eq!(summary.by_file.file_count(), 1);
     let file_counts = summary.by_file.get("a.rs").expect("file should exist");
     assert_eq!(file_counts.errors, 1);
-    
+
     // Check category counts
     assert_eq!(summary.by_category.category_count(), 1);
-    let cat_counts = summary.by_category.get("cat").expect("category should exist");
+    let cat_counts = summary
+        .by_category
+        .get("cat")
+        .expect("category should exist");
     assert_eq!(cat_counts.errors, 1);
 }
 
@@ -466,7 +475,7 @@ fn count_summary_record_multiple_same_file() {
     let mut summary = CountSummary::new();
     summary.record("a.rs", "cat1", SeverityLevel::Hint);
     summary.record("a.rs", "cat2", SeverityLevel::Warning);
-    
+
     assert_eq!(summary.total(), 2);
     assert_eq!(summary.by_file.file_count(), 1);
     assert_eq!(summary.by_category.category_count(), 2);
@@ -498,12 +507,12 @@ fn count_summary_has_blocking_false_with_only_warnings() {
 fn count_summary_merge_combines_all_data() {
     let mut a = CountSummary::new();
     a.record("a.rs", "cat1", SeverityLevel::Hint);
-    
+
     let mut b = CountSummary::new();
     b.record("b.rs", "cat2", SeverityLevel::Error);
-    
+
     a.merge(b);
-    
+
     assert_eq!(a.total(), 2);
     assert_eq!(a.by_file.file_count(), 2);
     assert_eq!(a.by_category.category_count(), 2);
@@ -514,12 +523,12 @@ fn count_summary_merge_combines_all_data() {
 fn count_summary_merge_same_file_accumulates() {
     let mut a = CountSummary::new();
     a.record("a.rs", "cat1", SeverityLevel::Hint);
-    
+
     let mut b = CountSummary::new();
     b.record("a.rs", "cat2", SeverityLevel::Error);
-    
+
     a.merge(b);
-    
+
     assert_eq!(a.by_file.file_count(), 1);
     let file_counts = a.by_file.get("a.rs").expect("file should exist");
     assert_eq!(file_counts.hints, 1);
@@ -549,16 +558,22 @@ fn count_summary_display_formats_correctly() {
     let mut summary = CountSummary::new();
     summary.record("a.rs", "cat1", SeverityLevel::Hint);
     summary.record("b.rs", "cat2", SeverityLevel::Error);
-    
+
     let s = format!("{summary}");
-    assert_eq!(s, "2 files, 2 categories, 1 hints, 0 notes, 0 warnings, 1 errors, 0 fatals");
+    assert_eq!(
+        s,
+        "2 files, 2 categories, 1 hints, 0 notes, 0 warnings, 1 errors, 0 fatals"
+    );
 }
 
 #[test]
 fn count_summary_display_empty() {
     let summary = CountSummary::new();
     let s = format!("{summary}");
-    assert_eq!(s, "0 files, 0 categories, 0 hints, 0 notes, 0 warnings, 0 errors, 0 fatals");
+    assert_eq!(
+        s,
+        "0 files, 0 categories, 0 hints, 0 notes, 0 warnings, 0 errors, 0 fatals"
+    );
 }
 
 #[test]
@@ -595,7 +610,7 @@ fn severity_level_equality() {
     assert_eq!(SeverityLevel::Warning, SeverityLevel::Warning);
     assert_eq!(SeverityLevel::Error, SeverityLevel::Error);
     assert_eq!(SeverityLevel::Fatal, SeverityLevel::Fatal);
-    
+
     assert_ne!(SeverityLevel::Hint, SeverityLevel::Note);
     assert_ne!(SeverityLevel::Warning, SeverityLevel::Error);
 }
@@ -605,7 +620,7 @@ fn severity_counts_equality() {
     let a = SeverityCounts::from_values(1, 2, 3, 4, 5);
     let b = SeverityCounts::from_values(1, 2, 3, 4, 5);
     let c = SeverityCounts::from_values(5, 4, 3, 2, 1);
-    
+
     assert_eq!(a, b);
     assert_ne!(a, c);
 }
@@ -655,15 +670,24 @@ fn large_counts_handling() {
 #[test]
 fn file_counts_with_path_containing_special_chars() {
     let mut fc = FileCounts::new();
-    fc.add_file("src/path/with spaces/file.rs", SeverityCounts::from_values(1, 0, 0, 0, 0));
-    fc.add_file("src/unicode/日本語.rs", SeverityCounts::from_values(1, 0, 0, 0, 0));
+    fc.add_file(
+        "src/path/with spaces/file.rs",
+        SeverityCounts::from_values(1, 0, 0, 0, 0),
+    );
+    fc.add_file(
+        "src/unicode/日本語.rs",
+        SeverityCounts::from_values(1, 0, 0, 0, 0),
+    );
     assert_eq!(fc.file_count(), 2);
 }
 
 #[test]
 fn category_counts_with_special_names() {
     let mut cc = CategoryCounts::new();
-    cc.add_category("clippy::result_unit_err", SeverityCounts::from_values(1, 0, 0, 0, 0));
+    cc.add_category(
+        "clippy::result_unit_err",
+        SeverityCounts::from_values(1, 0, 0, 0, 0),
+    );
     cc.add_category("rustc::E0433", SeverityCounts::from_values(0, 1, 0, 0, 0));
     assert_eq!(cc.category_count(), 2);
 }
@@ -671,7 +695,7 @@ fn category_counts_with_special_names() {
 #[test]
 fn count_summary_complex_scenario() {
     let mut summary = CountSummary::new();
-    
+
     // Record multiple findings across files and categories
     summary.record("src/main.rs", "clippy::style", SeverityLevel::Warning);
     summary.record("src/main.rs", "clippy::style", SeverityLevel::Warning);
@@ -679,7 +703,7 @@ fn count_summary_complex_scenario() {
     summary.record("src/lib.rs", "rustc::unused", SeverityLevel::Warning);
     summary.record("src/lib.rs", "rustc::unused", SeverityLevel::Hint);
     summary.record("src/utils.rs", "clippy::perf", SeverityLevel::Fatal);
-    
+
     assert_eq!(summary.total(), 6);
     assert_eq!(summary.by_file.file_count(), 3);
     assert_eq!(summary.by_category.category_count(), 4);
@@ -694,23 +718,23 @@ fn count_summary_complex_scenario() {
 fn count_summary_merge_empty() {
     let mut a = CountSummary::new();
     a.record("a.rs", "cat", SeverityLevel::Hint);
-    
+
     let b = CountSummary::new();
-    
+
     a.merge(b);
-    
+
     assert_eq!(a.total(), 1);
 }
 
 #[test]
 fn count_summary_merge_into_empty() {
     let mut a = CountSummary::new();
-    
+
     let mut b = CountSummary::new();
     b.record("b.rs", "cat", SeverityLevel::Error);
-    
+
     a.merge(b);
-    
+
     assert_eq!(a.total(), 1);
     assert!(a.has_blocking());
 }
@@ -722,7 +746,7 @@ fn file_counts_increment_multiple_severities() {
     fc.increment("a.rs", SeverityLevel::Hint);
     fc.increment("a.rs", SeverityLevel::Warning);
     fc.increment("a.rs", SeverityLevel::Error);
-    
+
     let counts = fc.get("a.rs").expect("file should exist");
     assert_eq!(counts.hints, 2);
     assert_eq!(counts.warnings, 1);
@@ -737,7 +761,7 @@ fn category_counts_increment_multiple_severities() {
     cc.increment("cat", SeverityLevel::Note);
     cc.increment("cat", SeverityLevel::Warning);
     cc.increment("cat", SeverityLevel::Fatal);
-    
+
     let counts = cc.get("cat").expect("category should exist");
     assert_eq!(counts.notes, 2);
     assert_eq!(counts.warnings, 1);
@@ -761,7 +785,7 @@ fn pass_rate_precision() {
     let counts = SeverityCounts::from_values(3, 1, 0, 0, 0); // 4/4 = 1.0
     let rate = counts.pass_rate().expect("should have rate");
     assert!((rate - 1.0).abs() < f64::EPSILON);
-    
+
     let counts2 = SeverityCounts::from_values(1, 1, 1, 1, 0); // 2/4 = 0.5
     let rate2 = counts2.pass_rate().expect("should have rate");
     assert!((rate2 - 0.5).abs() < f64::EPSILON);

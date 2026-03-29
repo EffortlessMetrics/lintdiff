@@ -230,7 +230,7 @@ fn test_table_basic() {
     let headers = vec!["Name", "Age"];
     let rows = vec![vec!["Alice", "30"]];
     let result = table(&headers, &rows);
-    
+
     assert!(result.contains("Name"));
     assert!(result.contains("Age"));
     assert!(result.contains("Alice"));
@@ -242,7 +242,7 @@ fn test_table_multiple_rows() {
     let headers = vec!["ID", "Value"];
     let rows = vec![vec!["1", "a"], vec!["2", "b"], vec!["3", "c"]];
     let result = table(&headers, &rows);
-    
+
     assert!(result.contains("1"));
     assert!(result.contains("2"));
     assert!(result.contains("3"));
@@ -253,7 +253,7 @@ fn test_table_empty_rows() {
     let headers = vec!["Col1", "Col2"];
     let rows: Vec<Vec<&str>> = vec![];
     let result = table(&headers, &rows);
-    
+
     // Should still have header and separator
     assert!(result.contains("Col1"));
     assert!(result.contains('|'));
@@ -264,7 +264,7 @@ fn test_table_column_width_alignment() {
     let headers = vec!["Short", "Very Long Header"];
     let rows = vec![vec!["x", "y"]];
     let result = table(&headers, &rows);
-    
+
     // Check that separator line is properly formed
     let lines: Vec<&str> = result.lines().collect();
     assert!(lines.len() >= 2);
@@ -275,7 +275,7 @@ fn test_table_empty_headers() {
     let headers: Vec<&str> = vec![];
     let rows = vec![vec!["a", "b"]];
     let result = table(&headers, &rows);
-    
+
     assert!(result.is_empty());
 }
 
@@ -393,7 +393,12 @@ fn test_text_builder_multiple_lines() {
 #[test]
 fn test_text_builder_with_indentation() {
     let mut builder = TextBuilder::new().with_indent(IndentConfig::new(2));
-    builder.line("root").indent().line("child").dedent().line("back");
+    builder
+        .line("root")
+        .indent()
+        .line("child")
+        .dedent()
+        .line("back");
     assert_eq!(builder.build(), "root\n  child\nback");
 }
 
@@ -420,7 +425,7 @@ fn test_indent_config_partial_eq() {
     let config1 = IndentConfig::new(4);
     let config2 = IndentConfig::new(4);
     let config3 = IndentConfig::new(2);
-    
+
     assert_eq!(config1, config2);
     assert_ne!(config1, config3);
 }
@@ -437,7 +442,7 @@ fn test_wrap_config_partial_eq() {
     let config1 = WrapConfig::new(40);
     let config2 = WrapConfig::new(40);
     let config3 = WrapConfig::new(80);
-    
+
     assert_eq!(config1, config2);
     assert_ne!(config1, config3);
 }
@@ -521,7 +526,15 @@ fn test_indent_config_tab_char() {
 #[test]
 fn test_text_builder_nested_indent() {
     let mut builder = TextBuilder::new().with_indent(IndentConfig::new(2));
-    builder.line("0").indent().line("1").indent().line("2").dedent().dedent().line("0");
+    builder
+        .line("0")
+        .indent()
+        .line("1")
+        .indent()
+        .line("2")
+        .dedent()
+        .dedent()
+        .line("0");
     assert_eq!(builder.build(), "0\n  1\n    2\n0");
 }
 
@@ -612,7 +625,7 @@ fn test_text_builder_chaining() {
 #[test]
 fn test_bullet_list_different_bullets() {
     let items = vec!["item"];
-    
+
     assert_eq!(bullet_list(&items, "-"), "- item");
     assert_eq!(bullet_list(&items, "*"), "* item");
     assert_eq!(bullet_list(&items, "+"), "+ item");

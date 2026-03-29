@@ -2,10 +2,12 @@
 //!
 //! These tests cover all public API functions and edge cases.
 
-use lintdiff_budget::{Budget, BudgetConfig, BudgetCounter, BudgetExceeded, BudgetTracker, RemainingBudget};
+use lintdiff_budget::{
+    Budget, BudgetConfig, BudgetCounter, BudgetExceeded, BudgetTracker, RemainingBudget,
+};
+use lintdiff_config_types::FailOn;
 use lintdiff_counts::SeverityCounts;
 use lintdiff_counts::SeverityLevel;
-use lintdiff_config_types::FailOn;
 
 // ============================================================================
 // BudgetConfig Tests

@@ -220,11 +220,11 @@ impl Severity {
     #[cfg(feature = "colors")]
     pub fn ansi_color(self) -> &'static str {
         match self {
-            Severity::Hint => "\x1b[36m",   // Cyan
-            Severity::Note => "\x1b[34m",   // Blue
+            Severity::Hint => "\x1b[36m",    // Cyan
+            Severity::Note => "\x1b[34m",    // Blue
             Severity::Warning => "\x1b[33m", // Yellow
-            Severity::Error => "\x1b[31m",  // Red
-            Severity::Fatal => "\x1b[35m",  // Magenta
+            Severity::Error => "\x1b[31m",   // Red
+            Severity::Fatal => "\x1b[35m",   // Magenta
         }
     }
 }
