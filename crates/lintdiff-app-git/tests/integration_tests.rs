@@ -5,6 +5,7 @@
 
 use std::fs;
 use std::process::Command;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use lintdiff_app_git::{acquire_diff, determine_repo_root, gather_git_info, AppGitError};
 use tempfile::TempDir;
@@ -34,6 +35,32 @@ fn git_run(dir: &std::path::Path, args: &[&str]) -> Result<String, String> {
             args.join(" "),
             String::from_utf8_lossy(&output.stderr)
         ))
+    }
+}
+
+fn cwd_lock() -> MutexGuard<'static, ()> {
+    static CWD_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    CWD_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("cwd lock poisoned")
+}
+
+struct CurrentDirGuard {
+    original_dir: std::path::PathBuf,
+}
+
+impl CurrentDirGuard {
+    fn change_to(path: &std::path::Path) -> Self {
+        let original_dir = std::env::current_dir().expect("failed to get current dir");
+        std::env::set_current_dir(path).expect("failed to change dir");
+        Self { original_dir }
+    }
+}
+
+impl Drop for CurrentDirGuard {
+    fn drop(&mut self) {
+        std::env::set_current_dir(&self.original_dir).expect("failed to restore dir");
     }
 }
 
@@ -98,6 +125,7 @@ mod repo_root_detection {
             return;
         }
 
+        let _cwd_lock = cwd_lock();
         let temp_dir = create_test_repo().expect("failed to create test repo");
         let repo_path = temp_dir.path();
 
@@ -105,14 +133,10 @@ mod repo_root_detection {
         let subdir = repo_path.join("src").join("nested").join("deep");
         fs::create_dir_all(&subdir).expect("failed to create subdir");
 
-        // Change to subdirectory and find root
-        let original_dir = std::env::current_dir().expect("failed to get current dir");
-        std::env::set_current_dir(&subdir).expect("failed to change dir");
+        // Change to subdirectory and find root.
+        let _cwd_guard = CurrentDirGuard::change_to(&subdir);
 
         let result = determine_repo_root(None);
-
-        // Restore original directory
-        std::env::set_current_dir(&original_dir).expect("failed to restore dir");
 
         assert!(result.is_ok());
         let found_root = result.unwrap();
@@ -130,6 +154,7 @@ mod repo_root_detection {
             return;
         }
 
+        let _cwd_lock = cwd_lock();
         let outer_repo = create_test_repo().expect("failed to create outer repo");
         let outer_path = outer_repo.path();
 
@@ -146,14 +171,10 @@ mod repo_root_detection {
         git_run(&inner_path, &["add", "inner.txt"]).expect("failed to add");
         git_run(&inner_path, &["commit", "-m", "Inner commit"]).expect("failed to commit");
 
-        // From inner repo, should find inner repo root
-        let original_dir = std::env::current_dir().expect("failed to get current dir");
-        std::env::set_current_dir(&inner_path).expect("failed to change dir");
+        // From inner repo, should find inner repo root.
+        let _cwd_guard = CurrentDirGuard::change_to(&inner_path);
 
         let result = determine_repo_root(None);
-
-        // Restore original directory
-        std::env::set_current_dir(&original_dir).expect("failed to restore dir");
 
         assert!(result.is_ok());
         let found_root = result.unwrap();
@@ -171,18 +192,15 @@ mod repo_root_detection {
             return;
         }
 
+        let _cwd_lock = cwd_lock();
         // Create a temporary directory without git
         let temp_dir = TempDir::new().expect("failed to create temp dir");
         let non_git_path = temp_dir.path();
 
-        let original_dir = std::env::current_dir().expect("failed to get current dir");
-        std::env::set_current_dir(non_git_path).expect("failed to change dir");
+        let _cwd_guard = CurrentDirGuard::change_to(non_git_path);
 
         // determine_repo_root should fall back to current_dir when git command fails
         let result = determine_repo_root(None);
-
-        // Restore original directory
-        std::env::set_current_dir(&original_dir).expect("failed to restore dir");
 
         // Should return current directory as fallback
         assert!(result.is_ok());
