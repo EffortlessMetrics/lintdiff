@@ -52,14 +52,14 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
       
       # Cache cargo registry and build artifacts for faster runs
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -260,7 +260,7 @@ jobs:
       
       # Upload mutation reports as artifacts
       - name: Upload mutation reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-reports
           path: mutants-out/
@@ -269,7 +269,7 @@ jobs:
       # Create GitHub issue if mutation score drops below threshold
       - name: Create issue for low mutation score
         if: steps.aggregate.outputs.overall_score < env.MUTATION_THRESHOLD && github.event_name == 'schedule'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const score = '${{ steps.aggregate.outputs.overall_score }}';
