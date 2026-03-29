@@ -1264,4 +1264,3 @@ mod tests {
         assert_eq!(report1, report2);
     }
 }
-

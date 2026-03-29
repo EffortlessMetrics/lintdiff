@@ -1323,21 +1323,23 @@ mod property_tests {
                 CanonicalSeverity::Warning,
                 CanonicalSeverity::Error,
             ];
+            let mut expected = std::collections::HashMap::new();
 
             for (linter, level) in &mappings {
+                let canonical = canonical_levels[(*level as usize) % canonical_levels.len()];
                 builder = builder.with_mapping(
                     linter,
                     "severity",
-                    canonical_levels[(*level as usize) % canonical_levels.len()],
+                    canonical,
                 );
+                expected.insert(linter.to_lowercase(), canonical);
             }
 
             let mapper = builder.build();
 
-            // Verify all mappings are present
-            for (linter, level) in &mappings {
-                let expected = canonical_levels[(*level as usize) % canonical_levels.len()];
-                prop_assert_eq!(mapper.map(linter, "severity"), expected);
+            // Duplicate keys overwrite earlier entries, so only the last write per linter survives.
+            for (linter, expected) in expected {
+                prop_assert_eq!(mapper.map(&linter, "severity"), expected);
             }
         }
     }
