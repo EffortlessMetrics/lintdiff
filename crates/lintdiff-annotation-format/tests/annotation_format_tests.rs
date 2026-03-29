@@ -262,37 +262,87 @@ mod ci_platform_detection {
 
         #[test]
         fn detects_gitlab_ci_when_set() {
-            temp_env::with_var("GITLAB_CI", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::GitLabCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", Some("true")),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::GitLabCI);
+                },
+            );
         }
 
         #[test]
         fn detects_azure_devops_when_set() {
-            temp_env::with_var("TF_BUILD", Some("True"), || {
-                assert_eq!(detect_ci(), CiPlatform::AzureDevOps);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", Some("True")),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::AzureDevOps);
+                },
+            );
         }
 
         #[test]
         fn detects_circleci_when_set() {
-            temp_env::with_var("CIRCLECI", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::CircleCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", Some("true")),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::CircleCI);
+                },
+            );
         }
 
         #[test]
         fn detects_travis_ci_when_set() {
-            temp_env::with_var("TRAVIS", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::TravisCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", Some("true")),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::TravisCI);
+                },
+            );
         }
 
         #[test]
         fn detects_jenkins_when_set() {
-            temp_env::with_var("JENKINS_URL", Some("http://jenkins:8080"), || {
-                assert_eq!(detect_ci(), CiPlatform::Jenkins);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", Some("http://jenkins:8080")),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::Jenkins);
+                },
+            );
         }
 
         #[test]
