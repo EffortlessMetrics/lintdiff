@@ -149,6 +149,7 @@ impl GitInfo {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase")]
 pub enum Severity {
     /// Informational hint.
     Hint = 0,
@@ -1263,3 +1264,4 @@ mod tests {
         assert_eq!(report1, report2);
     }
 }
+
