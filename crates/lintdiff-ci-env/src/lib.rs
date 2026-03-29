@@ -224,10 +224,9 @@ impl PullRequestInfo {
         let source_branch = env::var("CI_MERGE_REQUEST_SOURCE_BRANCH_NAME")
             .unwrap_or_else(|_| env::var("CI_COMMIT_REF_NAME").unwrap_or_default());
 
-        let target_branch =
-            env::var("CI_MERGE_REQUEST_TARGET_BRANCH_NAME").unwrap_or_else(|_| {
-                env::var("CI_DEFAULT_BRANCH").unwrap_or_else(|_| "main".to_string())
-            });
+        let target_branch = env::var("CI_MERGE_REQUEST_TARGET_BRANCH_NAME").unwrap_or_else(|_| {
+            env::var("CI_DEFAULT_BRANCH").unwrap_or_else(|_| "main".to_string())
+        });
 
         Some(Self {
             number,
@@ -252,9 +251,13 @@ impl PullRequestInfo {
     }
 
     fn detect_travis_ci() -> Option<Self> {
-        let number = env::var("TRAVIS_PULL_REQUEST")
-            .ok()
-            .and_then(|s| if s == "false" { None } else { s.parse().ok() })?;
+        let number = env::var("TRAVIS_PULL_REQUEST").ok().and_then(|s| {
+            if s == "false" {
+                None
+            } else {
+                s.parse().ok()
+            }
+        })?;
 
         let source_branch = env::var("TRAVIS_PULL_REQUEST_BRANCH").unwrap_or_default();
         let target_branch = env::var("TRAVIS_BRANCH").unwrap_or_default();
@@ -273,8 +276,8 @@ impl PullRequestInfo {
             .and_then(|s| s.parse().ok())?;
 
         let source_branch = env::var("BUILD_SOURCEBRANCHNAME").unwrap_or_default();
-        let target_branch = env::var("SYSTEM_PULLREQUEST_TARGETBRANCH")
-            .unwrap_or_else(|_| "main".to_string());
+        let target_branch =
+            env::var("SYSTEM_PULLREQUEST_TARGETBRANCH").unwrap_or_else(|_| "main".to_string());
 
         Some(Self {
             number,
@@ -535,7 +538,12 @@ impl CommitInfo {
         // Try to get branch from GITHUB_REF
         if let Ok(github_ref) = env::var("GITHUB_REF") {
             if github_ref.starts_with("refs/heads/") {
-                info.branch = Some(github_ref.strip_prefix("refs/heads/").unwrap_or(&github_ref).to_string());
+                info.branch = Some(
+                    github_ref
+                        .strip_prefix("refs/heads/")
+                        .unwrap_or(&github_ref)
+                        .to_string(),
+                );
             }
         }
 
@@ -600,7 +608,12 @@ impl CommitInfo {
         // BUILD_SOURCEBRANCH is like refs/heads/main
         if let Ok(source_branch) = env::var("BUILD_SOURCEBRANCH") {
             if source_branch.starts_with("refs/heads/") {
-                info.branch = Some(source_branch.strip_prefix("refs/heads/").unwrap_or(&source_branch).to_string());
+                info.branch = Some(
+                    source_branch
+                        .strip_prefix("refs/heads/")
+                        .unwrap_or(&source_branch)
+                        .to_string(),
+                );
             } else {
                 info.branch = Some(source_branch);
             }

@@ -556,7 +556,10 @@ mod tests {
     #[test]
     fn test_span_line_count() {
         assert_eq!(Span::single_line(5, 1, 10).line_count(), 1);
-        assert_eq!(Span::new(Position::new(1, 1), Position::new(5, 10)).line_count(), 5);
+        assert_eq!(
+            Span::new(Position::new(1, 1), Position::new(5, 10)).line_count(),
+            5
+        );
     }
 
     #[test]

@@ -5,7 +5,7 @@
 
 use lintdiff_annotation_format::{
     detect_ci, format_annotation, format_azure_annotation, format_circleci_annotation,
-    format_default_annotation, format_gitlab_annotation, format_github_annotation, is_azure_devops,
+    format_default_annotation, format_github_annotation, format_gitlab_annotation, is_azure_devops,
     is_circleci, is_github_actions, is_gitlab_ci, Annotation, AnnotationFormat, AnnotationSeverity,
     CiPlatform,
 };
@@ -57,10 +57,7 @@ mod annotation_format_enum {
 
         #[test]
         fn gitlab_format_resolves_to_itself() {
-            assert_eq!(
-                AnnotationFormat::Gitlab.resolve(),
-                AnnotationFormat::Gitlab
-            );
+            assert_eq!(AnnotationFormat::Gitlab.resolve(), AnnotationFormat::Gitlab);
         }
 
         #[test]
@@ -157,12 +154,18 @@ mod ci_platform_detection {
 
         #[test]
         fn jenkins_maps_to_default_format() {
-            assert_eq!(CiPlatform::Jenkins.annotation_format(), AnnotationFormat::Default);
+            assert_eq!(
+                CiPlatform::Jenkins.annotation_format(),
+                AnnotationFormat::Default
+            );
         }
 
         #[test]
         fn unknown_maps_to_default_format() {
-            assert_eq!(CiPlatform::Unknown.annotation_format(), AnnotationFormat::Default);
+            assert_eq!(
+                CiPlatform::Unknown.annotation_format(),
+                AnnotationFormat::Default
+            );
         }
     }
 
@@ -262,37 +265,87 @@ mod ci_platform_detection {
 
         #[test]
         fn detects_gitlab_ci_when_set() {
-            temp_env::with_var("GITLAB_CI", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::GitLabCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", Some("true")),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::GitLabCI);
+                },
+            );
         }
 
         #[test]
         fn detects_azure_devops_when_set() {
-            temp_env::with_var("TF_BUILD", Some("True"), || {
-                assert_eq!(detect_ci(), CiPlatform::AzureDevOps);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", Some("True")),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::AzureDevOps);
+                },
+            );
         }
 
         #[test]
         fn detects_circleci_when_set() {
-            temp_env::with_var("CIRCLECI", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::CircleCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", Some("true")),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::CircleCI);
+                },
+            );
         }
 
         #[test]
         fn detects_travis_ci_when_set() {
-            temp_env::with_var("TRAVIS", Some("true"), || {
-                assert_eq!(detect_ci(), CiPlatform::TravisCI);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", Some("true")),
+                    ("JENKINS_URL", None::<&str>),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::TravisCI);
+                },
+            );
         }
 
         #[test]
         fn detects_jenkins_when_set() {
-            temp_env::with_var("JENKINS_URL", Some("http://jenkins:8080"), || {
-                assert_eq!(detect_ci(), CiPlatform::Jenkins);
-            });
+            temp_env::with_vars(
+                [
+                    ("GITHUB_ACTIONS", None::<&str>),
+                    ("GITLAB_CI", None::<&str>),
+                    ("TF_BUILD", None::<&str>),
+                    ("CIRCLECI", None::<&str>),
+                    ("TRAVIS", None::<&str>),
+                    ("JENKINS_URL", Some("http://jenkins:8080")),
+                ],
+                || {
+                    assert_eq!(detect_ci(), CiPlatform::Jenkins);
+                },
+            );
         }
 
         #[test]
@@ -446,8 +499,7 @@ mod annotation_struct {
 
         #[test]
         fn simple_creates_annotation_without_column() {
-            let annotation =
-                Annotation::simple("main.rs", 1, AnnotationSeverity::Notice, "Info");
+            let annotation = Annotation::simple("main.rs", 1, AnnotationSeverity::Notice, "Info");
 
             assert_eq!(annotation.path, "main.rs");
             assert_eq!(annotation.line, 1);
@@ -539,12 +591,8 @@ mod github_formatting {
 
         #[test]
         fn formats_notice_correctly() {
-            let annotation = Annotation::simple(
-                "docs/readme.md",
-                5,
-                AnnotationSeverity::Notice,
-                "Notice",
-            );
+            let annotation =
+                Annotation::simple("docs/readme.md", 5, AnnotationSeverity::Notice, "Notice");
 
             let output = format_github_annotation(&annotation);
             assert!(output.starts_with("::notice"));
@@ -599,8 +647,7 @@ mod github_formatting {
 
         #[test]
         fn escapes_comma_in_message() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a, b, c");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a, b, c");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("%2C"));
@@ -635,12 +682,8 @@ mod github_formatting {
 
         #[test]
         fn escapes_multiple_special_chars() {
-            let annotation = Annotation::simple(
-                "file.rs",
-                1,
-                AnnotationSeverity::Error,
-                "a:b,c%d\ne",
-            );
+            let annotation =
+                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a:b,c%d\ne");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("%3A")); // :
@@ -674,8 +717,7 @@ mod gitlab_formatting {
 
         #[test]
         fn uses_info_for_notice() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
 
             let output = format_gitlab_annotation(&annotation);
             assert!(output.contains("info"));
@@ -683,8 +725,7 @@ mod gitlab_formatting {
 
         #[test]
         fn uses_critical_for_fatal() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Fatal, "Fatal");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Fatal, "Fatal");
 
             let output = format_gitlab_annotation(&annotation);
             assert!(output.contains("critical"));
@@ -746,8 +787,7 @@ mod azure_formatting {
 
         #[test]
         fn uses_information_for_notice() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
 
             let output = format_azure_annotation(&annotation);
             assert!(output.contains("type=information"));
@@ -759,8 +799,7 @@ mod azure_formatting {
 
         #[test]
         fn escapes_bracket() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "Error]");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "Error]");
 
             let output = format_azure_annotation(&annotation);
             assert!(output.contains("%5D"));
@@ -768,8 +807,7 @@ mod azure_formatting {
 
         #[test]
         fn escapes_semicolon() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a; b");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a; b");
 
             let output = format_azure_annotation(&annotation);
             assert!(output.contains("%3B"));
@@ -777,8 +815,7 @@ mod azure_formatting {
 
         #[test]
         fn escapes_newline() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a\nb");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "a\nb");
 
             let output = format_azure_annotation(&annotation);
             assert!(output.contains("%0A"));
@@ -816,8 +853,7 @@ mod circleci_formatting {
 
         #[test]
         fn uses_notice_for_notice() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Notice, "Info");
 
             let output = format_circleci_annotation(&annotation);
             assert!(output.contains("notice"));
@@ -858,14 +894,10 @@ mod default_formatting {
 
         #[test]
         fn formats_severity_as_debug_format() {
-            let warning =
-                Annotation::simple("f.rs", 1, AnnotationSeverity::Warning, "w");
-            let notice =
-                Annotation::simple("f.rs", 1, AnnotationSeverity::Notice, "n");
-            let error =
-                Annotation::simple("f.rs", 1, AnnotationSeverity::Error, "e");
-            let fatal =
-                Annotation::simple("f.rs", 1, AnnotationSeverity::Fatal, "f");
+            let warning = Annotation::simple("f.rs", 1, AnnotationSeverity::Warning, "w");
+            let notice = Annotation::simple("f.rs", 1, AnnotationSeverity::Notice, "n");
+            let error = Annotation::simple("f.rs", 1, AnnotationSeverity::Error, "e");
+            let fatal = Annotation::simple("f.rs", 1, AnnotationSeverity::Fatal, "f");
 
             assert!(format_default_annotation(&warning).contains("Warning"));
             assert!(format_default_annotation(&notice).contains("Notice"));
@@ -884,8 +916,7 @@ mod generic_format_annotation {
 
     #[test]
     fn routes_to_github_format() {
-        let annotation =
-            Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
+        let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
 
         let output = format_annotation(AnnotationFormat::Github, &annotation);
         assert!(output.starts_with("::error"));
@@ -893,8 +924,7 @@ mod generic_format_annotation {
 
     #[test]
     fn routes_to_gitlab_format() {
-        let annotation =
-            Annotation::simple("file.rs", 1, AnnotationSeverity::Warning, "msg");
+        let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Warning, "msg");
 
         let output = format_annotation(AnnotationFormat::Gitlab, &annotation);
         assert!(output.starts_with("file.rs:1:"));
@@ -902,8 +932,7 @@ mod generic_format_annotation {
 
     #[test]
     fn routes_to_azure_format() {
-        let annotation =
-            Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
+        let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
 
         let output = format_annotation(AnnotationFormat::Azure, &annotation);
         assert!(output.starts_with("##vso[task.logissue"));
@@ -911,8 +940,7 @@ mod generic_format_annotation {
 
     #[test]
     fn routes_to_circleci_format() {
-        let annotation =
-            Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
+        let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
 
         let output = format_annotation(AnnotationFormat::CircleCI, &annotation);
         assert!(output.starts_with("file.rs:1:"));
@@ -920,8 +948,7 @@ mod generic_format_annotation {
 
     #[test]
     fn routes_to_default_format() {
-        let annotation =
-            Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
+        let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
 
         let output = format_annotation(AnnotationFormat::Default, &annotation);
         assert!(output.starts_with("file.rs:1:"));
@@ -940,8 +967,7 @@ mod edge_cases {
 
         #[test]
         fn empty_message_github() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
 
             let output = format_github_annotation(&annotation);
             assert!(output.ends_with("::"));
@@ -949,8 +975,7 @@ mod edge_cases {
 
         #[test]
         fn empty_message_gitlab() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
 
             let output = format_gitlab_annotation(&annotation);
             // Should still have structure: path:line: severity: message
@@ -959,8 +984,7 @@ mod edge_cases {
 
         #[test]
         fn empty_message_azure() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "");
 
             let output = format_azure_annotation(&annotation);
             assert!(output.ends_with(']'));
@@ -972,8 +996,7 @@ mod edge_cases {
 
         #[test]
         fn line_number_one() {
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("line=1"));
@@ -999,13 +1022,8 @@ mod edge_cases {
 
         #[test]
         fn large_column_number() {
-            let annotation = Annotation::new(
-                "file.rs",
-                1,
-                Some(10_000),
-                AnnotationSeverity::Error,
-                "msg",
-            );
+            let annotation =
+                Annotation::new("file.rs", 1, Some(10_000), AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("col=10000"));
@@ -1017,12 +1035,8 @@ mod edge_cases {
 
         #[test]
         fn path_with_spaces() {
-            let annotation = Annotation::simple(
-                "src/my module/file.rs",
-                1,
-                AnnotationSeverity::Error,
-                "msg",
-            );
+            let annotation =
+                Annotation::simple("src/my module/file.rs", 1, AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("src/my module/file.rs"));
@@ -1030,12 +1044,8 @@ mod edge_cases {
 
         #[test]
         fn path_with_special_chars() {
-            let annotation = Annotation::simple(
-                "src/file-name_test.rs",
-                1,
-                AnnotationSeverity::Error,
-                "msg",
-            );
+            let annotation =
+                Annotation::simple("src/file-name_test.rs", 1, AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("file-name_test.rs"));
@@ -1043,12 +1053,8 @@ mod edge_cases {
 
         #[test]
         fn windows_style_path() {
-            let annotation = Annotation::simple(
-                "src\\module\\file.rs",
-                1,
-                AnnotationSeverity::Error,
-                "msg",
-            );
+            let annotation =
+                Annotation::simple("src\\module\\file.rs", 1, AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains("src\\module\\file.rs"));
@@ -1073,12 +1079,8 @@ mod edge_cases {
 
         #[test]
         fn unicode_message() {
-            let annotation = Annotation::simple(
-                "file.rs",
-                1,
-                AnnotationSeverity::Error,
-                "错误: 你好世界 🌍",
-            );
+            let annotation =
+                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, "错误: 你好世界 🌍");
 
             let output = format_default_annotation(&annotation);
             assert!(output.contains("错误"));
@@ -1102,8 +1104,7 @@ mod edge_cases {
         #[test]
         fn very_long_message() {
             let long_msg = "x".repeat(10000);
-            let annotation =
-                Annotation::simple("file.rs", 1, AnnotationSeverity::Error, &long_msg);
+            let annotation = Annotation::simple("file.rs", 1, AnnotationSeverity::Error, &long_msg);
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains(&long_msg));
@@ -1112,8 +1113,7 @@ mod edge_cases {
         #[test]
         fn very_long_path() {
             let long_path = format!("src/{}", "a".repeat(500));
-            let annotation =
-                Annotation::simple(&long_path, 1, AnnotationSeverity::Error, "msg");
+            let annotation = Annotation::simple(&long_path, 1, AnnotationSeverity::Error, "msg");
 
             let output = format_github_annotation(&annotation);
             assert!(output.contains(&long_path));

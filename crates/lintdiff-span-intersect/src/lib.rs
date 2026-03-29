@@ -162,13 +162,7 @@ pub fn find_containing_ranges(line: u32, ranges: &[LineRange]) -> Vec<usize> {
     ranges
         .iter()
         .enumerate()
-        .filter_map(|(i, r)| {
-            if r.contains(line) {
-                Some(i)
-            } else {
-                None
-            }
-        })
+        .filter_map(|(i, r)| if r.contains(line) { Some(i) } else { None })
         .collect()
 }
 
@@ -194,9 +188,7 @@ pub fn find_containing_ranges(line: u32, ranges: &[LineRange]) -> Vec<usize> {
 /// ```
 #[must_use]
 pub fn find_first_containing(line: u32, ranges: &[LineRange]) -> Option<usize> {
-    ranges
-        .iter()
-        .position(|r| r.contains(line))
+    ranges.iter().position(|r| r.contains(line))
 }
 
 /// Count how many ranges contain a given line number.
@@ -474,20 +466,14 @@ mod tests {
 
     #[test]
     fn test_line_in_ranges_found() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         assert!(line_in_ranges(5, &ranges));
         assert!(line_in_ranges(25, &ranges));
     }
 
     #[test]
     fn test_line_in_ranges_not_found() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         assert!(!line_in_ranges(15, &ranges));
         assert!(!line_in_ranges(0, &ranges));
         assert!(!line_in_ranges(35, &ranges));
@@ -502,7 +488,7 @@ mod tests {
     #[test]
     fn test_line_in_ranges_boundary() {
         let ranges = vec![LineRange::new(5, 10)];
-        assert!(line_in_ranges(5, &ranges));  // Start
+        assert!(line_in_ranges(5, &ranges)); // Start
         assert!(line_in_ranges(10, &ranges)); // End
         assert!(!line_in_ranges(4, &ranges)); // Before
         assert!(!line_in_ranges(11, &ranges)); // After
@@ -521,40 +507,28 @@ mod tests {
 
     #[test]
     fn test_find_containing_ranges_single() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         let result = find_containing_ranges(5, &ranges);
         assert_eq!(result, vec![0]);
     }
 
     #[test]
     fn test_find_containing_ranges_none() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         let result = find_containing_ranges(15, &ranges);
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_find_first_containing_found() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(5, 15),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(5, 15)];
         assert_eq!(find_first_containing(7, &ranges), Some(0));
         assert_eq!(find_first_containing(12, &ranges), Some(1));
     }
 
     #[test]
     fn test_find_first_containing_none() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         assert_eq!(find_first_containing(15, &ranges), None);
     }
 
@@ -572,10 +546,7 @@ mod tests {
 
     #[test]
     fn test_range_intersects_any() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         assert!(range_intersects_any(&LineRange::new(5, 15), &ranges));
         assert!(!range_intersects_any(&LineRange::new(12, 18), &ranges));
     }
@@ -642,28 +613,19 @@ mod tests {
 
     #[test]
     fn test_is_sorted_and_disjoint_true() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(20, 30),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(20, 30)];
         assert!(is_sorted_and_disjoint(&ranges));
     }
 
     #[test]
     fn test_is_sorted_and_disjoint_overlapping() {
-        let ranges = vec![
-            LineRange::new(1, 10),
-            LineRange::new(5, 15),
-        ];
+        let ranges = vec![LineRange::new(1, 10), LineRange::new(5, 15)];
         assert!(!is_sorted_and_disjoint(&ranges));
     }
 
     #[test]
     fn test_is_sorted_and_disjoint_unsorted() {
-        let ranges = vec![
-            LineRange::new(20, 30),
-            LineRange::new(1, 10),
-        ];
+        let ranges = vec![LineRange::new(20, 30), LineRange::new(1, 10)];
         assert!(!is_sorted_and_disjoint(&ranges));
     }
 }

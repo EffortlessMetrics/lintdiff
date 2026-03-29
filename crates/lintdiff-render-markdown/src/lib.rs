@@ -331,10 +331,7 @@ fn format_location(finding: &Finding) -> String {
 
 /// Truncate a message and escape markdown table characters.
 fn truncate_and_escape(s: &str, max_length: usize) -> String {
-    let escaped = s
-        .replace('|', "\\|")
-        .replace('\r', "")
-        .replace('\n', " ");
+    let escaped = s.replace('|', "\\|").replace('\r', "").replace('\n', " ");
 
     if escaped.len() > max_length {
         format!("{}...", &escaped[..max_length.saturating_sub(3)])
@@ -348,7 +345,13 @@ mod tests {
     use super::*;
     use lintdiff_types::{Location, NormPath};
 
-    fn test_finding(severity: Severity, path: &str, line: u32, code: &str, message: &str) -> Finding {
+    fn test_finding(
+        severity: Severity,
+        path: &str,
+        line: u32,
+        code: &str,
+        message: &str,
+    ) -> Finding {
         Finding {
             severity,
             code: code.to_string(),

@@ -163,7 +163,7 @@ impl Glob {
                     // Check if this is a globstar (**)
                     if chars.peek() == Some(&'*') {
                         chars.next(); // consume the second *
-                        // Flush any pending literal
+                                      // Flush any pending literal
                         if !current_literal.is_empty() {
                             segments.push(PatternSegment::Literal(current_literal.clone()));
                             current_literal.clear();
@@ -214,7 +214,9 @@ impl Glob {
     }
 
     /// Parse a character class starting after the opening `[`.
-    fn parse_char_class(chars: &mut std::iter::Peekable<std::str::Chars>) -> Result<CharClass, GlobError> {
+    fn parse_char_class(
+        chars: &mut std::iter::Peekable<std::str::Chars>,
+    ) -> Result<CharClass, GlobError> {
         let mut negated = false;
         let mut entries = Vec::new();
 
@@ -294,7 +296,11 @@ impl Glob {
     }
 
     /// Match a path against the parsed segments.
-    fn match_segments(segments: &[PatternSegment], path: &str, path_separator: Option<char>) -> bool {
+    fn match_segments(
+        segments: &[PatternSegment],
+        path: &str,
+        path_separator: Option<char>,
+    ) -> bool {
         if segments.is_empty() {
             return path.is_empty();
         }
@@ -356,7 +362,11 @@ impl Glob {
 
                     // Try matching from each possible position
                     for start_pos in path_idx..=chars.len() {
-                        if Self::match_segments(&segments[next_seg_idx..], &chars[start_pos..].iter().collect::<String>(), path_separator) {
+                        if Self::match_segments(
+                            &segments[next_seg_idx..],
+                            &chars[start_pos..].iter().collect::<String>(),
+                            path_separator,
+                        ) {
                             return true;
                         }
                     }
@@ -394,7 +404,11 @@ impl Glob {
     }
 
     /// Find the position after a wildcard that allows the rest to match.
-    fn match_after_wildcard(remaining_segments: &[PatternSegment], chars: &[char], path_separator: Option<char>) -> Option<usize> {
+    fn match_after_wildcard(
+        remaining_segments: &[PatternSegment],
+        chars: &[char],
+        path_separator: Option<char>,
+    ) -> Option<usize> {
         for end_pos in 0..=chars.len() {
             // Check if we hit a path separator (if we have one)
             if let Some(sep) = path_separator {
@@ -402,7 +416,11 @@ impl Glob {
                     break;
                 }
             }
-            if Self::match_segments(remaining_segments, &chars[end_pos..].iter().collect::<String>(), path_separator) {
+            if Self::match_segments(
+                remaining_segments,
+                &chars[end_pos..].iter().collect::<String>(),
+                path_separator,
+            ) {
                 return Some(end_pos);
             }
         }

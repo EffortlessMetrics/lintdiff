@@ -720,12 +720,30 @@ mod tests {
 
     #[test]
     fn canonical_severity_parse_error() {
-        assert_eq!(CanonicalSeverity::parse("error"), Ok(CanonicalSeverity::Error));
-        assert_eq!(CanonicalSeverity::parse("ERROR"), Ok(CanonicalSeverity::Error));
-        assert_eq!(CanonicalSeverity::parse("err"), Ok(CanonicalSeverity::Error));
-        assert_eq!(CanonicalSeverity::parse("fatal"), Ok(CanonicalSeverity::Error));
-        assert_eq!(CanonicalSeverity::parse("critical"), Ok(CanonicalSeverity::Error));
-        assert_eq!(CanonicalSeverity::parse("fail"), Ok(CanonicalSeverity::Error));
+        assert_eq!(
+            CanonicalSeverity::parse("error"),
+            Ok(CanonicalSeverity::Error)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("ERROR"),
+            Ok(CanonicalSeverity::Error)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("err"),
+            Ok(CanonicalSeverity::Error)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("fatal"),
+            Ok(CanonicalSeverity::Error)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("critical"),
+            Ok(CanonicalSeverity::Error)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("fail"),
+            Ok(CanonicalSeverity::Error)
+        );
         assert_eq!(CanonicalSeverity::parse("2"), Ok(CanonicalSeverity::Error));
     }
 
@@ -751,7 +769,10 @@ mod tests {
 
     #[test]
     fn canonical_severity_parse_info() {
-        assert_eq!(CanonicalSeverity::parse("info"), Ok(CanonicalSeverity::Info));
+        assert_eq!(
+            CanonicalSeverity::parse("info"),
+            Ok(CanonicalSeverity::Info)
+        );
         assert_eq!(
             CanonicalSeverity::parse("INFO"),
             Ok(CanonicalSeverity::Info)
@@ -760,7 +781,10 @@ mod tests {
             CanonicalSeverity::parse("information"),
             Ok(CanonicalSeverity::Info)
         );
-        assert_eq!(CanonicalSeverity::parse("note"), Ok(CanonicalSeverity::Info));
+        assert_eq!(
+            CanonicalSeverity::parse("note"),
+            Ok(CanonicalSeverity::Info)
+        );
         assert_eq!(
             CanonicalSeverity::parse("convention"),
             Ok(CanonicalSeverity::Info)
@@ -773,14 +797,26 @@ mod tests {
 
     #[test]
     fn canonical_severity_parse_hint() {
-        assert_eq!(CanonicalSeverity::parse("hint"), Ok(CanonicalSeverity::Hint));
-        assert_eq!(CanonicalSeverity::parse("HINT"), Ok(CanonicalSeverity::Hint));
+        assert_eq!(
+            CanonicalSeverity::parse("hint"),
+            Ok(CanonicalSeverity::Hint)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("HINT"),
+            Ok(CanonicalSeverity::Hint)
+        );
         assert_eq!(
             CanonicalSeverity::parse("suggestion"),
             Ok(CanonicalSeverity::Hint)
         );
-        assert_eq!(CanonicalSeverity::parse("help"), Ok(CanonicalSeverity::Hint));
-        assert_eq!(CanonicalSeverity::parse("style"), Ok(CanonicalSeverity::Hint));
+        assert_eq!(
+            CanonicalSeverity::parse("help"),
+            Ok(CanonicalSeverity::Hint)
+        );
+        assert_eq!(
+            CanonicalSeverity::parse("style"),
+            Ok(CanonicalSeverity::Hint)
+        );
     }
 
     #[test]
@@ -962,10 +998,7 @@ mod tests {
 
         mapper1.merge(mapper2);
 
-        assert_eq!(
-            mapper1.map("linter", "error"),
-            CanonicalSeverity::Warning
-        );
+        assert_eq!(mapper1.map("linter", "error"), CanonicalSeverity::Warning);
     }
 
     // =========================================================================
@@ -1070,10 +1103,13 @@ mod tests {
     #[test]
     fn builder_with_linter() {
         let mapper = SeverityMapBuilder::new()
-            .with_linter("custom", [
-                ("error", CanonicalSeverity::Error),
-                ("warning", CanonicalSeverity::Warning),
-            ])
+            .with_linter(
+                "custom",
+                [
+                    ("error", CanonicalSeverity::Error),
+                    ("warning", CanonicalSeverity::Warning),
+                ],
+            )
             .build();
 
         assert_eq!(mapper.map("custom", "error"), CanonicalSeverity::Error);
@@ -1193,7 +1229,10 @@ mod tests {
     fn very_long_severity_string() {
         let mapper = SeverityMapper::from_defaults();
         let long_severity = "error".repeat(100);
-        assert_eq!(mapper.map("eslint", &long_severity), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("eslint", &long_severity),
+            CanonicalSeverity::Unknown
+        );
     }
 
     // =========================================================================
@@ -1217,14 +1256,8 @@ mod tests {
 
     #[test]
     fn canonical_severity_debug() {
-        assert_eq!(
-            format!("{:?}", CanonicalSeverity::Error),
-            "Error"
-        );
-        assert_eq!(
-            format!("{:?}", CanonicalSeverity::Warning),
-            "Warning"
-        );
+        assert_eq!(format!("{:?}", CanonicalSeverity::Error), "Error");
+        assert_eq!(format!("{:?}", CanonicalSeverity::Warning), "Warning");
     }
 
     #[test]

@@ -149,6 +149,7 @@ impl GitInfo {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum Severity {
     /// Informational hint.
     Hint = 0,
@@ -595,11 +596,7 @@ impl ReportBuilder {
             return Err(ReportBuilderError::MissingToolName);
         }
 
-        if self.tool_version.is_none()
-            || self.tool_version
-                .as_ref()
-                .is_some_and(String::is_empty)
-        {
+        if self.tool_version.is_none() || self.tool_version.as_ref().is_some_and(String::is_empty) {
             return Err(ReportBuilderError::MissingToolVersion);
         }
 
@@ -635,18 +632,15 @@ impl ReportBuilder {
 
         // SAFETY: validate() ensures these are Some and non-empty
         #[allow(clippy::unwrap_used)]
-        let tool = ToolInfo::new(
-            self.tool_name.unwrap(),
-            self.tool_version.unwrap(),
-        );
+        let tool = ToolInfo::new(self.tool_name.unwrap(), self.tool_version.unwrap());
 
         let mut files: Vec<FileResult> = self.file_results.into_values().collect();
         // Sort files by path for deterministic output
         files.sort_by(|a, b| a.path.cmp(&b.path));
 
-        let summary = self.custom_summary.unwrap_or_else(|| {
-            ReportSummary::from_file_results(&files)
-        });
+        let summary = self
+            .custom_summary
+            .unwrap_or_else(|| ReportSummary::from_file_results(&files));
 
         // SAFETY: validate() ensures timestamp is Some and non-empty
         #[allow(clippy::unwrap_used)]
@@ -761,8 +755,7 @@ mod tests {
 
     #[test]
     fn test_finding_with_location() {
-        let finding = Finding::warning("test")
-            .with_location("src/main.rs", 10, 5);
+        let finding = Finding::warning("test").with_location("src/main.rs", 10, 5);
 
         assert_eq!(finding.path, Some("src/main.rs".to_string()));
         assert_eq!(finding.line, Some(10));
@@ -949,9 +942,8 @@ mod tests {
 
     #[test]
     fn test_report_builder_add_finding() {
-        let builder = ReportBuilder::new()
-            .add_finding("src/lib.rs", Finding::error("test error"));
-        
+        let builder = ReportBuilder::new().add_finding("src/lib.rs", Finding::error("test error"));
+
         assert_eq!(builder.file_results.len(), 1);
         let result = builder.file_results.get("src/lib.rs").unwrap();
         assert_eq!(result.added.len(), 1);
@@ -959,9 +951,9 @@ mod tests {
 
     #[test]
     fn test_report_builder_add_removed_finding() {
-        let builder = ReportBuilder::new()
-            .add_removed_finding("src/lib.rs", Finding::warning("fixed"));
-        
+        let builder =
+            ReportBuilder::new().add_removed_finding("src/lib.rs", Finding::warning("fixed"));
+
         let result = builder.file_results.get("src/lib.rs").unwrap();
         assert_eq!(result.removed.len(), 1);
         assert!(result.added.is_empty());
@@ -969,9 +961,9 @@ mod tests {
 
     #[test]
     fn test_report_builder_add_unchanged_finding() {
-        let builder = ReportBuilder::new()
-            .add_unchanged_finding("src/lib.rs", Finding::hint("unchanged"));
-        
+        let builder =
+            ReportBuilder::new().add_unchanged_finding("src/lib.rs", Finding::hint("unchanged"));
+
         let result = builder.file_results.get("src/lib.rs").unwrap();
         assert_eq!(result.unchanged.len(), 1);
     }
@@ -981,7 +973,7 @@ mod tests {
         let builder = ReportBuilder::new()
             .with_tool_info("", "1.0.0")
             .with_timestamp("2024-01-15T10:30:00Z");
-        
+
         let err = builder.validate().unwrap_err();
         assert!(err.is_missing_tool_name());
     }
@@ -991,16 +983,15 @@ mod tests {
         let builder = ReportBuilder::new()
             .with_tool_info("lintdiff", "")
             .with_timestamp("2024-01-15T10:30:00Z");
-        
+
         let err = builder.validate().unwrap_err();
         assert!(err.is_missing_tool_version());
     }
 
     #[test]
     fn test_report_builder_validate_missing_timestamp() {
-        let builder = ReportBuilder::new()
-            .with_tool_info("lintdiff", "1.0.0");
-        
+        let builder = ReportBuilder::new().with_tool_info("lintdiff", "1.0.0");
+
         let err = builder.validate().unwrap_err();
         assert!(err.is_missing_timestamp());
     }
@@ -1010,7 +1001,7 @@ mod tests {
         let builder = ReportBuilder::new()
             .with_tool_info("lintdiff", "1.0.0")
             .with_timestamp("invalid");
-        
+
         let err = builder.validate().unwrap_err();
         assert!(err.is_invalid_timestamp());
     }
@@ -1020,7 +1011,7 @@ mod tests {
         let builder = ReportBuilder::new()
             .with_tool_info("lintdiff", "1.0.0")
             .with_timestamp("2024-01-15T10:30:00Z");
-        
+
         assert!(builder.validate().is_ok());
     }
 

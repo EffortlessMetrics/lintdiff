@@ -194,7 +194,10 @@ fn test_is_ci_returns_true_in_github_actions() {
 #[test]
 fn test_is_ci_returns_true_in_gitlab_ci() {
     with_vars(
-        vec![("GITHUB_ACTIONS", None::<&str>), ("GITLAB_CI", Some("true"))],
+        vec![
+            ("GITHUB_ACTIONS", None::<&str>),
+            ("GITLAB_CI", Some("true")),
+        ],
         || {
             assert!(CiPlatform::is_ci());
         },
@@ -290,7 +293,10 @@ fn test_pr_info_detect_gitlab_ci() {
             ("GITHUB_ACTIONS", None::<&str>),
             ("GITLAB_CI", Some("true")),
             ("CI_MERGE_REQUEST_IID", Some("42")),
-            ("CI_MERGE_REQUEST_SOURCE_BRANCH_NAME", Some("feature-branch")),
+            (
+                "CI_MERGE_REQUEST_SOURCE_BRANCH_NAME",
+                Some("feature-branch"),
+            ),
             ("CI_MERGE_REQUEST_TARGET_BRANCH_NAME", Some("main")),
         ],
         || {
@@ -311,7 +317,10 @@ fn test_pr_info_detect_circleci() {
             ("GITHUB_ACTIONS", None::<&str>),
             ("GITLAB_CI", None::<&str>),
             ("CIRCLECI", Some("true")),
-            ("CIRCLE_PULL_REQUEST", Some("https://github.com/owner/repo/pull/123")),
+            (
+                "CIRCLE_PULL_REQUEST",
+                Some("https://github.com/owner/repo/pull/123"),
+            ),
             ("CIRCLE_BRANCH", Some("feature")),
         ],
         || {
@@ -511,7 +520,10 @@ fn test_commit_info_detect_github_actions() {
     with_vars(
         vec![
             ("GITHUB_ACTIONS", Some("true")),
-            ("GITHUB_SHA", Some("abcdef1234567890abcdef1234567890abcdef12")),
+            (
+                "GITHUB_SHA",
+                Some("abcdef1234567890abcdef1234567890abcdef12"),
+            ),
             ("GITHUB_REF", Some("refs/heads/main")),
         ],
         || {
@@ -531,7 +543,10 @@ fn test_commit_info_detect_gitlab_ci() {
         vec![
             ("GITHUB_ACTIONS", None::<&str>),
             ("GITLAB_CI", Some("true")),
-            ("CI_COMMIT_SHA", Some("1234567890abcdef1234567890abcdef12345678")),
+            (
+                "CI_COMMIT_SHA",
+                Some("1234567890abcdef1234567890abcdef12345678"),
+            ),
             ("CI_COMMIT_REF_NAME", Some("develop")),
             ("CI_COMMIT_MESSAGE", Some("Fix bug")),
             ("CI_COMMIT_AUTHOR", Some("John Doe")),
@@ -556,7 +571,10 @@ fn test_commit_info_detect_circleci() {
             ("GITHUB_ACTIONS", None::<&str>),
             ("GITLAB_CI", None::<&str>),
             ("CIRCLECI", Some("true")),
-            ("CIRCLE_SHA1", Some("fedcba0987654321fedcba0987654321fedcba09")),
+            (
+                "CIRCLE_SHA1",
+                Some("fedcba0987654321fedcba0987654321fedcba09"),
+            ),
             ("CIRCLE_BRANCH", Some("feature-xyz")),
         ],
         || {
@@ -581,7 +599,10 @@ fn test_commit_info_detect_bitbucket() {
             ("TF_BUILD", None::<&str>),
             ("JENKINS_URL", None::<&str>),
             ("BITBUCKET_BUILD_NUMBER", Some("1")),
-            ("BITBUCKET_COMMIT", Some("1111111111111111111111111111111111111111")),
+            (
+                "BITBUCKET_COMMIT",
+                Some("1111111111111111111111111111111111111111"),
+            ),
             ("BITBUCKET_BRANCH", Some("release")),
         ],
         || {
@@ -858,7 +879,10 @@ fn test_mock_github_actions_environment() {
         vec![
             ("GITHUB_ACTIONS", Some("true")),
             ("GITHUB_REPOSITORY", Some("test-owner/test-repo")),
-            ("GITHUB_SHA", Some("1234567890abcdef1234567890abcdef12345678")),
+            (
+                "GITHUB_SHA",
+                Some("1234567890abcdef1234567890abcdef12345678"),
+            ),
             ("GITHUB_REF", Some("refs/heads/test-branch")),
         ],
         || {
@@ -913,9 +937,15 @@ fn test_mock_circleci_environment() {
             ("CIRCLECI", Some("true")),
             ("CIRCLE_PROJECT_USERNAME", Some("circle-org")),
             ("CIRCLE_PROJECT_REPONAME", Some("circle-repo")),
-            ("CIRCLE_SHA1", Some("1111111111111111111111111111111111111111")),
+            (
+                "CIRCLE_SHA1",
+                Some("1111111111111111111111111111111111111111"),
+            ),
             ("CIRCLE_BRANCH", Some("circle-branch")),
-            ("CIRCLE_PULL_REQUEST", Some("https://github.com/circle-org/circle-repo/pull/50")),
+            (
+                "CIRCLE_PULL_REQUEST",
+                Some("https://github.com/circle-org/circle-repo/pull/50"),
+            ),
         ],
         || {
             let env = CiEnvironment::detect();
@@ -940,7 +970,10 @@ fn test_mock_azure_pipelines_environment() {
             ("TRAVIS", None::<&str>),
             ("TF_BUILD", Some("True")),
             ("BUILD_REPOSITORY_NAME", Some("azure-org/azure-repo")),
-            ("BUILD_SOURCEVERSION", Some("2222222222222222222222222222222222222222")),
+            (
+                "BUILD_SOURCEVERSION",
+                Some("2222222222222222222222222222222222222222"),
+            ),
             ("BUILD_SOURCEBRANCH", Some("refs/heads/azure-branch")),
             ("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER", Some("75")),
         ],
@@ -970,7 +1003,10 @@ fn test_mock_drone_ci_environment() {
             ("APPVEYOR", None::<&str>),
             ("DRONE", Some("true")),
             ("DRONE_REPO", Some("drone-org/drone-repo")),
-            ("DRONE_COMMIT_SHA", Some("3333333333333333333333333333333333333333")),
+            (
+                "DRONE_COMMIT_SHA",
+                Some("3333333333333333333333333333333333333333"),
+            ),
             ("DRONE_BRANCH", Some("drone-branch")),
             ("DRONE_COMMIT_MESSAGE", Some("Test commit")),
             ("DRONE_COMMIT_AUTHOR", Some("Test Author")),

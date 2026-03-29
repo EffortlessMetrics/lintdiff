@@ -84,7 +84,10 @@ mod git_sha_creation {
         let result = GitSha::new("0123456789ghijef0123456789abcdef01234567");
         assert!(result.is_err());
         match result {
-            Err(GitInfoError::InvalidHexCharacter { position, character }) => {
+            Err(GitInfoError::InvalidHexCharacter {
+                position,
+                character,
+            }) => {
                 assert_eq!(position, 10);
                 assert_eq!(character, 'g');
             }
@@ -469,8 +472,14 @@ mod edge_cases {
 
     #[test]
     fn git_ref_display() {
-        assert_eq!(format!("{}", GitRef::Branch("main".to_string())), "refs/heads/main");
-        assert_eq!(format!("{}", GitRef::Tag("v1.0.0".to_string())), "refs/tags/v1.0.0");
+        assert_eq!(
+            format!("{}", GitRef::Branch("main".to_string())),
+            "refs/heads/main"
+        );
+        assert_eq!(
+            format!("{}", GitRef::Tag("v1.0.0".to_string())),
+            "refs/tags/v1.0.0"
+        );
         assert_eq!(format!("{}", GitRef::Head), "HEAD");
         assert_eq!(format!("{}", GitRef::Unknown), "(unknown)");
     }
@@ -491,7 +500,7 @@ mod edge_cases {
         let sha1 = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         let sha2 = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         let sha3 = GitSha::new("ffffffffffffffffffffffffffffffffffffffff").unwrap();
-        
+
         assert_eq!(sha1, sha2);
         assert_ne!(sha1, sha3);
     }
@@ -555,7 +564,7 @@ mod serde_tests {
         let sha = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         let json = serde_json::to_string(&sha).unwrap();
         assert_eq!(json, "\"0123456789abcdef0123456789abcdef01234567\"");
-        
+
         let deserialized: GitSha = serde_json::from_str(&json).unwrap();
         assert_eq!(sha, deserialized);
     }
@@ -574,7 +583,7 @@ mod serde_tests {
         let info = GitInfo::new(sha)
             .with_ref_name("main".to_string())
             .with_dirty(false);
-        
+
         let json = serde_json::to_string(&info).unwrap();
         assert!(json.contains("0123456789abcdef0123456789abcdef01234567"));
         assert!(json.contains("main"));
@@ -640,14 +649,14 @@ mod ordering_tests {
     #[test]
     fn git_sha_hash_consistency() {
         use std::collections::HashSet;
-        
+
         let sha1 = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         let sha2 = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
-        
+
         let mut set = HashSet::new();
         set.insert(sha1.clone());
         set.insert(sha2.clone());
-        
+
         assert_eq!(set.len(), 1);
     }
 
@@ -677,17 +686,17 @@ mod integration_tests {
         // Simulate parsing a SHA from GITHUB_SHA environment variable
         let env_sha = "0123456789abcdef0123456789abcdef01234567";
         let sha = parse_sha(env_sha).unwrap();
-        
+
         // Simulate parsing a ref from GITHUB_REF
         let env_ref = "refs/heads/main";
         let git_ref = parse_ref(env_ref);
-        
+
         // Build GitInfo
         let info = GitInfo::new(sha)
             .with_ref_name(git_ref.as_branch().unwrap().to_string())
             .with_dirty(false)
             .with_message("Add feature X".to_string());
-        
+
         assert_eq!(info.short_sha(), "0123456");
         assert_eq!(info.ref_name, Some("main".to_string()));
         assert!(info.is_clean());
@@ -697,13 +706,12 @@ mod integration_tests {
     fn typical_tag_release_workflow() {
         let env_sha = "0123456789abcdef0123456789abcdef01234567";
         let env_ref = "refs/tags/v1.0.0";
-        
+
         let sha = parse_sha(env_sha).unwrap();
         let git_ref = parse_ref(env_ref);
-        
-        let info = GitInfo::new(sha)
-            .with_ref_name(git_ref.as_tag().unwrap().to_string());
-        
+
+        let info = GitInfo::new(sha).with_ref_name(git_ref.as_tag().unwrap().to_string());
+
         assert_eq!(info.ref_name, Some("v1.0.0".to_string()));
     }
 
@@ -711,10 +719,10 @@ mod integration_tests {
     fn detached_head_workflow() {
         let env_sha = "0123456789abcdef0123456789abcdef01234567";
         let sha = parse_sha(env_sha).unwrap();
-        
+
         // Detached HEAD - no ref name
         let info = GitInfo::new(sha);
-        
+
         assert!(info.ref_name.is_none());
     }
 
@@ -722,7 +730,7 @@ mod integration_tests {
     fn dirty_working_directory() {
         let sha = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         let info = GitInfo::new(sha).with_dirty(true);
-        
+
         assert!(!info.is_clean());
         assert!(info.is_dirty);
     }

@@ -238,7 +238,10 @@ mod verdict_reason_builder {
         let reason = VerdictReasonBuilder::new()
             .with_custom("Special handling".to_string())
             .build();
-        assert_eq!(reason, VerdictReason::Custom("Special handling".to_string()));
+        assert_eq!(
+            reason,
+            VerdictReason::Custom("Special handling".to_string())
+        );
     }
 
     #[test]
@@ -419,8 +422,7 @@ mod verdict_summary {
 
     #[test]
     fn test_summary_is_failure() {
-        let failure_summary =
-            VerdictSummary::new(VerdictReason::AddedErrors { count: 1 });
+        let failure_summary = VerdictSummary::new(VerdictReason::AddedErrors { count: 1 });
         assert!(failure_summary.is_failure());
 
         let success_summary = VerdictSummary::new(VerdictReason::NoChanges);
@@ -432,8 +434,7 @@ mod verdict_summary {
         let success_summary = VerdictSummary::new(VerdictReason::RemovedErrors { count: 1 });
         assert!(success_summary.is_success());
 
-        let failure_summary =
-            VerdictSummary::new(VerdictReason::AddedWarnings { count: 1 });
+        let failure_summary = VerdictSummary::new(VerdictReason::AddedWarnings { count: 1 });
         assert!(!failure_summary.is_success());
     }
 
@@ -480,13 +481,19 @@ mod helper_functions {
     #[test]
     fn test_is_failure_reason_added_errors() {
         assert!(is_failure_reason(&VerdictReason::AddedErrors { count: 1 }));
-        assert!(is_failure_reason(&VerdictReason::AddedErrors { count: 100 }));
+        assert!(is_failure_reason(&VerdictReason::AddedErrors {
+            count: 100
+        }));
     }
 
     #[test]
     fn test_is_failure_reason_added_warnings() {
-        assert!(is_failure_reason(&VerdictReason::AddedWarnings { count: 1 }));
-        assert!(is_failure_reason(&VerdictReason::AddedWarnings { count: 100 }));
+        assert!(is_failure_reason(&VerdictReason::AddedWarnings {
+            count: 1
+        }));
+        assert!(is_failure_reason(&VerdictReason::AddedWarnings {
+            count: 100
+        }));
     }
 
     #[test]
@@ -499,7 +506,9 @@ mod helper_functions {
 
     #[test]
     fn test_is_failure_reason_custom() {
-        assert!(is_failure_reason(&VerdictReason::Custom("Any reason".to_string())));
+        assert!(is_failure_reason(&VerdictReason::Custom(
+            "Any reason".to_string()
+        )));
     }
 
     #[test]
@@ -509,8 +518,12 @@ mod helper_functions {
 
     #[test]
     fn test_is_success_reason_removed() {
-        assert!(is_success_reason(&VerdictReason::RemovedErrors { count: 1 }));
-        assert!(is_success_reason(&VerdictReason::RemovedWarnings { count: 1 }));
+        assert!(is_success_reason(&VerdictReason::RemovedErrors {
+            count: 1
+        }));
+        assert!(is_success_reason(&VerdictReason::RemovedWarnings {
+            count: 1
+        }));
     }
 
     #[test]
@@ -527,7 +540,10 @@ mod helper_functions {
             VerdictReason::RemovedWarnings { count: 1 },
             VerdictReason::RemovedErrors { count: 1 },
             VerdictReason::OnlyUnchanged,
-            VerdictReason::ThresholdExceeded { limit: 1, actual: 2 },
+            VerdictReason::ThresholdExceeded {
+                limit: 1,
+                actual: 2,
+            },
             VerdictReason::Custom("test".to_string()),
         ];
 
@@ -559,9 +575,7 @@ mod edge_cases {
 
     #[test]
     fn test_large_counts() {
-        let reason = VerdictReason::AddedErrors {
-            count: usize::MAX,
-        };
+        let reason = VerdictReason::AddedErrors { count: usize::MAX };
         assert_eq!(reason.count(), Some(usize::MAX));
     }
 
@@ -616,10 +630,7 @@ mod edge_cases {
             actual: 10,
         };
         // This is technically "at" the limit, but the variant exists
-        assert_eq!(
-            format_reason_short(&reason),
-            "threshold-exceeded:10/10"
-        );
+        assert_eq!(format_reason_short(&reason), "threshold-exceeded:10/10");
     }
 
     #[test]
@@ -776,7 +787,11 @@ mod additional_coverage {
             VerdictReason::RemovedWarnings { count: 1 }.icon(),
             VerdictReason::RemovedErrors { count: 1 }.icon(),
             VerdictReason::OnlyUnchanged.icon(),
-            VerdictReason::ThresholdExceeded { limit: 1, actual: 2 }.icon(),
+            VerdictReason::ThresholdExceeded {
+                limit: 1,
+                actual: 2,
+            }
+            .icon(),
             VerdictReason::Custom("".to_string()).icon(),
         ];
 
@@ -795,7 +810,11 @@ mod additional_coverage {
             VerdictReason::RemovedWarnings { count: 1 }.as_str(),
             VerdictReason::RemovedErrors { count: 1 }.as_str(),
             VerdictReason::OnlyUnchanged.as_str(),
-            VerdictReason::ThresholdExceeded { limit: 1, actual: 2 }.as_str(),
+            VerdictReason::ThresholdExceeded {
+                limit: 1,
+                actual: 2,
+            }
+            .as_str(),
             VerdictReason::Custom("".to_string()).as_str(),
         ];
 
@@ -819,14 +838,26 @@ mod additional_coverage {
     #[test]
     fn test_merge_threshold_takes_highest_excess() {
         let reasons = vec![
-            VerdictReason::ThresholdExceeded { limit: 10, actual: 12 }, // excess 2
-            VerdictReason::ThresholdExceeded { limit: 5, actual: 20 },  // excess 15
-            VerdictReason::ThresholdExceeded { limit: 3, actual: 5 },   // excess 2
+            VerdictReason::ThresholdExceeded {
+                limit: 10,
+                actual: 12,
+            }, // excess 2
+            VerdictReason::ThresholdExceeded {
+                limit: 5,
+                actual: 20,
+            }, // excess 15
+            VerdictReason::ThresholdExceeded {
+                limit: 3,
+                actual: 5,
+            }, // excess 2
         ];
         let merged = merge_reasons(&reasons);
         assert_eq!(
             merged,
-            VerdictReason::ThresholdExceeded { limit: 5, actual: 20 }
+            VerdictReason::ThresholdExceeded {
+                limit: 5,
+                actual: 20
+            }
         );
     }
 
@@ -866,7 +897,10 @@ mod additional_coverage {
             VerdictReason::RemovedWarnings { count: 1 },
             VerdictReason::RemovedErrors { count: 1 },
             VerdictReason::OnlyUnchanged,
-            VerdictReason::ThresholdExceeded { limit: 1, actual: 2 },
+            VerdictReason::ThresholdExceeded {
+                limit: 1,
+                actual: 2,
+            },
             VerdictReason::Custom("test".to_string()),
         ];
 

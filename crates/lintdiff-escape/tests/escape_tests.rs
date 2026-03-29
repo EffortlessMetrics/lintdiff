@@ -2,7 +2,10 @@
 
 use std::borrow::Cow;
 
-use lintdiff_escape::{escape, escape_github, escape_html, escape_json, escape_markdown, escape_plain, needs_escaping, OutputFormat};
+use lintdiff_escape::{
+    escape, escape_github, escape_html, escape_json, escape_markdown, escape_plain, needs_escaping,
+    OutputFormat,
+};
 
 // =============================================================================
 // GitHub Actions Escaping Tests
@@ -47,10 +50,7 @@ mod github_tests {
 
     #[test]
     fn test_combined_special_chars() {
-        assert_eq!(
-            escape_github("Error: 100%\nDone"),
-            "Error%3A 100%25%0ADone"
-        );
+        assert_eq!(escape_github("Error: 100%\nDone"), "Error%3A 100%25%0ADone");
         assert_eq!(
             escape_github("::error::50%\r\n"),
             "%3A%3Aerror%3A%3A50%25%0D%0A"
@@ -415,11 +415,20 @@ mod zero_copy_tests {
     #[test]
     fn test_escape_function_zero_copy() {
         let s = "no special chars";
-        assert!(matches!(escape(s, OutputFormat::GitHubActions), Cow::Borrowed(_)));
-        assert!(matches!(escape(s, OutputFormat::Markdown), Cow::Borrowed(_)));
+        assert!(matches!(
+            escape(s, OutputFormat::GitHubActions),
+            Cow::Borrowed(_)
+        ));
+        assert!(matches!(
+            escape(s, OutputFormat::Markdown),
+            Cow::Borrowed(_)
+        ));
         assert!(matches!(escape(s, OutputFormat::Html), Cow::Borrowed(_)));
         assert!(matches!(escape(s, OutputFormat::Json), Cow::Borrowed(_)));
-        assert!(matches!(escape(s, OutputFormat::PlainText), Cow::Borrowed(_)));
+        assert!(matches!(
+            escape(s, OutputFormat::PlainText),
+            Cow::Borrowed(_)
+        ));
     }
 }
 
@@ -432,7 +441,10 @@ mod output_format_tests {
 
     #[test]
     fn test_debug_impl() {
-        assert_eq!(format!("{:?}", OutputFormat::GitHubActions), "GitHubActions");
+        assert_eq!(
+            format!("{:?}", OutputFormat::GitHubActions),
+            "GitHubActions"
+        );
         assert_eq!(format!("{:?}", OutputFormat::Markdown), "Markdown");
         assert_eq!(format!("{:?}", OutputFormat::PlainText), "PlainText");
         assert_eq!(format!("{:?}", OutputFormat::Html), "Html");

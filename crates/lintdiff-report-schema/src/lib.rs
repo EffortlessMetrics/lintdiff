@@ -15,7 +15,11 @@ impl SchemaVersion {
     /// Create a new schema version.
     #[must_use]
     pub const fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
+        Self {
+            major,
+            minor,
+            patch,
+        }
     }
 
     /// Get the current (latest) schema version.
@@ -61,7 +65,11 @@ impl SchemaVersion {
         let patch = parts[2]
             .parse()
             .map_err(|_| SchemaVersionParseError::InvalidPatch(parts[2].to_string()))?;
-        Ok(Self { major, minor, patch })
+        Ok(Self {
+            major,
+            minor,
+            patch,
+        })
     }
 
     /// Check if this version is compatible with another.

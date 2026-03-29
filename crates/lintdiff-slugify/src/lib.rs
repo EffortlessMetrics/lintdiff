@@ -534,11 +534,9 @@ fn truncate_at_boundary(s: &mut String, separator: char, max_len: usize) {
 #[must_use]
 pub fn slugify_cow(s: &str) -> Cow<'_, str> {
     // Check if slugification is needed
-    let needs_conversion = s.chars().any(|c| {
-        c.is_whitespace()
-            || (!c.is_alphanumeric() && c != '-')
-            || c.is_uppercase()
-    });
+    let needs_conversion = s
+        .chars()
+        .any(|c| c.is_whitespace() || (!c.is_alphanumeric() && c != '-') || c.is_uppercase());
 
     if !needs_conversion {
         Cow::Borrowed(s)
@@ -580,7 +578,10 @@ mod tests {
     fn test_preserve_special() {
         let options = SlugOptions::new().with_preserve_special(true);
         assert_eq!(slugify_with_options("Test@123", &options), "test@123");
-        assert_eq!(slugify_with_options("Special#Char", &options), "special#char");
+        assert_eq!(
+            slugify_with_options("Special#Char", &options),
+            "special#char"
+        );
     }
 
     #[test]
@@ -592,7 +593,10 @@ mod tests {
     #[test]
     fn test_max_length() {
         let options = SlugOptions::new().with_max_length(10);
-        assert_eq!(slugify_with_options("Very Long String", &options), "very-long");
+        assert_eq!(
+            slugify_with_options("Very Long String", &options),
+            "very-long"
+        );
     }
 
     #[test]

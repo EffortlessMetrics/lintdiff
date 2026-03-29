@@ -142,7 +142,10 @@ mod strip_diff_prefix_tests {
 
     #[test]
     fn nested_paths() {
-        assert_eq!(strip_diff_prefix("a/deep/nested/path.rs"), "deep/nested/path.rs");
+        assert_eq!(
+            strip_diff_prefix("a/deep/nested/path.rs"),
+            "deep/nested/path.rs"
+        );
     }
 
     #[test]
@@ -713,7 +716,9 @@ mod normalized_paths_tests {
 
     #[test]
     fn normalized_handles_dev_null() {
-        let paths = DiffPaths::parse("--- /dev/null\n+++ b/new.rs\n").unwrap().unwrap();
+        let paths = DiffPaths::parse("--- /dev/null\n+++ b/new.rs\n")
+            .unwrap()
+            .unwrap();
         assert_eq!(paths.old_path_normalized(), Some("/dev/null"));
     }
 
@@ -1170,10 +1175,7 @@ mod edge_cases_tests {
         let header = "--- a/a/b/c/d/e/f/g/h/file.rs\n+++ b/a/b/c/d/e/f/g/h/file.rs\n";
         let paths = DiffPaths::parse(header).unwrap().unwrap();
 
-        assert_eq!(
-            paths.old_path_normalized(),
-            Some("a/b/c/d/e/f/g/h/file.rs")
-        );
+        assert_eq!(paths.old_path_normalized(), Some("a/b/c/d/e/f/g/h/file.rs"));
     }
 
     #[test]

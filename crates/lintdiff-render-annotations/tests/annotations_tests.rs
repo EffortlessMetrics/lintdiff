@@ -3,7 +3,9 @@
 //! These tests verify the GitHub Actions annotation rendering functionality
 //! including format compliance, severity filtering, and configuration options.
 
-use lintdiff_render_annotations::{render_annotations, render_finding_annotation, AnnotationsConfig};
+use lintdiff_render_annotations::{
+    render_annotations, render_finding_annotation, AnnotationsConfig,
+};
 use lintdiff_types::{Finding, Location, NormPath, Severity};
 
 /// Helper to create a test finding with all fields.
@@ -71,7 +73,13 @@ mod single_finding_rendering {
 
     #[test]
     fn renders_error_with_correct_level() {
-        let finding = create_finding(Severity::Error, "E001", "error message", "src/lib.rs", Some(10));
+        let finding = create_finding(
+            Severity::Error,
+            "E001",
+            "error message",
+            "src/lib.rs",
+            Some(10),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.starts_with("::error"));
@@ -83,7 +91,13 @@ mod single_finding_rendering {
 
     #[test]
     fn renders_warning_with_correct_level() {
-        let finding = create_finding(Severity::Warn, "W001", "warning message", "src/main.rs", Some(42));
+        let finding = create_finding(
+            Severity::Warn,
+            "W001",
+            "warning message",
+            "src/main.rs",
+            Some(42),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.starts_with("::warning"));
@@ -93,7 +107,13 @@ mod single_finding_rendering {
 
     #[test]
     fn renders_info_as_notice() {
-        let finding = create_finding(Severity::Info, "I001", "info message", "docs/README.md", Some(1));
+        let finding = create_finding(
+            Severity::Info,
+            "I001",
+            "info message",
+            "docs/README.md",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.starts_with("::notice"));
@@ -198,9 +218,13 @@ mod severity_filtering {
 
     #[test]
     fn includes_notes_when_enabled() {
-        let findings = vec![
-            create_finding(Severity::Info, "I001", "info", "src/lib.rs", Some(1)),
-        ];
+        let findings = vec![create_finding(
+            Severity::Info,
+            "I001",
+            "info",
+            "src/lib.rs",
+            Some(1),
+        )];
         let config = AnnotationsConfig {
             include_errors: true,
             include_warnings: true,
@@ -238,7 +262,15 @@ mod max_annotations_limit {
     #[test]
     fn limits_output_to_max_annotations() {
         let findings: Vec<Finding> = (0..100)
-            .map(|i| create_finding(Severity::Error, &format!("E{i:03}"), "error", "src/lib.rs", Some(i)))
+            .map(|i| {
+                create_finding(
+                    Severity::Error,
+                    &format!("E{i:03}"),
+                    "error",
+                    "src/lib.rs",
+                    Some(i),
+                )
+            })
             .collect();
 
         let config = AnnotationsConfig {
@@ -253,7 +285,15 @@ mod max_annotations_limit {
     #[test]
     fn takes_first_n_findings() {
         let findings: Vec<Finding> = (0..5)
-            .map(|i| create_finding(Severity::Error, &format!("E{i}"), "error", "src/lib.rs", Some(i)))
+            .map(|i| {
+                create_finding(
+                    Severity::Error,
+                    &format!("E{i}"),
+                    "error",
+                    "src/lib.rs",
+                    Some(i),
+                )
+            })
             .collect();
 
         let config = AnnotationsConfig {
@@ -271,7 +311,13 @@ mod max_annotations_limit {
 
     #[test]
     fn zero_max_annotations_produces_empty_output() {
-        let findings = vec![create_finding(Severity::Error, "E001", "error", "src/lib.rs", Some(1))];
+        let findings = vec![create_finding(
+            Severity::Error,
+            "E001",
+            "error",
+            "src/lib.rs",
+            Some(1),
+        )];
         let config = AnnotationsConfig {
             max_annotations: 0,
             ..Default::default()
@@ -287,7 +333,13 @@ mod github_annotation_format {
 
     #[test]
     fn follows_github_workflow_command_format() {
-        let finding = create_finding(Severity::Error, "clippy::unwrap_used", "used unwrap()", "src/lib.rs", Some(42));
+        let finding = create_finding(
+            Severity::Error,
+            "clippy::unwrap_used",
+            "used unwrap()",
+            "src/lib.rs",
+            Some(42),
+        );
         let annotation = render_finding_annotation(&finding);
 
         // Format: ::{level} file={file},line={line},title={title}::{message}
@@ -301,7 +353,13 @@ mod github_annotation_format {
 
     #[test]
     fn escapes_colons_in_code() {
-        let finding = create_finding(Severity::Error, "clippy::unwrap_used", "message", "src/lib.rs", Some(1));
+        let finding = create_finding(
+            Severity::Error,
+            "clippy::unwrap_used",
+            "message",
+            "src/lib.rs",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         // The title should have colons escaped
@@ -310,7 +368,13 @@ mod github_annotation_format {
 
     #[test]
     fn escapes_colons_in_message() {
-        let finding = create_finding(Severity::Error, "E001", "error: something went wrong", "src/lib.rs", Some(1));
+        let finding = create_finding(
+            Severity::Error,
+            "E001",
+            "error: something went wrong",
+            "src/lib.rs",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.contains("error%3A something went wrong"));
@@ -326,7 +390,13 @@ mod github_annotation_format {
 
     #[test]
     fn escapes_newlines_in_message() {
-        let finding = create_finding(Severity::Error, "E001", "line1\nline2", "src/lib.rs", Some(1));
+        let finding = create_finding(
+            Severity::Error,
+            "E001",
+            "line1\nline2",
+            "src/lib.rs",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.contains("line1%0Aline2"));
@@ -334,7 +404,13 @@ mod github_annotation_format {
 
     #[test]
     fn escapes_carriage_returns_in_message() {
-        let finding = create_finding(Severity::Error, "E001", "line1\r\nline2", "src/lib.rs", Some(1));
+        let finding = create_finding(
+            Severity::Error,
+            "E001",
+            "line1\r\nline2",
+            "src/lib.rs",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.contains("line1%0D%0Aline2"));
@@ -342,7 +418,13 @@ mod github_annotation_format {
 
     #[test]
     fn escapes_percent_in_message() {
-        let finding = create_finding(Severity::Error, "E001", "100% complete", "src/lib.rs", Some(1));
+        let finding = create_finding(
+            Severity::Error,
+            "E001",
+            "100% complete",
+            "src/lib.rs",
+            Some(1),
+        );
         let annotation = render_finding_annotation(&finding);
 
         assert!(annotation.contains("100%25 complete"));

@@ -449,10 +449,7 @@ mod tests {
         };
         assert_eq!(compare_by_key(&a, &b, SortKey::Path), Ordering::Less);
         assert_eq!(compare_by_key(&b, &a, SortKey::Path), Ordering::Greater);
-        assert_eq!(
-            compare_by_key(&a, &a, SortKey::Path),
-            Ordering::Equal
-        );
+        assert_eq!(compare_by_key(&a, &a, SortKey::Path), Ordering::Equal);
     }
 
     #[test]

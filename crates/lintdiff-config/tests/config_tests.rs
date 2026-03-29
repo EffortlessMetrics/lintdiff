@@ -96,14 +96,8 @@ fn test_output_format_default_is_json() {
 
 #[test]
 fn test_output_format_from_str_valid() {
-    assert_eq!(
-        "json".parse::<OutputFormat>().unwrap(),
-        OutputFormat::Json
-    );
-    assert_eq!(
-        "JSON".parse::<OutputFormat>().unwrap(),
-        OutputFormat::Json
-    );
+    assert_eq!("json".parse::<OutputFormat>().unwrap(), OutputFormat::Json);
+    assert_eq!("JSON".parse::<OutputFormat>().unwrap(), OutputFormat::Json);
 
     assert_eq!(
         "markdown".parse::<OutputFormat>().unwrap(),

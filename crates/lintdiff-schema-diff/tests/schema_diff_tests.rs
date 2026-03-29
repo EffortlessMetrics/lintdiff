@@ -113,7 +113,10 @@ mod diff_kind_tests {
 
     #[test]
     fn display_array_length_changed() {
-        assert_eq!(DiffKind::ArrayLengthChanged.to_string(), "array length changed");
+        assert_eq!(
+            DiffKind::ArrayLengthChanged.to_string(),
+            "array length changed"
+        );
     }
 
     #[test]
@@ -859,9 +862,13 @@ mod set_at_path_tests {
         let mut value = json!({"a": {"b": 1}});
         set_at_path(
             &mut value,
-            &[PathSegment::key("a".to_string()), PathSegment::key("b".to_string())],
+            &[
+                PathSegment::key("a".to_string()),
+                PathSegment::key("b".to_string()),
+            ],
             json!(2),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(value, json!({"a": {"b": 2}}));
     }
 

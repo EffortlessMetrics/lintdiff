@@ -409,18 +409,14 @@ mod tests {
 
     #[test]
     fn test_missing_code() {
-        let result = FindingBuilder::new()
-            .with_message("test message")
-            .build();
+        let result = FindingBuilder::new().with_message("test message").build();
 
         assert_eq!(result.unwrap_err(), BuildError::MissingCode);
     }
 
     #[test]
     fn test_missing_message() {
-        let result = FindingBuilder::new()
-            .with_code("test_code")
-            .build();
+        let result = FindingBuilder::new().with_code("test_code").build();
 
         assert_eq!(result.unwrap_err(), BuildError::MissingMessage);
     }

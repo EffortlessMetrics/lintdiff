@@ -11,8 +11,8 @@
 //! Total: 60 tests
 
 use lintdiff_message_norm::{
-    escape, has_ansi, normalize, normalize_owned, strip_ansi, truncate, truncate_at_word,
-    unescape, EscapeFormat, NormalizedMessage, NormalizeConfig,
+    escape, has_ansi, normalize, normalize_owned, strip_ansi, truncate, truncate_at_word, unescape,
+    EscapeFormat, NormalizeConfig, NormalizedMessage,
 };
 
 // =============================================================================
@@ -168,7 +168,9 @@ mod normalize_config_tests {
 
     #[test]
     fn config_with_suffix_uses_custom_suffix() {
-        let config = NormalizeConfig::new().with_max_length(10).with_suffix("...");
+        let config = NormalizeConfig::new()
+            .with_max_length(10)
+            .with_suffix("...");
         assert_eq!(config.truncation_suffix, "...");
         let result = config.normalize("hello world this is long");
         assert!(result.ends_with("..."));
@@ -377,7 +379,10 @@ mod escape_tests {
 
     #[test]
     fn escape_json_escapes_backslash() {
-        assert_eq!(escape("path\\to\\file", EscapeFormat::Json), "path\\\\to\\\\file");
+        assert_eq!(
+            escape("path\\to\\file", EscapeFormat::Json),
+            "path\\\\to\\\\file"
+        );
     }
 
     #[test]
@@ -526,7 +531,10 @@ mod unescape_tests {
 
     #[test]
     fn unescape_json_unescapes_newlines() {
-        assert_eq!(unescape("hello\\nworld", EscapeFormat::Json), "hello\nworld");
+        assert_eq!(
+            unescape("hello\\nworld", EscapeFormat::Json),
+            "hello\nworld"
+        );
     }
 
     #[test]

@@ -71,31 +71,46 @@ mod schema_version_creation_and_parsing {
     #[test]
     fn test_parse_invalid_format_missing_parts() {
         let result = SchemaVersion::parse("1.2");
-        assert!(matches!(result, Err(SchemaVersionParseError::InvalidFormat(_))));
+        assert!(matches!(
+            result,
+            Err(SchemaVersionParseError::InvalidFormat(_))
+        ));
     }
 
     #[test]
     fn test_parse_invalid_format_extra_parts() {
         let result = SchemaVersion::parse("1.2.3.4");
-        assert!(matches!(result, Err(SchemaVersionParseError::InvalidFormat(_))));
+        assert!(matches!(
+            result,
+            Err(SchemaVersionParseError::InvalidFormat(_))
+        ));
     }
 
     #[test]
     fn test_parse_invalid_major_not_a_number() {
         let result = SchemaVersion::parse("a.2.3");
-        assert!(matches!(result, Err(SchemaVersionParseError::InvalidMajor(_))));
+        assert!(matches!(
+            result,
+            Err(SchemaVersionParseError::InvalidMajor(_))
+        ));
     }
 
     #[test]
     fn test_parse_invalid_minor_not_a_number() {
         let result = SchemaVersion::parse("1.b.3");
-        assert!(matches!(result, Err(SchemaVersionParseError::InvalidMinor(_))));
+        assert!(matches!(
+            result,
+            Err(SchemaVersionParseError::InvalidMinor(_))
+        ));
     }
 
     #[test]
     fn test_parse_invalid_patch_not_a_number() {
         let result = SchemaVersion::parse("1.2.c");
-        assert!(matches!(result, Err(SchemaVersionParseError::InvalidPatch(_))));
+        assert!(matches!(
+            result,
+            Err(SchemaVersionParseError::InvalidPatch(_))
+        ));
     }
 }
 
@@ -132,10 +147,7 @@ mod schema_version_compatibility {
     fn test_compatibility_is_reflexive() {
         let v1 = SchemaVersion::new(3, 7, 2);
         let v2 = SchemaVersion::new(3, 1, 9);
-        assert_eq!(
-            v1.is_compatible_with(&v2),
-            v2.is_compatible_with(&v1)
-        );
+        assert_eq!(v1.is_compatible_with(&v2), v2.is_compatible_with(&v1));
     }
 
     #[test]
@@ -143,7 +155,7 @@ mod schema_version_compatibility {
         let v0_1_0 = SchemaVersion::new(0, 1, 0);
         let v0_9_9 = SchemaVersion::new(0, 9, 9);
         let v1_0_0 = SchemaVersion::new(1, 0, 0);
-        
+
         assert!(v0_1_0.is_compatible_with(&v0_9_9));
         assert!(!v0_1_0.is_compatible_with(&v1_0_0));
     }
@@ -178,7 +190,8 @@ mod validation_error_variants {
 
     #[test]
     fn test_invalid_value_error_message() {
-        let error = ValidationError::InvalidValue("count".to_string(), "must be positive".to_string());
+        let error =
+            ValidationError::InvalidValue("count".to_string(), "must be positive".to_string());
         let msg = error.to_string();
         assert!(msg.contains("count"));
         assert!(msg.contains("must be positive"));
@@ -253,11 +266,12 @@ mod validation_result_methods {
 
     #[test]
     fn test_merge_combines_errors_from_invalid_result() {
-        let mut result1 = ValidationResult::with_error(ValidationError::MissingField("a".to_string()));
+        let mut result1 =
+            ValidationResult::with_error(ValidationError::MissingField("a".to_string()));
         let result2 = ValidationResult::with_error(ValidationError::MissingField("b".to_string()));
-        
+
         result1.merge(result2);
-        
+
         assert!(result1.is_err());
         assert_eq!(result1.errors().len(), 2);
     }
@@ -266,20 +280,21 @@ mod validation_result_methods {
     fn test_merge_with_valid_result_does_not_change_validity() {
         let mut result1 = ValidationResult::valid();
         let result2 = ValidationResult::valid();
-        
+
         result1.merge(result2);
-        
+
         assert!(result1.is_ok());
         assert!(result1.errors().is_empty());
     }
 
     #[test]
     fn test_merge_valid_into_invalid_preserves_errors() {
-        let mut result1 = ValidationResult::with_error(ValidationError::Custom("error".to_string()));
+        let mut result1 =
+            ValidationResult::with_error(ValidationError::Custom("error".to_string()));
         let result2 = ValidationResult::valid();
-        
+
         result1.merge(result2);
-        
+
         assert!(result1.is_err());
         assert_eq!(result1.errors().len(), 1);
     }
@@ -291,7 +306,7 @@ mod validation_result_methods {
             ValidationError::MissingField("b".to_string()),
         ];
         let result = ValidationResult::invalid(errors);
-        
+
         let error_slice = result.errors();
         assert_eq!(error_slice.len(), 2);
     }
@@ -341,7 +356,10 @@ mod report_validator_basic_validation {
         let json = serde_json::json!("not an object");
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::InvalidType(..))));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidType(..))));
     }
 
     #[test]
@@ -370,7 +388,10 @@ mod report_validator_basic_validation {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::VersionMismatch(..))));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::VersionMismatch(..))));
     }
 
     #[test]
@@ -383,7 +404,10 @@ mod report_validator_basic_validation {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::InvalidValue(..))));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidValue(..))));
     }
 
     #[test]
@@ -396,7 +420,10 @@ mod report_validator_basic_validation {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::InvalidType(..))));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidType(..))));
     }
 
     #[test]
@@ -424,7 +451,10 @@ mod report_validator_required_fields {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::MissingField(f) if f == "schema_version")));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField(f) if f == "schema_version")));
     }
 
     #[test]
@@ -436,7 +466,10 @@ mod report_validator_required_fields {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::MissingField(f) if f == "verdict")));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField(f) if f == "verdict")));
     }
 
     #[test]
@@ -448,7 +481,10 @@ mod report_validator_required_fields {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::MissingField(f) if f == "findings")));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField(f) if f == "findings")));
     }
 
     #[test]
@@ -473,7 +509,10 @@ mod report_validator_required_fields {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::MissingField(f) if f == "custom_field")));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField(f) if f == "custom_field")));
     }
 
     #[test]
@@ -489,7 +528,10 @@ mod report_validator_required_fields {
         });
         let result = validator.validate(&json);
         assert!(result.is_err());
-        assert!(result.errors().iter().any(|e| matches!(e, ValidationError::MissingField(f) if f == "field2")));
+        assert!(result
+            .errors()
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField(f) if f == "field2")));
     }
 }
 
@@ -574,7 +616,7 @@ mod additional_tests {
         let v1 = SchemaVersion::new(1, 0, 0);
         let v2 = SchemaVersion::new(1, 1, 0);
         let v3 = SchemaVersion::new(2, 0, 0);
-        
+
         assert!(v1 < v2);
         assert!(v2 < v3);
         assert!(v1 < v3);
@@ -585,7 +627,7 @@ mod additional_tests {
         let v1 = SchemaVersion::new(1, 2, 3);
         let v2 = SchemaVersion::new(1, 2, 3);
         let v3 = SchemaVersion::new(1, 2, 4);
-        
+
         assert_eq!(v1, v2);
         assert_ne!(v1, v3);
     }
@@ -593,12 +635,12 @@ mod additional_tests {
     #[test]
     fn test_version_hash() {
         use std::collections::HashSet;
-        
+
         let mut set = HashSet::new();
         let v1 = SchemaVersion::new(1, 0, 0);
         let v2 = SchemaVersion::new(1, 0, 0);
         let v3 = SchemaVersion::new(2, 0, 0);
-        
+
         set.insert(v1);
         assert!(set.contains(&v2));
         assert!(!set.contains(&v3));

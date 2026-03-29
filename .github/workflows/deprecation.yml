@@ -18,12 +18,56 @@ jobs:
       - name: Build deprecated crates
         run: |
           echo "Building all deprecated facade crates..."
-          cargo build -p lintdiff-domain -p lintdiff-core -p lintdiff-ingest
+          deprecated_crates=()
+          if [ -d "${{ github.workspace }}/crates/lintdiff-domain" ]; then
+            deprecated_crates+=("lintdiff-domain")
+          else
+            echo "✅ Skipping lintdiff-domain (already removed)"
+          fi
+          if [ -d "${{ github.workspace }}/crates/lintdiff-core" ]; then
+            deprecated_crates+=("lintdiff-core")
+          else
+            echo "✅ Skipping lintdiff-core (already removed)"
+          fi
+          if [ -d "${{ github.workspace }}/crates/lintdiff-ingest" ]; then
+            deprecated_crates+=("lintdiff-ingest")
+          else
+            echo "✅ Skipping lintdiff-ingest (already removed)"
+          fi
+
+          if [ ${#deprecated_crates[@]} -eq 0 ]; then
+            echo "✅ No deprecated facade crates found; skipping build."
+            exit 0
+          fi
+
+          cargo build ${deprecated_crates[@]/#/ -p }
           
       - name: Check deprecated crates compile without errors
         run: |
           echo "Checking deprecated crates compile successfully..."
-          cargo check -p lintdiff-domain -p lintdiff-core -p lintdiff-ingest
+          deprecated_crates=()
+          if [ -d "${{ github.workspace }}/crates/lintdiff-domain" ]; then
+            deprecated_crates+=("lintdiff-domain")
+          else
+            echo "✅ Skipping lintdiff-domain (already removed)"
+          fi
+          if [ -d "${{ github.workspace }}/crates/lintdiff-core" ]; then
+            deprecated_crates+=("lintdiff-core")
+          else
+            echo "✅ Skipping lintdiff-core (already removed)"
+          fi
+          if [ -d "${{ github.workspace }}/crates/lintdiff-ingest" ]; then
+            deprecated_crates+=("lintdiff-ingest")
+          else
+            echo "✅ Skipping lintdiff-ingest (already removed)"
+          fi
+
+          if [ ${#deprecated_crates[@]} -eq 0 ]; then
+            echo "✅ No deprecated facade crates found; skipping checks."
+            exit 0
+          fi
+
+          cargo check ${deprecated_crates[@]/#/ -p }
 
   # Job 2: Verify deprecation warnings are emitted
   verify-warnings:
@@ -35,6 +79,10 @@ jobs:
       
       - name: Check deprecation warnings in lintdiff-domain
         run: |
+          if [ ! -d "${{ github.workspace }}/crates/lintdiff-domain" ]; then
+            echo "✅ Skipping lintdiff-domain (already removed)"
+            exit 0
+          fi
           echo "Checking that lintdiff-domain emits deprecation warning..."
           # Create a temporary test file that uses the deprecated crate
           mkdir -p /tmp/deptest/src
@@ -66,6 +114,10 @@ jobs:
 
       - name: Check deprecation warnings in lintdiff-core
         run: |
+          if [ ! -d "${{ github.workspace }}/crates/lintdiff-core" ]; then
+            echo "✅ Skipping lintdiff-core (already removed)"
+            exit 0
+          fi
           echo "Checking that lintdiff-core emits deprecation warning..."
           mkdir -p /tmp/deptest-core
           cat > /tmp/deptest-core/Cargo.toml << 'EOF'
@@ -96,6 +148,10 @@ jobs:
 
       - name: Check deprecation warnings in lintdiff-ingest
         run: |
+          if [ ! -d "${{ github.workspace }}/crates/lintdiff-ingest" ]; then
+            echo "✅ Skipping lintdiff-ingest (already removed)"
+            exit 0
+          fi
           echo "Checking that lintdiff-ingest emits deprecation warning..."
           mkdir -p /tmp/deptest-ingest
           cat > /tmp/deptest-ingest/Cargo.toml << 'EOF'

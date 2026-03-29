@@ -37,7 +37,13 @@ impl SeverityCounts {
 
     /// Create counts from individual values.
     #[must_use]
-    pub const fn from_values(hints: u64, notes: u64, warnings: u64, errors: u64, fatals: u64) -> Self {
+    pub const fn from_values(
+        hints: u64,
+        notes: u64,
+        warnings: u64,
+        errors: u64,
+        fatals: u64,
+    ) -> Self {
         Self {
             hints,
             notes,
@@ -187,7 +193,10 @@ impl FileCounts {
     /// Increment a severity for a file.
     pub fn increment(&mut self, path: impl Into<String>, severity: SeverityLevel) {
         self.total.increment(severity);
-        self.by_file.entry(path.into()).or_default().increment(severity);
+        self.by_file
+            .entry(path.into())
+            .or_default()
+            .increment(severity);
     }
 
     /// Get counts for a specific file.
@@ -654,7 +663,10 @@ mod tests {
         summary.record("a.rs", "cat1", SeverityLevel::Hint);
         summary.record("b.rs", "cat2", SeverityLevel::Error);
         let s = format!("{summary}");
-        assert_eq!(s, "2 files, 2 categories, 1 hints, 0 notes, 0 warnings, 1 errors, 0 fatals");
+        assert_eq!(
+            s,
+            "2 files, 2 categories, 1 hints, 0 notes, 0 warnings, 1 errors, 0 fatals"
+        );
     }
 
     #[test]
@@ -789,7 +801,7 @@ mod tests {
         let mut fc = FileCounts::new();
         fc.add_file("a.rs", SeverityCounts::from_values(1, 2, 3, 4, 5));
         fc.add_file("b.rs", SeverityCounts::from_values(2, 3, 4, 5, 6));
-        
+
         let total = fc.total();
         assert_eq!(total.hints, 3);
         assert_eq!(total.notes, 5);
@@ -803,7 +815,7 @@ mod tests {
         let mut cc = CategoryCounts::new();
         cc.add_category("cat1", SeverityCounts::from_values(1, 2, 3, 4, 5));
         cc.add_category("cat2", SeverityCounts::from_values(2, 3, 4, 5, 6));
-        
+
         let total = cc.total();
         assert_eq!(total.hints, 3);
         assert_eq!(total.notes, 5);
@@ -820,7 +832,7 @@ mod tests {
         counts.increment(SeverityLevel::Warning);
         counts.increment(SeverityLevel::Error);
         counts.increment(SeverityLevel::Fatal);
-        
+
         assert_eq!(counts.hints, 1);
         assert_eq!(counts.notes, 1);
         assert_eq!(counts.warnings, 1);
@@ -835,7 +847,7 @@ mod tests {
         fc.increment("a.rs", SeverityLevel::Hint);
         fc.increment("a.rs", SeverityLevel::Warning);
         fc.increment("a.rs", SeverityLevel::Error);
-        
+
         assert_eq!(fc.file_count(), 1);
         let counts = fc.get("a.rs").expect("should exist");
         assert_eq!(counts.hints, 1);
@@ -850,7 +862,7 @@ mod tests {
         cc.increment("cat", SeverityLevel::Hint);
         cc.increment("cat", SeverityLevel::Warning);
         cc.increment("cat", SeverityLevel::Error);
-        
+
         assert_eq!(cc.category_count(), 1);
         let counts = cc.get("cat").expect("should exist");
         assert_eq!(counts.hints, 1);
@@ -864,11 +876,11 @@ mod tests {
         let mut summary = CountSummary::new();
         summary.record("a.rs", "cat1", SeverityLevel::Hint);
         summary.record("a.rs", "cat2", SeverityLevel::Warning);
-        
+
         assert_eq!(summary.total(), 2);
         assert_eq!(summary.by_file.file_count(), 1);
         assert_eq!(summary.by_category.category_count(), 2);
-        
+
         let file_counts = summary.by_file.get("a.rs").expect("should exist");
         assert_eq!(file_counts.total(), 2);
     }
@@ -879,12 +891,12 @@ mod tests {
         let counts = SeverityCounts::from_values(1, 1, 1, 1, 0);
         let rate = counts.pass_rate().expect("pass rate should exist");
         assert!((rate - 0.5).abs() < f64::EPSILON);
-        
+
         // 25% pass rate: 1 non-problem out of 4 total
         let counts2 = SeverityCounts::from_values(1, 0, 1, 1, 1);
         let rate2 = counts2.pass_rate().expect("pass rate should exist");
         assert!((rate2 - 0.25).abs() < f64::EPSILON);
-        
+
         // 75% pass rate: 3 non-problems out of 4 total
         let counts3 = SeverityCounts::from_values(2, 1, 1, 0, 0);
         let rate3 = counts3.pass_rate().expect("pass rate should exist");

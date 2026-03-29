@@ -208,7 +208,13 @@ pub fn table(headers: &[&str], rows: &[Vec<&str>]) -> String {
     let header_row: String = headers
         .iter()
         .enumerate()
-        .map(|(i, h)| format!(" {:width$} ", h, width = widths.get(i).copied().unwrap_or(0)))
+        .map(|(i, h)| {
+            format!(
+                " {:width$} ",
+                h,
+                width = widths.get(i).copied().unwrap_or(0)
+            )
+        })
         .collect::<Vec<_>>()
         .join("|");
 
@@ -225,7 +231,11 @@ pub fn table(headers: &[&str], rows: &[Vec<&str>]) -> String {
             row.iter()
                 .enumerate()
                 .map(|(i, cell)| {
-                    format!(" {:width$} ", cell, width = widths.get(i).copied().unwrap_or(0))
+                    format!(
+                        " {:width$} ",
+                        cell,
+                        width = widths.get(i).copied().unwrap_or(0)
+                    )
                 })
                 .collect::<Vec<_>>()
                 .join("|")
@@ -395,10 +405,7 @@ mod tests {
     #[test]
     fn test_indent_string_multi_line() {
         let config = IndentConfig::default();
-        assert_eq!(
-            config.indent_string("hello\nworld", 1),
-            "  hello\n  world"
-        );
+        assert_eq!(config.indent_string("hello\nworld", 1), "  hello\n  world");
     }
 
     #[test]

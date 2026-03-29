@@ -297,10 +297,8 @@ pub fn render_finding_annotation(finding: &Finding) -> String {
             let message = escape_message(&finding.message);
             let title = escape_message(&finding.code);
 
-            format!(
-                "::{level} file={file},line={line},title={title}::{message}"
-            )
-        }
+            format!("::{level} file={file},line={line},title={title}::{message}")
+        },
     )
 }
 
@@ -412,7 +410,11 @@ mod tests {
 
     #[test]
     fn test_single_info_finding() {
-        let findings = vec![create_test_finding(Severity::Info, "I001", "test info message")];
+        let findings = vec![create_test_finding(
+            Severity::Info,
+            "I001",
+            "test info message",
+        )];
         let config = AnnotationsConfig::default();
         let result = render_annotations(&findings, &config);
 
@@ -423,7 +425,11 @@ mod tests {
 
     #[test]
     fn test_info_finding_included_when_enabled() {
-        let findings = vec![create_test_finding(Severity::Info, "I001", "test info message")];
+        let findings = vec![create_test_finding(
+            Severity::Info,
+            "I001",
+            "test info message",
+        )];
         let config = AnnotationsConfig {
             include_notes: true,
             ..Default::default()
@@ -507,14 +513,8 @@ mod tests {
         assert_eq!(escape_message("hello:world"), "hello%3Aworld");
         assert_eq!(escape_message("a,b,c"), "a%2Cb%2Cc");
         assert_eq!(escape_message("100%"), "100%25");
-        assert_eq!(
-            escape_message("line1\nline2"),
-            "line1%0Aline2"
-        );
-        assert_eq!(
-            escape_message("line1\r\nline2"),
-            "line1%0D%0Aline2"
-        );
+        assert_eq!(escape_message("line1\nline2"), "line1%0Aline2");
+        assert_eq!(escape_message("line1\r\nline2"), "line1%0D%0Aline2");
     }
 
     #[test]

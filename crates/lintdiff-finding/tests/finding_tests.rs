@@ -512,7 +512,9 @@ fn test_finding_location_with_line() {
 
 #[test]
 fn test_finding_location_with_line_and_column() {
-    let finding = Finding::new("src/lib.rs", "msg").with_line(42).with_column(10);
+    let finding = Finding::new("src/lib.rs", "msg")
+        .with_line(42)
+        .with_column(10);
     assert_eq!(finding.location(), "src/lib.rs:42:10");
 }
 

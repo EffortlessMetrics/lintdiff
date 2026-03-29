@@ -640,7 +640,7 @@ fn test_star_at_end() {
 
 #[test]
 fn test_double_star_not_globstar() {
-    // When ** is not between separators, it should act as two * 
+    // When ** is not between separators, it should act as two *
     let glob = Glob::new("file**.rs").unwrap();
     assert!(glob.is_match("file.rs"));
     assert!(glob.is_match("file_extra.rs"));
@@ -780,7 +780,7 @@ fn test_star_question_combination() {
     let glob = Glob::new("*?.rs").unwrap();
     assert!(glob.is_match("ab.rs")); // * matches a, ? matches b
     assert!(glob.is_match("abc.rs")); // * matches ab, ? matches c
-    // * can match empty, so a.rs works: * matches "", ? matches "a"
+                                      // * can match empty, so a.rs works: * matches "", ? matches "a"
     assert!(glob.is_match("a.rs"));
     assert!(!glob.is_match(".rs")); // ? needs at least one char
 }

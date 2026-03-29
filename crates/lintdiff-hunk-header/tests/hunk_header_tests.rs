@@ -12,7 +12,7 @@
 //! 9. Display trait round-trip (5 tests)
 //! 10. Property-based tests with proptest (5 tests)
 
-use lintdiff_hunk_header::{HunkHeader, HunkHeaderError, parse_hunk_header};
+use lintdiff_hunk_header::{parse_hunk_header, HunkHeader, HunkHeaderError};
 
 // =============================================================================
 // 1. HunkHeader creation (10 tests)
@@ -315,7 +315,9 @@ fn test_parse_standard_hunk_header() {
 
 #[test]
 fn test_parse_with_large_numbers() {
-    let header = parse_hunk_header("@@ -1000,500 +2000,750 @@").unwrap().unwrap();
+    let header = parse_hunk_header("@@ -1000,500 +2000,750 @@")
+        .unwrap()
+        .unwrap();
     assert_eq!(header.old_start(), 1000);
     assert_eq!(header.old_count(), 500);
     assert_eq!(header.new_start(), 2000);
@@ -324,7 +326,9 @@ fn test_parse_with_large_numbers() {
 
 #[test]
 fn test_parse_with_context_after() {
-    let header = parse_hunk_header("@@ -1,4 +1,5 @@ function name()").unwrap().unwrap();
+    let header = parse_hunk_header("@@ -1,4 +1,5 @@ function name()")
+        .unwrap()
+        .unwrap();
     assert_eq!(header.old_start(), 1);
     assert_eq!(header.old_count(), 4);
     assert_eq!(header.new_start(), 1);
@@ -508,7 +512,9 @@ fn test_line_count_calculation() {
 #[test]
 fn test_parse_with_function_context() {
     // Git sometimes includes function context after the header
-    let header = parse_hunk_header("@@ -1,4 +1,5 @@ fn main() {").unwrap().unwrap();
+    let header = parse_hunk_header("@@ -1,4 +1,5 @@ fn main() {")
+        .unwrap()
+        .unwrap();
     assert_eq!(header.old_start(), 1);
     assert_eq!(header.old_count(), 4);
     assert_eq!(header.new_start(), 1);
@@ -702,7 +708,9 @@ proptest! {
 
 #[test]
 fn test_parse_with_tabs() {
-    let header = parse_hunk_header("@@ -1,4 +1,5 @@\tsome context").unwrap().unwrap();
+    let header = parse_hunk_header("@@ -1,4 +1,5 @@\tsome context")
+        .unwrap()
+        .unwrap();
     assert_eq!(header.old_start(), 1);
     assert_eq!(header.old_count(), 4);
 }
@@ -766,7 +774,9 @@ fn test_hash_trait() {
 #[test]
 fn test_parse_returns_none_for_diff_header() {
     // A diff --git line should not be parsed as a hunk header
-    assert!(parse_hunk_header("diff --git a/file.rs b/file.rs").unwrap().is_none());
+    assert!(parse_hunk_header("diff --git a/file.rs b/file.rs")
+        .unwrap()
+        .is_none());
 }
 
 #[test]

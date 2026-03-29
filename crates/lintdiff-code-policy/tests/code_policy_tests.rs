@@ -8,9 +8,9 @@
 //! - Property-based tests with proptest
 
 use lintdiff_code_policy::{
-    count_matching_lines, find_matching_lines, glob_matches_pattern, line_number_at,
-    regex_matches_pattern, CodePolicy, Match, PolicyEvaluator, PolicyResult, PolicyRule,
-    PatternType, Severity, column_number_at,
+    column_number_at, count_matching_lines, find_matching_lines, glob_matches_pattern,
+    line_number_at, regex_matches_pattern, CodePolicy, Match, PatternType, PolicyEvaluator,
+    PolicyResult, PolicyRule, Severity,
 };
 
 // =============================================================================
@@ -185,29 +185,26 @@ mod policy_rule_tests {
 
     #[test]
     fn rule_with_severity_sets_severity() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_severity(Severity::Critical);
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_severity(Severity::Critical);
         assert_eq!(rule.severity, Some(Severity::Critical));
     }
 
     #[test]
     fn rule_with_message_sets_message() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_message("Avoid using this pattern");
+        let rule =
+            PolicyRule::new("test", CodePolicy::Deny).with_message("Avoid using this pattern");
         assert_eq!(rule.message, Some("Avoid using this pattern".to_string()));
     }
 
     #[test]
     fn rule_with_file_filter_sets_filter() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_file_filter("src/**/*.rs");
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_file_filter("src/**/*.rs");
         assert_eq!(rule.file_filter, Some("src/**/*.rs".to_string()));
     }
 
     #[test]
     fn rule_with_id_sets_id() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_id("POLICY-001");
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_id("POLICY-001");
         assert_eq!(rule.id, Some("POLICY-001".to_string()));
     }
 
@@ -236,16 +233,14 @@ mod policy_rule_tests {
 
     #[test]
     fn rule_applies_to_file_with_filter_matches_correctly() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_file_filter("*.rs");
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_file_filter("*.rs");
         assert!(rule.applies_to_file("main.rs").unwrap());
         assert!(!rule.applies_to_file("main.txt").unwrap());
     }
 
     #[test]
     fn rule_applies_to_file_with_globstar_filter() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_file_filter("src/**/*.rs");
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_file_filter("src/**/*.rs");
         assert!(rule.applies_to_file("src/lib.rs").unwrap());
         assert!(rule.applies_to_file("src/foo/bar.rs").unwrap());
         assert!(!rule.applies_to_file("tests/lib.rs").unwrap());
@@ -253,8 +248,7 @@ mod policy_rule_tests {
 
     #[test]
     fn rule_clone_works() {
-        let rule = PolicyRule::new("test", CodePolicy::Deny)
-            .with_message("Test message");
+        let rule = PolicyRule::new("test", CodePolicy::Deny).with_message("Test message");
         let cloned = rule.clone();
         assert_eq!(rule.pattern, cloned.pattern);
         assert_eq!(rule.policy, cloned.policy);
@@ -328,8 +322,8 @@ mod policy_result_tests {
     #[test]
     fn result_with_file_path_adds_path() {
         let rule = PolicyRule::new("test", CodePolicy::Deny);
-        let result = PolicyResult::new(rule, vec![], CodePolicy::Deny)
-            .with_file_path("src/main.rs");
+        let result =
+            PolicyResult::new(rule, vec![], CodePolicy::Deny).with_file_path("src/main.rs");
         assert_eq!(result.file_path, Some("src/main.rs".to_string()));
     }
 
@@ -367,7 +361,8 @@ mod policy_result_tests {
             rule,
             vec![Match::new(0, 4, 1, "test".to_string())],
             CodePolicy::Deny,
-        ).with_file_path("test.rs");
+        )
+        .with_file_path("test.rs");
         let cloned = result.clone();
         assert_eq!(result.file_path, cloned.file_path);
         assert_eq!(result.matches.len(), cloned.matches.len());
@@ -602,8 +597,7 @@ mod file_evaluation_tests {
     fn evaluate_file_applies_file_filter() {
         let mut evaluator = PolicyEvaluator::new();
         evaluator.add_rule(
-            PolicyRule::glob("todo!()", CodePolicy::Deny)
-                .with_file_filter("src/**/*.rs"),
+            PolicyRule::glob("todo!()", CodePolicy::Deny).with_file_filter("src/**/*.rs"),
         );
 
         let code = "fn main() { todo!() }";
@@ -631,10 +625,7 @@ mod file_evaluation_tests {
     #[test]
     fn evaluate_file_with_no_matching_rules_returns_empty() {
         let mut evaluator = PolicyEvaluator::new();
-        evaluator.add_rule(
-            PolicyRule::glob("todo!()", CodePolicy::Deny)
-                .with_file_filter("*.txt"),
-        );
+        evaluator.add_rule(PolicyRule::glob("todo!()", CodePolicy::Deny).with_file_filter("*.txt"));
 
         let code = "fn main() { todo!() }";
         let results = evaluator.evaluate_file("src/main.rs", code);
@@ -988,8 +979,7 @@ fn main() {
 
         // Allow println! in main
         evaluator.add_rule(
-            PolicyRule::glob("println!", CodePolicy::Allow)
-                .with_file_filter("src/main.rs"),
+            PolicyRule::glob("println!", CodePolicy::Allow).with_file_filter("src/main.rs"),
         );
 
         let code = r#"
@@ -1006,10 +996,12 @@ fn main() {
         // Should have results for unwrap (deny) and TODO (suppress)
         assert!(results.len() >= 2);
 
-        let deny_results: Vec<_> = results.iter()
+        let deny_results: Vec<_> = results
+            .iter()
             .filter(|r| r.policy == CodePolicy::Deny)
             .collect();
-        let suppress_results: Vec<_> = results.iter()
+        let suppress_results: Vec<_> = results
+            .iter()
             .filter(|r| r.policy == CodePolicy::Suppress)
             .collect();
 
@@ -1033,8 +1025,7 @@ fn main() {
     fn workflow_file_filter_excludes_tests() {
         let mut evaluator = PolicyEvaluator::new();
         evaluator.add_rule(
-            PolicyRule::glob("todo!()", CodePolicy::Deny)
-                .with_file_filter("src/**/*.rs"),
+            PolicyRule::glob("todo!()", CodePolicy::Deny).with_file_filter("src/**/*.rs"),
         );
 
         let code = "fn test() { todo!() }";
@@ -1170,7 +1161,8 @@ mod serde_tests {
             rule,
             vec![Match::new(0, 4, 1, "test".to_string())],
             CodePolicy::Deny,
-        ).with_file_path("test.rs");
+        )
+        .with_file_path("test.rs");
         assert!(result.has_matches());
     }
 }

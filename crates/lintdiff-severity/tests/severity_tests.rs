@@ -498,7 +498,7 @@ mod threshold_functionality {
         let t1 = SeverityThreshold::minimum(Severity::Warning);
         let t2 = SeverityThreshold::minimum(Severity::Warning);
         let t3 = SeverityThreshold::minimum(Severity::Error);
-        
+
         assert_eq!(t1, t2);
         assert_ne!(t1, t3);
     }
@@ -571,12 +571,12 @@ mod additional_coverage {
     #[test]
     fn test_severity_hash_consistency() {
         use std::collections::HashSet;
-        
+
         let mut set = HashSet::new();
         set.insert(Severity::Warning);
         set.insert(Severity::Error);
         set.insert(Severity::Warning); // Duplicate
-        
+
         assert_eq!(set.len(), 2);
     }
 
@@ -585,7 +585,7 @@ mod additional_coverage {
         let s1 = Severity::Warning;
         let s2 = s1; // Copy
         let s3 = s1; // Copy again
-        
+
         assert_eq!(s1, s2);
         assert_eq!(s2, s3);
     }
@@ -595,7 +595,7 @@ mod additional_coverage {
         let t1 = SeverityThreshold::minimum(Severity::Error);
         let t2 = t1; // Copy
         let t3 = t1; // Copy again
-        
+
         assert_eq!(t1, t2);
         assert_eq!(t2, t3);
     }
@@ -609,7 +609,7 @@ mod additional_coverage {
             Severity::Error,
             Severity::Fatal,
         ];
-        
+
         // Verify each is strictly less than the next
         for i in 0..severities.len() - 1 {
             assert!(severities[i] < severities[i + 1]);
@@ -619,7 +619,7 @@ mod additional_coverage {
     #[test]
     fn test_roundtrip_str_to_severity_to_str() {
         let inputs = ["hint", "note", "warning", "error", "fatal"];
-        
+
         for input in inputs {
             let severity = Severity::from_str(input).unwrap();
             assert_eq!(severity.as_str(), input);

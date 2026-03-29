@@ -167,11 +167,7 @@ pub fn normalize_whitespace_with_options(s: &str, trim: bool, collapse: bool) ->
             line.to_string()
         };
 
-        let final_line = if trim {
-            processed.trim()
-        } else {
-            &processed
-        };
+        let final_line = if trim { processed.trim() } else { &processed };
 
         if i > 0 {
             result.push('\n');

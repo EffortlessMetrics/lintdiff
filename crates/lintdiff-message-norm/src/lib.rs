@@ -151,7 +151,8 @@ impl NormalizeConfig {
 
         // Step 3: Collapse internal whitespace
         if self.collapse_whitespace {
-            let has_multiple_spaces = result.contains("  ") || result.contains("\t ") || result.contains("\t\t");
+            let has_multiple_spaces =
+                result.contains("  ") || result.contains("\t ") || result.contains("\t\t");
             if has_multiple_spaces {
                 let mut collapsed = String::with_capacity(result.len());
                 let mut prev_was_space = false;
@@ -501,7 +502,12 @@ fn unescape_html(message: &str) -> Cow<'_, str> {
         if chars[i] == '&' {
             // Look for semicolon
             let mut semicolon_pos = None;
-            for (j, &ch) in chars.iter().enumerate().take(chars.len().min(i + 12)).skip(i + 1) {
+            for (j, &ch) in chars
+                .iter()
+                .enumerate()
+                .take(chars.len().min(i + 12))
+                .skip(i + 1)
+            {
                 if ch == ';' {
                     semicolon_pos = Some(j);
                     break;
@@ -650,12 +656,23 @@ fn escape_markdown(message: &str) -> Cow<'_, str> {
     let needs_escape = message.chars().any(|c| {
         matches!(
             c,
-            '\\' | '`' | '*'
-                | '_' | '{' | '}'
-                | '[' | ']' | '('
-                | ')' | '#' | '+'
-                | '-' | '.' | '!'
-                | '|' | '~' | '>'
+            '\\' | '`'
+                | '*'
+                | '_'
+                | '{'
+                | '}'
+                | '['
+                | ']'
+                | '('
+                | ')'
+                | '#'
+                | '+'
+                | '-'
+                | '.'
+                | '!'
+                | '|'
+                | '~'
+                | '>'
         )
     });
 
@@ -666,8 +683,8 @@ fn escape_markdown(message: &str) -> Cow<'_, str> {
     let mut result = String::with_capacity(message.len() + message.len() / 4);
     for c in message.chars() {
         match c {
-            '\\' | '`' | '*' | '_' | '{' | '}' | '[' | ']' | '(' | ')' | '#' | '+' | '-'
-            | '.' | '!' | '|' | '~' | '>' => {
+            '\\' | '`' | '*' | '_' | '{' | '}' | '[' | ']' | '(' | ')' | '#' | '+' | '-' | '.'
+            | '!' | '|' | '~' | '>' => {
                 result.push('\\');
                 result.push(c);
             }
@@ -691,12 +708,23 @@ fn unescape_markdown(message: &str) -> Cow<'_, str> {
                 // Unescape known markdown characters
                 if matches!(
                     next,
-                    '\\' | '`' | '*'
-                        | '_' | '{' | '}'
-                        | '[' | ']' | '('
-                        | ')' | '#' | '+'
-                        | '-' | '.' | '!'
-                        | '|' | '~' | '>'
+                    '\\' | '`'
+                        | '*'
+                        | '_'
+                        | '{'
+                        | '}'
+                        | '['
+                        | ']'
+                        | '('
+                        | ')'
+                        | '#'
+                        | '+'
+                        | '-'
+                        | '.'
+                        | '!'
+                        | '|'
+                        | '~'
+                        | '>'
                 ) {
                     result.push(next);
                     chars.next();

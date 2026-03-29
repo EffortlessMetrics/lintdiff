@@ -133,7 +133,9 @@ impl NormalizeConfig {
 
         // Step 3: Strip diff prefixes (a/ or b/)
         if self.strip_diff_prefix {
-            let stripped = result.strip_prefix("a/").or_else(|| result.strip_prefix("b/"));
+            let stripped = result
+                .strip_prefix("a/")
+                .or_else(|| result.strip_prefix("b/"));
             if let Some(s) = stripped {
                 result = Cow::Owned(s.to_owned());
             }
@@ -202,15 +204,15 @@ pub fn extension(path: &str) -> Option<&str> {
     // Handle both forward and backslashes
     let last_sep = path.rfind(&['/', '\\'][..]).map_or(0, |i| i + 1);
     let filename = &path[last_sep..];
-    
+
     // Find the extension (after last .)
     let dot_pos = filename.rfind('.')?;
-    
+
     // Extension must not be the first character (hidden files like .gitignore)
     if dot_pos == 0 {
         return None;
     }
-    
+
     Some(&filename[dot_pos + 1..])
 }
 
@@ -228,22 +230,23 @@ pub fn file_name(path: &str) -> Option<&str> {
     if path.is_empty() {
         return None;
     }
-    
+
     // If path ends with a slash, it's a directory - no file name
     if path.ends_with('/') || path.ends_with('\\') {
         return None;
     }
-    
+
     // Find the last separator (forward or backslash)
     let last_sep = path.rfind(&['/', '\\'][..]);
-    
-    last_sep.map_or(
-        if path.is_empty() { None } else { Some(path) },
-        |pos| {
-            let name = &path[pos + 1..];
-            if name.is_empty() { None } else { Some(name) }
-        },
-    )
+
+    last_sep.map_or(if path.is_empty() { None } else { Some(path) }, |pos| {
+        let name = &path[pos + 1..];
+        if name.is_empty() {
+            None
+        } else {
+            Some(name)
+        }
+    })
 }
 
 /// Extracts the parent directory from a path.
@@ -260,17 +263,17 @@ pub fn parent(path: &str) -> Option<&str> {
     if path.is_empty() {
         return None;
     }
-    
+
     // Strip trailing slashes
     let path = path.trim_end_matches(&['/', '\\'][..]);
-    
+
     if path.is_empty() {
         return None;
     }
-    
+
     // Find the last separator (forward or backslash)
     let last_sep = path.rfind(&['/', '\\'][..])?;
-    
+
     // Return everything before the last separator
     Some(&path[..last_sep])
 }

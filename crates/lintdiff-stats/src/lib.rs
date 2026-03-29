@@ -154,7 +154,10 @@ impl Stats {
                 Severity::Warn => "warning",
                 Severity::Info => "info",
             };
-            *stats.by_severity.entry(severity_key.to_string()).or_insert(0) += 1;
+            *stats
+                .by_severity
+                .entry(severity_key.to_string())
+                .or_insert(0) += 1;
 
             // Count by code
             *stats.by_code.entry(finding.code.clone()).or_insert(0) += 1;
@@ -256,7 +259,6 @@ impl Stats {
         f64::from(self.matched_diagnostics as u32) / f64::from(self.total_diagnostics as u32)
     }
 }
-
 
 /// Trait for types that can provide stats.
 ///

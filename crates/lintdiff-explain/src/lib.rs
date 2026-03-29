@@ -202,7 +202,10 @@ impl Explanation {
     /// assert!(!explanation.is_included());
     /// ```
     pub fn outside_diff() -> Self {
-        Self::new(Disposition::OutsideDiff, "Diagnostic is outside the diff hunks")
+        Self::new(
+            Disposition::OutsideDiff,
+            "Diagnostic is outside the diff hunks",
+        )
     }
 
     /// Create a `GeneratedFile` explanation.
@@ -216,7 +219,10 @@ impl Explanation {
     /// assert_eq!(explanation.disposition, Disposition::GeneratedFile);
     /// ```
     pub fn generated_file() -> Self {
-        Self::new(Disposition::GeneratedFile, "Diagnostic is in a generated file")
+        Self::new(
+            Disposition::GeneratedFile,
+            "Diagnostic is in a generated file",
+        )
     }
 
     /// Create a `Suppressed` explanation with the given code.
@@ -232,8 +238,11 @@ impl Explanation {
     /// ```
     pub fn suppressed(code: impl Into<String>) -> Self {
         let code = code.into();
-        Self::new(Disposition::Suppressed, format!("Diagnostic '{}' was suppressed by configuration", code))
-            .with_code(code)
+        Self::new(
+            Disposition::Suppressed,
+            format!("Diagnostic '{}' was suppressed by configuration", code),
+        )
+        .with_code(code)
     }
 
     /// Create a `NoSpan` explanation.
@@ -261,7 +270,10 @@ impl Explanation {
     /// assert_eq!(explanation.disposition, Disposition::NonWorkspace);
     /// ```
     pub fn non_workspace() -> Self {
-        Self::new(Disposition::NonWorkspace, "Diagnostic is in a file outside the workspace")
+        Self::new(
+            Disposition::NonWorkspace,
+            "Diagnostic is in a file outside the workspace",
+        )
     }
 
     /// Check if this explanation means the diagnostic was included.
@@ -358,8 +370,7 @@ mod tests {
 
     #[test]
     fn test_explanation_with_code() {
-        let explanation = Explanation::new(Disposition::Suppressed, "Test")
-            .with_code("dead_code");
+        let explanation = Explanation::new(Disposition::Suppressed, "Test").with_code("dead_code");
         assert_eq!(explanation.code, Some("dead_code".to_string()));
     }
 

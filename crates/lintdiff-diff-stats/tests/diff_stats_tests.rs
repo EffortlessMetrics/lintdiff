@@ -956,7 +956,12 @@ proptest::proptest! {
 #[test]
 fn change_type_all_variants_covered() {
     // Ensure all variants are tested
-    let variants = [ChangeType::Added, ChangeType::Deleted, ChangeType::Modified, ChangeType::Renamed];
+    let variants = [
+        ChangeType::Added,
+        ChangeType::Deleted,
+        ChangeType::Modified,
+        ChangeType::Renamed,
+    ];
     for variant in variants {
         // Just ensure we can use each variant
         let _ = variant.to_string();
@@ -1076,13 +1081,13 @@ fn diff_stats_new_is_const_fn() {
 #[test]
 fn change_type_hash_consistency() {
     use std::collections::HashSet;
-    
+
     let mut set = HashSet::new();
     set.insert(ChangeType::Added);
     set.insert(ChangeType::Deleted);
     set.insert(ChangeType::Modified);
     set.insert(ChangeType::Renamed);
-    
+
     assert_eq!(set.len(), 4);
     assert!(set.contains(&ChangeType::Added));
 }
@@ -1090,10 +1095,10 @@ fn change_type_hash_consistency() {
 #[test]
 fn file_diff_stats_hash_consistency() {
     use std::collections::HashSet;
-    
+
     let mut set = HashSet::new();
     set.insert(FileDiffStats::added("test.rs", 10));
     set.insert(FileDiffStats::added("test.rs", 10)); // Duplicate
-    
+
     assert_eq!(set.len(), 1);
 }

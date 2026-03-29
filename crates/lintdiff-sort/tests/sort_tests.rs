@@ -293,8 +293,8 @@ mod sort_config_tests {
         assert_eq!(config.primary, SortKey::Severity);
         assert_eq!(config.secondary, Some(SortKey::Path));
         assert_eq!(config.tertiary, Some(SortKey::Column)); // From default
-        // Note: by_severity uses ascending direction because compare_by_key for Severity
-        // already reverses the order (higher severity first)
+                                                            // Note: by_severity uses ascending direction because compare_by_key for Severity
+                                                            // already reverses the order (higher severity first)
         assert_eq!(config.direction, SortDirection::Ascending);
     }
 
@@ -383,10 +383,7 @@ mod compare_by_key_tests {
         let low = TestItem::new("test").with_column(5);
         let high = TestItem::new("test").with_column(15);
 
-        assert_eq!(
-            compare_by_key(&low, &high, SortKey::Column),
-            Ordering::Less
-        );
+        assert_eq!(compare_by_key(&low, &high, SortKey::Column), Ordering::Less);
         assert_eq!(
             compare_by_key(&high, &low, SortKey::Column),
             Ordering::Greater
@@ -407,14 +404,8 @@ mod compare_by_key_tests {
         let a = TestItem::new("test").with_message("error a");
         let b = TestItem::new("test").with_message("error b");
 
-        assert_eq!(
-            compare_by_key(&a, &b, SortKey::Message),
-            Ordering::Less
-        );
-        assert_eq!(
-            compare_by_key(&b, &a, SortKey::Message),
-            Ordering::Greater
-        );
+        assert_eq!(compare_by_key(&a, &b, SortKey::Message), Ordering::Less);
+        assert_eq!(compare_by_key(&b, &a, SortKey::Message), Ordering::Greater);
     }
 
     #[test]
@@ -422,10 +413,7 @@ mod compare_by_key_tests {
         let a = TestItem::new("test").with_fingerprint("abc123");
         let b = TestItem::new("test").with_fingerprint("def456");
 
-        assert_eq!(
-            compare_by_key(&a, &b, SortKey::Fingerprint),
-            Ordering::Less
-        );
+        assert_eq!(compare_by_key(&a, &b, SortKey::Fingerprint), Ordering::Less);
         assert_eq!(
             compare_by_key(&b, &a, SortKey::Fingerprint),
             Ordering::Greater
@@ -629,11 +617,11 @@ mod natural_compare_tests {
     #[test]
     fn natural_compare_multiple_numbers() {
         assert_eq!(natural_compare("file1.txt", "file10.txt"), Ordering::Less);
-        assert_eq!(natural_compare("file10.txt", "file2.txt"), Ordering::Greater);
         assert_eq!(
-            natural_compare("file2part1", "file2part10"),
-            Ordering::Less
+            natural_compare("file10.txt", "file2.txt"),
+            Ordering::Greater
         );
+        assert_eq!(natural_compare("file2part1", "file2part10"), Ordering::Less);
     }
 
     #[test]
@@ -708,7 +696,11 @@ mod natural_sort_tests {
         natural_sort_owned(&mut strings);
         assert_eq!(
             strings,
-            vec!["file1".to_string(), "file2".to_string(), "file10".to_string()]
+            vec![
+                "file1".to_string(),
+                "file2".to_string(),
+                "file10".to_string()
+            ]
         );
     }
 
@@ -790,10 +782,7 @@ mod edge_case_tests {
         let a = TestItem::new("test").with_severity(u8::MAX);
         let b = TestItem::new("test").with_severity(0);
 
-        assert_eq!(
-            compare_by_key(&a, &b, SortKey::Severity),
-            Ordering::Less
-        ); // Higher severity first
+        assert_eq!(compare_by_key(&a, &b, SortKey::Severity), Ordering::Less); // Higher severity first
     }
 
     #[test]
@@ -804,10 +793,7 @@ mod edge_case_tests {
         let b = TestItem::new("test").with_line(0).with_column(0);
 
         assert_eq!(compare_by_key(&a, &b, SortKey::Line), Ordering::Greater);
-        assert_eq!(
-            compare_by_key(&a, &b, SortKey::Column),
-            Ordering::Greater
-        );
+        assert_eq!(compare_by_key(&a, &b, SortKey::Column), Ordering::Greater);
     }
 
     #[test]

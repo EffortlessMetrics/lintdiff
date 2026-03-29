@@ -9,8 +9,8 @@
 //! - Edge cases and property-based tests
 
 use lintdiff_severity_map::{
-    map_severity, is_error_level, is_warning_level, is_problem_level,
-    CanonicalSeverity, SeverityMapBuilder, SeverityMapper, SeverityParseError,
+    is_error_level, is_problem_level, is_warning_level, map_severity, CanonicalSeverity,
+    SeverityMapBuilder, SeverityMapper, SeverityParseError,
 };
 
 // =============================================================================
@@ -65,9 +65,8 @@ mod canonical_severity_feature {
     #[test]
     fn parse_error_variants() {
         let error_cases = [
-            "error", "ERROR", "Error", "err", "ERR", "Err",
-            "fatal", "FATAL", "Fatal", "critical", "CRITICAL",
-            "fail", "FAIL", "Fail", "2",
+            "error", "ERROR", "Error", "err", "ERR", "Err", "fatal", "FATAL", "Fatal", "critical",
+            "CRITICAL", "fail", "FAIL", "Fail", "2",
         ];
         for case in error_cases {
             assert_eq!(
@@ -81,9 +80,7 @@ mod canonical_severity_feature {
 
     #[test]
     fn parse_warning_variants() {
-        let warning_cases = [
-            "warning", "WARNING", "Warning", "warn", "WARN", "Warn", "1",
-        ];
+        let warning_cases = ["warning", "WARNING", "Warning", "warn", "WARN", "Warn", "1"];
         for case in warning_cases {
             assert_eq!(
                 CanonicalSeverity::parse(case),
@@ -97,9 +94,18 @@ mod canonical_severity_feature {
     #[test]
     fn parse_info_variants() {
         let info_cases = [
-            "info", "INFO", "Info", "information", "INFORMATION",
-            "note", "NOTE", "Note", "convention", "CONVENTION",
-            "refactor", "REFACTOR",
+            "info",
+            "INFO",
+            "Info",
+            "information",
+            "INFORMATION",
+            "note",
+            "NOTE",
+            "Note",
+            "convention",
+            "CONVENTION",
+            "refactor",
+            "REFACTOR",
         ];
         for case in info_cases {
             assert_eq!(
@@ -114,8 +120,17 @@ mod canonical_severity_feature {
     #[test]
     fn parse_hint_variants() {
         let hint_cases = [
-            "hint", "HINT", "Hint", "suggestion", "SUGGESTION",
-            "help", "HELP", "Help", "style", "STYLE", "Style",
+            "hint",
+            "HINT",
+            "Hint",
+            "suggestion",
+            "SUGGESTION",
+            "help",
+            "HELP",
+            "Help",
+            "style",
+            "STYLE",
+            "Style",
         ];
         for case in hint_cases {
             assert_eq!(
@@ -295,7 +310,10 @@ mod severity_mapper_feature {
         let mut mapper = SeverityMapper::new();
         mapper.add_mapping("test-linter", "test-severity", CanonicalSeverity::Error);
 
-        assert_eq!(mapper.map("test-linter", "test-severity"), CanonicalSeverity::Error);
+        assert_eq!(
+            mapper.map("test-linter", "test-severity"),
+            CanonicalSeverity::Error
+        );
         assert_eq!(mapper.mapping_count(), 1);
     }
 
@@ -346,13 +364,19 @@ mod severity_mapper_feature {
     #[test]
     fn map_returns_unknown_for_unknown_linter() {
         let mapper = SeverityMapper::from_defaults();
-        assert_eq!(mapper.map("unknown-linter", "error"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("unknown-linter", "error"),
+            CanonicalSeverity::Unknown
+        );
     }
 
     #[test]
     fn map_returns_unknown_for_unknown_severity() {
         let mapper = SeverityMapper::from_defaults();
-        assert_eq!(mapper.map("eslint", "unknown-severity"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("eslint", "unknown-severity"),
+            CanonicalSeverity::Unknown
+        );
     }
 
     #[test]
@@ -486,7 +510,10 @@ mod severity_mapper_feature {
         let cloned = mapper.clone();
 
         assert_eq!(mapper.map("eslint", "error"), cloned.map("eslint", "error"));
-        assert_eq!(mapper.map("rustc", "warning"), cloned.map("rustc", "warning"));
+        assert_eq!(
+            mapper.map("rustc", "warning"),
+            cloned.map("rustc", "warning")
+        );
     }
 
     #[test]
@@ -687,7 +714,10 @@ mod builtin_linter_mappings_feature {
     #[test]
     fn shellcheck_warning_maps_to_warning() {
         let mapper = create_mapper();
-        assert_eq!(mapper.map("shellcheck", "warning"), CanonicalSeverity::Warning);
+        assert_eq!(
+            mapper.map("shellcheck", "warning"),
+            CanonicalSeverity::Warning
+        );
     }
 
     #[test]
@@ -756,11 +786,14 @@ mod severity_map_builder_feature {
     #[test]
     fn with_linter_adds_multiple_mappings() {
         let mapper = SeverityMapBuilder::new()
-            .with_linter("custom", [
-                ("error", CanonicalSeverity::Error),
-                ("warning", CanonicalSeverity::Warning),
-                ("info", CanonicalSeverity::Info),
-            ])
+            .with_linter(
+                "custom",
+                [
+                    ("error", CanonicalSeverity::Error),
+                    ("warning", CanonicalSeverity::Warning),
+                    ("info", CanonicalSeverity::Info),
+                ],
+            )
             .build();
 
         assert_eq!(mapper.map("custom", "error"), CanonicalSeverity::Error);
@@ -854,8 +887,8 @@ mod severity_map_builder_feature {
 
     #[test]
     fn build_returns_mapper() {
-        let builder = SeverityMapBuilder::new()
-            .with_mapping("linter", "error", CanonicalSeverity::Error);
+        let builder =
+            SeverityMapBuilder::new().with_mapping("linter", "error", CanonicalSeverity::Error);
         let mapper = builder.build();
 
         assert_eq!(mapper.map("linter", "error"), CanonicalSeverity::Error);
@@ -889,7 +922,10 @@ mod convenience_functions_feature {
 
     #[test]
     fn map_severity_returns_unknown_for_unknown_linter() {
-        assert_eq!(map_severity("unknown-linter", "error"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            map_severity("unknown-linter", "error"),
+            CanonicalSeverity::Unknown
+        );
     }
 
     #[test]
@@ -1037,14 +1073,20 @@ mod edge_cases_feature {
     fn very_long_severity_string() {
         let mapper = SeverityMapper::from_defaults();
         let long_severity = "error".repeat(100);
-        assert_eq!(mapper.map("eslint", &long_severity), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("eslint", &long_severity),
+            CanonicalSeverity::Unknown
+        );
     }
 
     #[test]
     fn very_long_linter_name() {
         let mapper = SeverityMapper::from_defaults();
         let long_linter = "linter".repeat(100);
-        assert_eq!(mapper.map(&long_linter, "error"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map(&long_linter, "error"),
+            CanonicalSeverity::Unknown
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -1078,15 +1120,24 @@ mod edge_cases_feature {
     fn special_characters_in_severity() {
         let mapper = SeverityMapper::from_defaults();
         assert_eq!(mapper.map("eslint", "error!"), CanonicalSeverity::Unknown);
-        assert_eq!(mapper.map("eslint", "error@host"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("eslint", "error@host"),
+            CanonicalSeverity::Unknown
+        );
         assert_eq!(mapper.map("eslint", "error\n"), CanonicalSeverity::Unknown);
     }
 
     #[test]
     fn special_characters_in_linter() {
         let mapper = SeverityMapper::from_defaults();
-        assert_eq!(mapper.map("eslint-plugin", "error"), CanonicalSeverity::Unknown);
-        assert_eq!(mapper.map("eslint/plugin", "error"), CanonicalSeverity::Unknown);
+        assert_eq!(
+            mapper.map("eslint-plugin", "error"),
+            CanonicalSeverity::Unknown
+        );
+        assert_eq!(
+            mapper.map("eslint/plugin", "error"),
+            CanonicalSeverity::Unknown
+        );
     }
 }
 
@@ -1272,21 +1323,23 @@ mod property_tests {
                 CanonicalSeverity::Warning,
                 CanonicalSeverity::Error,
             ];
+            let mut expected = std::collections::HashMap::new();
 
             for (linter, level) in &mappings {
+                let canonical = canonical_levels[(*level as usize) % canonical_levels.len()];
                 builder = builder.with_mapping(
                     linter,
                     "severity",
-                    canonical_levels[(*level as usize) % canonical_levels.len()],
+                    canonical,
                 );
+                expected.insert(linter.to_lowercase(), canonical);
             }
 
             let mapper = builder.build();
 
-            // Verify all mappings are present
-            for (linter, level) in &mappings {
-                let expected = canonical_levels[(*level as usize) % canonical_levels.len()];
-                prop_assert_eq!(mapper.map(linter, "severity"), expected);
+            // Duplicate keys overwrite earlier entries, so only the last write per linter survives.
+            for (linter, expected) in expected {
+                prop_assert_eq!(mapper.map(&linter, "severity"), expected);
             }
         }
     }
@@ -1303,19 +1356,34 @@ mod integration_tests {
     fn full_workflow_with_custom_linter() {
         // Create a mapper for a custom linter
         let mapper = SeverityMapBuilder::new()
-            .with_linter("my-custom-linter", [
-                ("critical", CanonicalSeverity::Error),
-                ("major", CanonicalSeverity::Warning),
-                ("minor", CanonicalSeverity::Info),
-                ("suggestion", CanonicalSeverity::Hint),
-            ])
+            .with_linter(
+                "my-custom-linter",
+                [
+                    ("critical", CanonicalSeverity::Error),
+                    ("major", CanonicalSeverity::Warning),
+                    ("minor", CanonicalSeverity::Info),
+                    ("suggestion", CanonicalSeverity::Hint),
+                ],
+            )
             .build();
 
         // Use the mapper
-        assert_eq!(mapper.map("my-custom-linter", "critical"), CanonicalSeverity::Error);
-        assert_eq!(mapper.map("my-custom-linter", "major"), CanonicalSeverity::Warning);
-        assert_eq!(mapper.map("my-custom-linter", "minor"), CanonicalSeverity::Info);
-        assert_eq!(mapper.map("my-custom-linter", "suggestion"), CanonicalSeverity::Hint);
+        assert_eq!(
+            mapper.map("my-custom-linter", "critical"),
+            CanonicalSeverity::Error
+        );
+        assert_eq!(
+            mapper.map("my-custom-linter", "major"),
+            CanonicalSeverity::Warning
+        );
+        assert_eq!(
+            mapper.map("my-custom-linter", "minor"),
+            CanonicalSeverity::Info
+        );
+        assert_eq!(
+            mapper.map("my-custom-linter", "suggestion"),
+            CanonicalSeverity::Hint
+        );
 
         // Check problem detection
         assert!(is_error_level(&mapper.map("my-custom-linter", "critical")));
@@ -1325,10 +1393,13 @@ mod integration_tests {
     #[test]
     fn combining_default_and_custom_mappings() {
         let mapper = SeverityMapBuilder::with_defaults()
-            .with_linter("custom", [
-                ("bad", CanonicalSeverity::Error),
-                ("not-great", CanonicalSeverity::Warning),
-            ])
+            .with_linter(
+                "custom",
+                [
+                    ("bad", CanonicalSeverity::Error),
+                    ("not-great", CanonicalSeverity::Warning),
+                ],
+            )
             .build();
 
         // Default mappings work
@@ -1337,7 +1408,10 @@ mod integration_tests {
 
         // Custom mappings work
         assert_eq!(mapper.map("custom", "bad"), CanonicalSeverity::Error);
-        assert_eq!(mapper.map("custom", "not-great"), CanonicalSeverity::Warning);
+        assert_eq!(
+            mapper.map("custom", "not-great"),
+            CanonicalSeverity::Warning
+        );
     }
 
     #[test]
@@ -1347,10 +1421,13 @@ mod integration_tests {
 
         // Create custom mapper for internal tools
         let internal = SeverityMapBuilder::new()
-            .with_linter("internal-linter", [
-                ("severe", CanonicalSeverity::Error),
-                ("moderate", CanonicalSeverity::Warning),
-            ])
+            .with_linter(
+                "internal-linter",
+                [
+                    ("severe", CanonicalSeverity::Error),
+                    ("moderate", CanonicalSeverity::Warning),
+                ],
+            )
             .build();
 
         // Merge internal mappings
@@ -1358,7 +1435,10 @@ mod integration_tests {
 
         // Both default and internal work
         assert_eq!(mapper.map("eslint", "error"), CanonicalSeverity::Error);
-        assert_eq!(mapper.map("internal-linter", "severe"), CanonicalSeverity::Error);
+        assert_eq!(
+            mapper.map("internal-linter", "severe"),
+            CanonicalSeverity::Error
+        );
     }
 
     #[test]

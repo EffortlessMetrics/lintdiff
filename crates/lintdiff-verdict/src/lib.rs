@@ -150,7 +150,12 @@ impl FindingCounts {
 
     /// Create counts with specific values.
     #[must_use]
-    pub const fn from_counts(new_errors: u32, new_warnings: u32, fixed: u32, pre_existing: u32) -> Self {
+    pub const fn from_counts(
+        new_errors: u32,
+        new_warnings: u32,
+        fixed: u32,
+        pre_existing: u32,
+    ) -> Self {
         Self {
             new_errors,
             new_warnings,

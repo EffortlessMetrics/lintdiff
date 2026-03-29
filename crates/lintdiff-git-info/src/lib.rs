@@ -392,7 +392,6 @@ impl fmt::Display for GitRef {
     }
 }
 
-
 /// Combined Git information for a repository state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -586,26 +585,26 @@ pub fn parse_sha(s: &str) -> Result<GitSha, GitInfoError> {
 #[must_use]
 pub fn parse_ref(s: &str) -> GitRef {
     let trimmed = s.trim();
-    
+
     if trimmed == "HEAD" {
         return GitRef::Head;
     }
-    
+
     if let Some(name) = trimmed.strip_prefix("refs/heads/") {
         return GitRef::Branch(name.to_string());
     }
-    
+
     if let Some(name) = trimmed.strip_prefix("refs/tags/") {
         return GitRef::Tag(name.to_string());
     }
-    
+
     // Try to parse as a commit SHA
     if is_valid_sha(trimmed) {
         if let Ok(sha) = GitSha::new(trimmed) {
             return GitRef::Commit(sha);
         }
     }
-    
+
     GitRef::Unknown
 }
 
@@ -635,7 +634,7 @@ fn validate_sha(s: &str) -> Result<(), GitInfoError> {
             actual: s.len(),
         });
     }
-    
+
     for (i, c) in s.chars().enumerate() {
         if !c.is_ascii_hexdigit() {
             return Err(GitInfoError::InvalidHexCharacter {
@@ -644,14 +643,14 @@ fn validate_sha(s: &str) -> Result<(), GitInfoError> {
             });
         }
     }
-    
+
     Ok(())
 }
 
 // Internal hex encoding to avoid dependency
 mod hex {
     const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
-    
+
     #[allow(unreachable_pub)]
     pub fn encode(bytes: [u8; 20]) -> String {
         let mut result = String::with_capacity(40);
@@ -695,7 +694,7 @@ mod tests {
     fn test_git_sha_is_zero() {
         let zero = GitSha::new("0000000000000000000000000000000000000000").unwrap();
         assert!(zero.is_zero());
-        
+
         let non_zero = GitSha::new("0123456789abcdef0123456789abcdef01234567").unwrap();
         assert!(!non_zero.is_zero());
     }

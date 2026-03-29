@@ -248,9 +248,7 @@ impl Location {
     /// ```
     #[must_use]
     pub fn extension(&self) -> Option<&str> {
-        Path::new(&self.path)
-            .extension()
-            .and_then(|s| s.to_str())
+        Path::new(&self.path).extension().and_then(|s| s.to_str())
     }
 
     /// Get the file name (if any).
@@ -264,9 +262,7 @@ impl Location {
     /// ```
     #[must_use]
     pub fn file_name(&self) -> Option<&str> {
-        Path::new(&self.path)
-            .file_name()
-            .and_then(|s| s.to_str())
+        Path::new(&self.path).file_name().and_then(|s| s.to_str())
     }
 
     /// Get the parent directory (if any).
@@ -544,11 +540,7 @@ impl LocationRange {
     /// ```
     #[must_use]
     pub fn start(&self) -> Location {
-        Location::from_parts(
-            self.path.clone(),
-            Some(self.start_line),
-            self.start_column,
-        )
+        Location::from_parts(self.path.clone(), Some(self.start_line), self.start_column)
     }
 
     /// Get the end location.

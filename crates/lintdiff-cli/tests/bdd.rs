@@ -124,12 +124,12 @@ async fn when_ingest(world: &mut LintdiffWorld) {
         &world.diagnostics,
         &world.config,
     ));
-    
+
     // Set exit code based on verdict for error cases
     if world.error_message.is_some() {
         return; // Exit code already set
     }
-    
+
     // For skip verdict with empty diagnostics, set exit code 0
     let r = world.report.as_ref().expect("report produced");
     if r.verdict.status == lintdiff_types::VerdictStatus::Skip {
@@ -324,22 +324,34 @@ async fn when_full_pipeline(world: &mut LintdiffWorld) {
     let r = world.report.as_ref().expect("report produced");
     world.markdown = Some(render_markdown(r, MarkdownOptions::default()));
     world.annotations = Some(render_github_annotations(r, 100));
-    
+
     // Determine exit code based on verdict and fail_on configuration
-    let fail_on = world.config.fail_on.as_ref().unwrap_or(&lintdiff_types::FailOn::Error);
+    let fail_on = world
+        .config
+        .fail_on
+        .as_ref()
+        .unwrap_or(&lintdiff_types::FailOn::Error);
     let has_errors = r.verdict.counts.error > 0;
     let has_warnings = r.verdict.counts.warn > 0;
-    
+
     // Check if any denied codes caused errors
     let is_fail = r.verdict.status == lintdiff_types::VerdictStatus::Fail;
-    
+
     world.exit_code = Some(match fail_on {
         lintdiff_types::FailOn::Never => 0,
         lintdiff_types::FailOn::Error => {
-            if has_errors || is_fail { 2 } else { 0 }
+            if has_errors || is_fail {
+                2
+            } else {
+                0
+            }
         }
         lintdiff_types::FailOn::Warn => {
-            if has_errors || has_warnings || is_fail { 2 } else { 0 }
+            if has_errors || has_warnings || is_fail {
+                2
+            } else {
+                0
+            }
         }
     });
 }
