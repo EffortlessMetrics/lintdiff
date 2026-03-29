@@ -19,7 +19,7 @@ lintdiff-app-io = { path = "../lintdiff-app-io" }
 lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }
 lintdiff-diff = { path = "../lintdiff-diff" }
-lintdiff-domain = { path = "../lintdiff-domain" }
+lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
 lintdiff-render = { path = "../lintdiff-render" }
 
 thiserror.workspace = true

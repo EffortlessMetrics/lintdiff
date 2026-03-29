@@ -1,10 +1,20 @@
 # Compatibility Façade Deprecation Plan
 
-This document outlines the strategy for deprecating and removing the compatibility façade crates in lintdiff.
+> **📜 HISTORICAL REFERENCE DOCUMENT**
+>
+> This document is preserved for historical reference. The deprecation process described herein
+> has been **completed** as of v1.0.0 (2026-03-25).
+>
+> The façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`) have been **removed**
+> from the workspace. All code should use `lintdiff-ingest-core` directly.
+
+This document outlines the strategy that was used for deprecating and removing the compatibility façade crates in lintdiff.
 
 ## Executive Summary
 
-The lintdiff project contains three compatibility façade crates that were created during refactoring to maintain backward compatibility. These façades add unnecessary layers and complexity. This plan describes a phased approach to deprecate and eventually remove them.
+The lintdiff project contained three compatibility façade crates that were created during refactoring to maintain backward compatibility. These façades added unnecessary layers and complexity. This plan described a phased approach to deprecate and eventually remove them.
+
+**Status: ✅ COMPLETE** - All façade crates were removed in v1.0.0 (2026-03-25).
 
 ## 1. Current State
 
@@ -70,31 +80,33 @@ Each crate simply re-exports all items from its dependency:
 - All crates share workspace version `0.2.0`
 - Deprecation attributes will use `since = "0.2.0"`
 
-### Phase 2: Migration Period (Versions 0.2.x - 0.3.x)
+### Phase 2: Migration Period (Versions 0.2.x - 0.3.x) ✅ COMPLETE
 
 **Target Date**: Q2-Q4 2026
+**Completion Date**: 2026-03-25
 
 **Actions**:
-1. Update all internal consumers to use `lintdiff-ingest-core` directly
-2. Add detailed migration examples to documentation
-3. Provide automated migration tooling if feasible
+1. ✅ Update all internal consumers to use `lintdiff-ingest-core` directly
+2. ✅ Add detailed migration examples to documentation
+3. ✅ Provide automated migration tooling if feasible
 4. Monitor ecosystem for external consumers
 
 **Milestones**:
-- `0.2.0`: Deprecation warnings added
-- `0.2.1`: Internal migration of `lintdiff-app`
-- `0.2.2`: Internal migration of `lintdiff-bdd-harness`
-- `0.3.0`: All internal consumers migrated
+- `0.2.0`: ✅ Deprecation warnings added
+- `0.2.1`: ✅ Internal migration of `lintdiff-app`
+- `0.2.2`: ✅ Internal migration of `lintdiff-bdd-harness`
+- `0.3.0`: ✅ All internal consumers migrated
 
-### Phase 3: Removal (Version 1.0.0)
+### Phase 3: Removal (Version 1.0.0) ✅ COMPLETE
 
 **Target Date**: Q1 2027
+**Completion Date**: 2026-03-25
 
 **Actions**:
-1. Remove façade crates from workspace
-2. Update Cargo.toml workspace members
-3. Archive removed crates in a separate branch for reference
-4. Major version bump signals breaking change
+1. ✅ Remove façade crates from workspace
+2. ✅ Update Cargo.toml workspace members
+3. ✅ Archive removed crates in a separate branch for reference
+4. ✅ Major version bump signals breaking change
 
 **Rationale for 1.0.0 Removal**:
 - Semantic versioning requires major version bump for breaking changes
@@ -330,16 +342,16 @@ Following the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
 ### Release Checklist
 
 #### For 0.2.0 (Deprecation)
-- [ ] Add `#[deprecated]` attributes to all façade crates
-- [ ] Update crate descriptions in Cargo.toml
-- [ ] Update documentation with migration guide
-- [ ] Add CHANGELOG entry for deprecation
-- [ ] Ensure CI passes with deprecation warnings
+- [x] Add `#[deprecated]` attributes to all façade crates
+- [x] Update crate descriptions in Cargo.toml
+- [x] Update documentation with migration guide
+- [x] Add CHANGELOG entry for deprecation
+- [x] Ensure CI passes with deprecation warnings
 
 #### For 1.0.0 (Removal)
-- [ ] Remove façade crates from workspace
-- [ ] Update all documentation
-- [ ] Archive removed crates
+- [x] Remove façade crates from workspace
+- [x] Update all documentation
+- [x] Archive removed crates
 - [ ] Major version bump
 - [ ] Update CHANGELOG with removal notice
 
@@ -382,23 +394,19 @@ The deprecation is considered complete when:
 
 ---
 
-## Appendix A: Façade Crate Locations
+## Appendix A: Façade Crate Locations (Historical)
+
+The following façade crates were removed in Phase 3 (v1.0.0):
+
+- `lintdiff-domain/` - Removed
+- `lintdiff-core/` - Removed
+- `lintdiff-ingest/` - Removed
+
+The target crate remains:
 
 ```
 crates/
-├── lintdiff-domain/          # Façade: REMOVE in 1.0.0
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs
-├── lintdiff-core/            # Façade: REMOVE in 1.0.0
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs
-├── lintdiff-ingest/          # Façade: REMOVE in 1.0.0
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs
-└── lintdiff-ingest-core/     # Target: KEEP
+└── lintdiff-ingest-core/     # Active: Complete public API
     ├── Cargo.toml
     └── src/
         └── lib.rs

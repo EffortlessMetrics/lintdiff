@@ -1,0 +1,22 @@
+[package]
+name = "lintdiff-locale-detect"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "System locale detection for lintdiff internationalization."
+keywords.workspace = true
+categories.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+
+[dependencies]
+sys-locale = "0.3"
+
+[dev-dependencies]
+
+[lints]
+workspace = true

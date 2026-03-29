@@ -1,0 +1,18 @@
+[package]
+name = "lintdiff-severity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Severity level classification for lintdiff diagnostics"
+
+[dependencies]
+thiserror.workspace = true
+
+[features]
+default = []
+colors = []
+
+[dev-dependencies]
+proptest.workspace = true

@@ -50,6 +50,11 @@ impl From<&str> for NormPath {
 pub fn normalize_path(raw: &str) -> NormPath {
     let mut s = raw.trim().replace('\\', "/");
 
+    // strip leading ./ (repeat to be safe)
+    while let Some(stripped) = s.strip_prefix("./") {
+        s = stripped.to_string();
+    }
+
     // strip diff prefixes
     if let Some(stripped) = s.strip_prefix("a/") {
         s = stripped.to_string();
@@ -57,7 +62,7 @@ pub fn normalize_path(raw: &str) -> NormPath {
         s = stripped.to_string();
     }
 
-    // strip leading ./ (repeat to be safe)
+    // strip leading ./ again (handles cases like a/./path)
     while let Some(stripped) = s.strip_prefix("./") {
         s = stripped.to_string();
     }

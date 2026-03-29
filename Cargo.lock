@@ -610,6 +610,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ececcb659e7ba858fb4f10388c250a7252eb0a27373f1a72b8748afdd248e587"
 dependencies = [
  "powerfmt",
+ "serde_core",
 ]
 
 [[package]]
@@ -1500,14 +1501,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "lintdiff-annotation-format"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "temp-env",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "lintdiff-app"
 version = "0.1.0"
 dependencies = [
  "lintdiff-app-git",
  "lintdiff-app-io",
  "lintdiff-diff",
- "lintdiff-domain",
  "lintdiff-feature-flags",
+ "lintdiff-ingest-core",
  "lintdiff-render",
  "lintdiff-types",
  "serde_json",
@@ -1556,10 +1567,10 @@ name = "lintdiff-bdd-harness"
 version = "0.1.0"
 dependencies = [
  "lintdiff-bdd-grid",
- "lintdiff-core",
  "lintdiff-diagnostics",
  "lintdiff-diff",
  "lintdiff-feature-flags",
+ "lintdiff-ingest-core",
  "lintdiff-types",
 ]
 
@@ -1575,10 +1586,87 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-core"
+name = "lintdiff-budget"
 version = "0.1.0"
 dependencies = [
- "lintdiff-ingest",
+ "lintdiff-config-types",
+ "lintdiff-counts",
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "lintdiff-ci-env"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "temp-env",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-code-norm"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-code-policy"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-glob",
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-code-url"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-config"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml",
+]
+
+[[package]]
+name = "lintdiff-config-types"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-counts"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-diagnostic-level"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
  "serde_json",
 ]
 
@@ -1602,10 +1690,68 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-domain"
+name = "lintdiff-diff-paths"
 version = "0.1.0"
 dependencies = [
- "lintdiff-core",
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-diff-stats"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-disposition"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-escape"
+version = "0.1.0"
+
+[[package]]
+name = "lintdiff-exit"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-types",
+]
+
+[[package]]
+name = "lintdiff-explain"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-explain-builder"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-explain-summary"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1613,6 +1759,23 @@ name = "lintdiff-feature-flags"
 version = "0.1.0"
 dependencies = [
  "lintdiff-types",
+]
+
+[[package]]
+name = "lintdiff-finding"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-finding-builder"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-types",
+ "serde_json",
 ]
 
 [[package]]
@@ -1626,6 +1789,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "lintdiff-git-info"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-glob"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-host-info"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "lintdiff-hunk-header"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "lintdiff-i18n"
 version = "0.1.0"
 dependencies = [
@@ -1633,13 +1831,6 @@ dependencies = [
  "fluent-bundle",
  "thiserror 1.0.69",
  "unic-langid",
-]
-
-[[package]]
-name = "lintdiff-ingest"
-version = "0.1.0"
-dependencies = [
- "lintdiff-ingest-core",
 ]
 
 [[package]]
@@ -1655,12 +1846,76 @@ dependencies = [
 ]
 
 [[package]]
+name = "lintdiff-jsonl"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-line-merge"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-line-range",
+ "proptest",
+]
+
+[[package]]
+name = "lintdiff-line-range"
+version = "0.1.0"
+
+[[package]]
+name = "lintdiff-locale-detect"
+version = "0.1.0"
+dependencies = [
+ "sys-locale",
+]
+
+[[package]]
+name = "lintdiff-location"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "lintdiff-match"
 version = "0.1.0"
 dependencies = [
  "globset",
  "lintdiff-diagnostics",
  "lintdiff-types",
+]
+
+[[package]]
+name = "lintdiff-message-norm"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-message-truncate"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "lintdiff-path-norm"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1673,12 +1928,160 @@ dependencies = [
 ]
 
 [[package]]
+name = "lintdiff-range-merge"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
 name = "lintdiff-render"
 version = "0.1.0"
 dependencies = [
  "lintdiff-types",
  "serde_json",
 ]
+
+[[package]]
+name = "lintdiff-render-annotations"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-types",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-render-markdown"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-stats",
+ "lintdiff-types",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-render-utils"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-report-builder"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-report-schema"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-run-info"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "time",
+]
+
+[[package]]
+name = "lintdiff-schema-diff"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-severity"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-severity-map"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-slugify"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-sort"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-span"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-span-intersect"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-line-range",
+ "proptest",
+]
+
+[[package]]
+name = "lintdiff-stats"
+version = "0.1.0"
+dependencies = [
+ "lintdiff-types",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lintdiff-timestamp"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "time",
+]
+
+[[package]]
+name = "lintdiff-truncate"
+version = "0.1.0"
 
 [[package]]
 name = "lintdiff-types"
@@ -1689,6 +2092,25 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "time",
+]
+
+[[package]]
+name = "lintdiff-verdict"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "lintdiff-verdict-reason"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1928,6 +2350,16 @@ dependencies = [
  "elliptic-curve",
  "primeorder",
  "sha2",
+]
+
+[[package]]
+name = "parking_lot"
+version = "0.12.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
+dependencies = [
+ "lock_api",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -2755,6 +3187,24 @@ dependencies = [
  "quote",
  "sealed",
  "syn",
+]
+
+[[package]]
+name = "sys-locale"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eab9a99a024a169fe8a903cf9d4a3b3601109bcc13bd9e3c6fff259138626c4"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "temp-env"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96374855068f47402c3121c6eed88d29cb1de8f3ab27090e273e420bdabcf050"
+dependencies = [
+ "parking_lot",
 ]
 
 [[package]]

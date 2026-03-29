@@ -26,7 +26,7 @@ We adopt **hexagonal architecture** (also known as ports and adapters) combined 
 
 The architecture separates the codebase into:
 
-1. **Domain Core** (`lintdiff-domain`): Pure business logic with no external dependencies
+1. **Domain Core** (`lintdiff-ingest-core`): Pure business logic with no external dependencies
 2. **Ports**: Traits/interfaces that define contracts for external interactions
 3. **Adapters**: Concrete implementations of ports for specific technologies
 4. **Application Layer** (`lintdiff-app`, `lintdiff-app-*`): Orchestrates domain logic through ports
@@ -37,15 +37,13 @@ The project is decomposed into focused crates:
 
 | Crate | Responsibility |
 |-------|---------------|
-| `lintdiff-domain` | Core domain types and business rules |
-| `lintdiff-core` | Main application orchestration |
+| `lintdiff-ingest-core` | Core domain types, business rules, and ingest pipeline |
 | `lintdiff-app` | Application traits (ports) |
 | `lintdiff-app-io` | I/O adapter implementations |
 | `lintdiff-app-git` | Git adapter implementations |
 | `lintdiff-cli` | Command-line interface entry point |
 | `lintdiff-diff` | Diff parsing and analysis |
 | `lintdiff-diagnostics` | Diagnostic parsing and handling |
-| `lintdiff-ingest`, `lintdiff-ingest-core` | Data ingestion pipeline |
 | `lintdiff-match` | Diff-to-diagnostic matching logic |
 | `lintdiff-policy` | Policy evaluation and verdicts |
 | `lintdiff-render` | Output rendering (JSON, Markdown) |
@@ -53,6 +51,8 @@ The project is decomposed into focused crates:
 | `lintdiff-fingerprint` | Content fingerprinting |
 | `lintdiff-feature-flags` | Feature flag management |
 | `lintdiff-bdd-*` | BDD testing infrastructure |
+
+> **Note:** As of v1.0.0, the façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`) have been removed. All functionality is now in `lintdiff-ingest-core`.
 
 ## Consequences
 

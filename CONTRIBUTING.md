@@ -65,10 +65,10 @@ cargo test --workspace
 cargo test --workspace --all-features
 
 # Run tests for a specific crate
-cargo test -p lintdiff-core
+cargo test -p lintdiff-ingest-core
 
 # Run a specific test
-cargo test -p lintdiff-core test_name
+cargo test -p lintdiff-ingest-core test_name
 ```
 
 ## Development Workflow

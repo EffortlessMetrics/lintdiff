@@ -90,6 +90,7 @@ async fn when_ingest(world: &mut LintdiffWorld) {
     // Handle missing diff file case
     if world.missing_diff {
         world.error_message = Some("diff file not found".to_string());
+        world.exit_code = Some(2);
         return;
     }
 
@@ -100,6 +101,7 @@ async fn when_ingest(world: &mut LintdiffWorld) {
             && !diff.contains("diff --git")
         {
             world.error_message = Some("failed to parse diff: invalid format".to_string());
+            world.exit_code = Some(2);
             return;
         }
     }
@@ -109,6 +111,7 @@ async fn when_ingest(world: &mut LintdiffWorld) {
         let trimmed = diagnostics.trim();
         if !trimmed.is_empty() && !trimmed.starts_with('{') && !trimmed.starts_with('[') {
             world.error_message = Some("failed to parse diagnostics JSON".to_string());
+            world.exit_code = Some(2);
             return;
         }
     }
@@ -121,6 +124,17 @@ async fn when_ingest(world: &mut LintdiffWorld) {
         &world.diagnostics,
         &world.config,
     ));
+    
+    // Set exit code based on verdict for error cases
+    if world.error_message.is_some() {
+        return; // Exit code already set
+    }
+    
+    // For skip verdict with empty diagnostics, set exit code 0
+    let r = world.report.as_ref().expect("report produced");
+    if r.verdict.status == lintdiff_types::VerdictStatus::Skip {
+        world.exit_code = Some(0);
+    }
 }
 
 #[then(expr = "verdict status is {string}")]
@@ -310,6 +324,24 @@ async fn when_full_pipeline(world: &mut LintdiffWorld) {
     let r = world.report.as_ref().expect("report produced");
     world.markdown = Some(render_markdown(r, MarkdownOptions::default()));
     world.annotations = Some(render_github_annotations(r, 100));
+    
+    // Determine exit code based on verdict and fail_on configuration
+    let fail_on = world.config.fail_on.as_ref().unwrap_or(&lintdiff_types::FailOn::Error);
+    let has_errors = r.verdict.counts.error > 0;
+    let has_warnings = r.verdict.counts.warn > 0;
+    
+    // Check if any denied codes caused errors
+    let is_fail = r.verdict.status == lintdiff_types::VerdictStatus::Fail;
+    
+    world.exit_code = Some(match fail_on {
+        lintdiff_types::FailOn::Never => 0,
+        lintdiff_types::FailOn::Error => {
+            if has_errors || is_fail { 2 } else { 0 }
+        }
+        lintdiff_types::FailOn::Warn => {
+            if has_errors || has_warnings || is_fail { 2 } else { 0 }
+        }
+    });
 }
 
 #[then(expr = "findings count is {int}")]
@@ -1041,6 +1073,47 @@ async fn then_report_tool_version_semver(world: &mut LintdiffWorld) {
 #[given(expr = "git repository is available")]
 async fn given_git_repo_available(world: &mut LintdiffWorld) {
     world.git_available = true;
+}
+
+#[then(expr = "report field {string} is greater than {int}")]
+async fn then_report_field_greater_than(world: &mut LintdiffWorld, field: String, min_value: i32) {
+    let r = world.report.as_ref().expect("report produced");
+
+    // Convert report to JSON value for nested field access
+    let json = serde_json::to_value(r).expect("report should serialize to JSON");
+
+    // Handle both top-level and nested fields using dot notation
+    let parts: Vec<&str> = field.split('.').collect();
+
+    let mut current = &json;
+    for part in &parts {
+        if current.is_null() {
+            panic!(
+                "unknown report field: {} (parent field '{}' is null)",
+                field,
+                parts[..parts.iter().position(|&p| p == *part).unwrap_or(0)].join(".")
+            );
+        }
+
+        if let Some(next) = current.get(*part) {
+            current = next;
+        } else {
+            panic!("unknown report field: {}", field);
+        }
+    }
+
+    // Get the numeric value
+    let actual_value = current
+        .as_i64()
+        .unwrap_or_else(|| panic!("field '{}' is not an integer", field));
+
+    assert!(
+        actual_value > min_value as i64,
+        "Expected field '{}' to be greater than {}, but got {}",
+        field,
+        min_value,
+        actual_value
+    );
 }
 
 #[then(expr = "reports are identical")]

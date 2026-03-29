@@ -18,7 +18,7 @@ report-findings-title = Findings
 report-findings-empty = No findings to report.
 
 report-finding-item = { $severity }: { $code } in { $file }:{ $line }
-    .description = { $message }
+    .description = Finding description
 
 ## Severity Labels
 severity-error = Error

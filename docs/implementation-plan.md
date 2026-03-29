@@ -107,7 +107,7 @@ Exit criteria:
 
 Deliverables:
 
-- `lintdiff-domain` matches diagnostics to diff ranges
+- `lintdiff-ingest-core` matches diagnostics to diff ranges
 - `fail_on` implemented (error|warn|never)
 - allow/suppress/deny code lists
 - receipts include:
