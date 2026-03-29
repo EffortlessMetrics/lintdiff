@@ -13,17 +13,9 @@ updates:
       prefix: "deps"
       include: "scope"
     groups:
-      - patterns:
+      dependencies:
+        patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
-        versioning-strategy: "widen"
-      - patterns:
-          - "*"
-        update-types:
-          - "major"
-        versioning-strategy: "increase-if-necessary"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -38,9 +30,6 @@ updates:
       prefix: "ci"
       include: "scope"
     groups:
-      - patterns:
+      actions:
+        patterns:
           - "*"
-        update-types:
-          - "major"
-          - "minor"
-          - "patch"

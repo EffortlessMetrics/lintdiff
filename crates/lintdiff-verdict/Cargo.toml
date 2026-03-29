@@ -1,0 +1,22 @@
+[package]
+name = "lintdiff-verdict"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Verdict types for lintdiff check results"
+
+[dependencies]
+thiserror.workspace = true
+serde = { workspace = true, optional = true, features = ["derive"] }
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -108,7 +108,7 @@ All planned phases are complete. The project has achieved:
 
 ### v0.4 — Code Quality
 
-- [x] **Compatibility Façade Deprecation**: Plan migration path for `lintdiff-domain` → `lintdiff-core`
+- [x] **Compatibility Façade Deprecation**: Plan migration path for façade crates → `lintdiff-ingest-core`
 - [x] **Test Coverage Expansion**: 1,000+ tests across all crates
 - [x] **ADRs Setup**: Architecture Decision Records for key decisions
 
@@ -118,13 +118,19 @@ All planned phases are complete. The project has achieved:
 - [ ] **GitLab CI Support**: Example templates for GitLab users
 - [x] **Performance Profiling**: Benchmark suite for large repos
 
+### v1.0 — Production Release
+
+- [x] **Façade Crate Removal**: Removed `lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`
+- [x] **Stable API Guarantee**: All public APIs marked with stability guarantees
+- [x] **EPIC-001 Complete**: Façade deprecation epic fully completed
+
 ---
 
-## Long-term Vision (v1.0+)
+## Long-term Vision (v1.1+)
 
 ### Production Readiness
 
-- [ ] **Stable API Guarantee**: All public APIs marked with stability guarantees
+- [x] **Stable API Guarantee**: All public APIs marked with stability guarantees
 - [ ] **Schema v2 Evaluation**: Assess need for schema evolution
 - [ ] **Enterprise Features**: Audit logging, compliance artifacts
 

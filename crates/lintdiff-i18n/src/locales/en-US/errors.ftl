@@ -9,7 +9,7 @@ error-config-parse-error = Failed to parse configuration: { $error }
 ## Diff Errors
 error-diff-parse = Failed to parse diff output.
 error-diff-empty = Diff is empty. No changes to analyze.
-error-diff-binary = Cannot analyze binary file: { $path }
+error-diff-binary = Cannot analyze binary file.
 
 ## Diagnostic Errors
 error-diagnostic-parse = Failed to parse diagnostic at line { $line }.

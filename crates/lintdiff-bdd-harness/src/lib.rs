@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 pub use lintdiff_bdd_grid::{FeatureFlagGrid, FeatureFlagGridRow};
-use lintdiff_core::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
 use lintdiff_diagnostics::parse_cargo_messages;
 use lintdiff_diff::parse_unified_diff;
 use lintdiff_feature_flags::set_feature_flag_by_name_and_value;

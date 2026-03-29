@@ -31,17 +31,12 @@ lintdiff is implemented as a hexagonal (ports/adapters) tool with a microcrate w
   - Code normalization, allow/suppress/deny, verdict computation, fingerprinting
 - `lintdiff-ingest-core`
   - Core ingest pipeline (diagnostics + diff → report)
-- `lintdiff-ingest`
-  - Compatibility facade over `lintdiff-ingest-core`
-- `lintdiff-bdd-grid`
-  - BDD matrix representation and feature-flag cell parsing
-  - Deterministic assignment serialization for fixture-driven scenario combinatorics
-- `lintdiff-core`
   - Domain engine for matching diagnostics to changed lines
   - Policy mapping (`fail_on`, allow/suppress/deny)
   - Receipt generation (verdict + findings + tool-specific data)
-- `lintdiff-domain`
-  - Compatibility façade over `lintdiff-core` (legacy crate name)
+- `lintdiff-bdd-grid`
+  - BDD matrix representation and feature-flag cell parsing
+  - Deterministic assignment serialization for fixture-driven scenario combinatorics
 - `lintdiff-render`
   - Markdown renderer (budgeted)
   - GitHub annotations renderer (budgeted)
