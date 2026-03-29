@@ -1,15 +1,5 @@
 # lintdiff architecture
 
-> **⚠️ Deprecation Notice (v0.2.0)**
->
-> The following façade crates have been **deprecated** and will be removed in a future version:
-> - `lintdiff-domain` — use `lintdiff-ingest-core` instead
-> - `lintdiff-core` — use `lintdiff-ingest-core` instead
-> - `lintdiff-ingest` — use `lintdiff-ingest-core` instead
->
-> These crates were intermediate façades that simply re-exported items from `lintdiff-ingest-core`.
-> See the [Migration Guide](migration-guide.md) for instructions on updating your dependencies.
-
 ## Role in the cockpit ecosystem
 
 lintdiff is a **build-truth consumer** that answers:
@@ -107,9 +97,6 @@ This crate provides the complete public API for:
 | Crate | Purpose | Status |
 |-------|---------|--------|
 | `lintdiff-ingest-core` | **Recommended**: Complete public API for ingestion and processing | ✅ Active |
-| `lintdiff-domain` | ~~Façade for domain types~~ | ⚠️ Deprecated |
-| `lintdiff-core` | ~~Façade for core logic~~ | ⚠️ Deprecated |
-| `lintdiff-ingest` | ~~Façade for ingestion~~ | ⚠️ Deprecated |
 | `lintdiff-types` | Configuration and report types | Internal use |
 | `lintdiff-diagnostics` | Diagnostics parsing | Internal use |
 | `lintdiff-diff` | Diff parsing | Internal use |
@@ -149,14 +136,3 @@ This crate provides the complete public API for:
 │  └──────────────┘ └──────────────┘ └──────────────┘             │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
-### Migration from Deprecated Crates
-
-If you are currently using any of the deprecated façade crates, migrate to `lintdiff-ingest-core`:
-
-```diff
-- use lintdiff_domain::IngestPipeline;
-+ use lintdiff_ingest_core::IngestPipeline;
-```
-
-See the [Migration Guide](migration-guide.md) for detailed instructions.

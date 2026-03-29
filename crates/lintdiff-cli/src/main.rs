@@ -327,7 +327,7 @@ enum Commands {
         #[arg(long)]
         root: Option<PathBuf>,
 
-        /// lintdiff.toml path (defaults to <root>/lintdiff.toml if present).
+        /// lintdiff.toml path (defaults to `<root>/lintdiff.toml` if present).
         #[arg(long)]
         config: Option<PathBuf>,
 
@@ -370,7 +370,7 @@ enum Commands {
         #[arg(long)]
         root: Option<PathBuf>,
 
-        /// lintdiff.toml path (defaults to <root>/lintdiff.toml if present).
+        /// lintdiff.toml path (defaults to `<root>/lintdiff.toml` if present).
         #[arg(long)]
         config: Option<PathBuf>,
 

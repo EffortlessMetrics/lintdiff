@@ -1,0 +1,22 @@
+[package]
+name = "lintdiff-severity-map"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Severity mapping utilities for converting between linter-specific and canonical severity levels"
+
+[dependencies]
+thiserror.workspace = true
+serde = { workspace = true, optional = true, features = ["derive"] }
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

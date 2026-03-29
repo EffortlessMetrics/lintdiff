@@ -5,10 +5,10 @@
 //!
 //! # Modules
 //!
-//! - [`config`] - Configuration types for lintdiff
-//! - [`ordering`] - Deterministic finding ordering
-//! - [`path`] - Path normalization and line ranges
-//! - [`report`] - Report structures and types
+//! - config - Configuration types for lintdiff
+//! - ordering - Deterministic finding ordering
+//! - path - Path normalization and line ranges
+//! - report - Report structures and types
 //!
 //! # Example: Path Normalization
 //!

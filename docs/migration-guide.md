@@ -1,18 +1,33 @@
 # Migration Guide: Façade Crate Deprecation
 
-This guide helps you migrate from the deprecated façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`) to `lintdiff-ingest-core`.
+> **📜 HISTORICAL REFERENCE DOCUMENT**
+>
+> This document is preserved for historical reference. The migration period has ended.
+>
+> **v1.0.0 (2026-03-25)**: The façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`)
+> have been **removed** from the workspace. Migration to `lintdiff-ingest-core` is now **required**
+> to use lintdiff v1.0.0 and later.
+>
+> If you are still using a pre-v1.0.0 version, this guide will help you migrate before upgrading.
+
+This guide helps you migrate from the removed façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`) to `lintdiff-ingest-core`.
+
+## Quick Links
+
+- **[Migration Examples](examples/migration-example.md)** - Copy-paste ready code examples
+- **[Automated Migration Script](migration-plans/PR-106-automated-migration-script.md)** - Script to automate the migration
 
 ## Overview
 
-Three crates have been deprecated as of version 0.2.0:
+Three façade crates were deprecated in version 0.2.0 and **removed** in version 1.0.0:
 
-| Deprecated Crate | Replacement | Status |
-|------------------|-------------|--------|
-| `lintdiff-domain` | `lintdiff-ingest-core` | Deprecated since 0.2.0 |
-| `lintdiff-core` | `lintdiff-ingest-core` | Deprecated since 0.2.0 |
-| `lintdiff-ingest` | `lintdiff-ingest-core` | Deprecated since 0.2.0 |
+| Removed Crate | Replacement | Status |
+|---------------|-------------|--------|
+| `lintdiff-domain` | `lintdiff-ingest-core` | Removed in v1.0.0 |
+| `lintdiff-core` | `lintdiff-ingest-core` | Removed in v1.0.0 |
+| `lintdiff-ingest` | `lintdiff-ingest-core` | Removed in v1.0.0 |
 
-These façade crates were created during refactoring to maintain backward compatibility. They simply re-export all items from `lintdiff-ingest-core`. Migrating directly to `lintdiff-ingest-core` reduces dependencies and simplifies your crate graph.
+These façade crates were created during refactoring to maintain backward compatibility. They simply re-exported all items from `lintdiff-ingest-core`. Migrating directly to `lintdiff-ingest-core` reduces dependencies and simplifies your crate graph.
 
 ## Quick Migration Guide (TL;DR)
 
@@ -424,6 +439,8 @@ If you encounter issues during migration:
 
 ## See Also
 
+- **[Migration Examples](examples/migration-example.md)** - Copy-paste ready code examples for migration
+- **[Automated Migration Script](migration-plans/PR-106-automated-migration-script.md)** - Script to automate the migration process
 - [Deprecation Plan](deprecation-plan.md) - Technical details of the deprecation process
 - [Architecture Documentation](architecture.md) - Overview of the crate structure
 - [CHANGELOG.md](../CHANGELOG.md) - Release notes and deprecation announcements

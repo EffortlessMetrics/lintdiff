@@ -6,16 +6,6 @@
 
 **Question answered:** _"Did this change introduce actionable diagnostics on changed lines?"_
 
-## ⚠️ Deprecation Notice
-
-> **Important:** Three façade crates have been deprecated and will be removed in a future version:
->
-> - `lintdiff-domain` → use [`lintdiff-core`](crates/lintdiff-core) directly
-> - `lintdiff-core` → use [`lintdiff-ingest-core`](crates/lintdiff-ingest-core) for ingest operations
-> - `lintdiff-ingest` → use [`lintdiff-ingest-core`](crates/lintdiff-ingest-core)
->
-> 📖 See the [**Migration Guide**](docs/migration-guide.md) for detailed instructions on updating your dependencies.
-
 ## Project Status
 
 | Metric | Value |
@@ -78,7 +68,7 @@ jobs:
         with:
           fetch-depth: 0  # Required for git diff
       - run: cargo clippy --message-format=json > clippy.jsonl
-      - uses: effortless-metrics/lintdiff@v1
+      - uses: effortless-metrics/lintdiff@v0
         with:
           diagnostics: clippy.jsonl
           fail_on: warn  # Optional: error, warn, or never
@@ -101,9 +91,6 @@ See [action.yml](action.yml) for all available inputs and outputs.
 - `lintdiff-match` – path/span matching primitives (filter compilation, span selection)
 - `lintdiff-policy` – code normalization, allow/suppress/deny, verdict, fingerprinting
 - `lintdiff-ingest-core` – core ingest pipeline (diagnostics + diff → report)
-- ~~`lintdiff-ingest`~~ – **DEPRECATED**: compatibility facade over `lintdiff-ingest-core`
-- ~~`lintdiff-core`~~ – **DEPRECATED**: pure domain engine (use `lintdiff-ingest-core` instead)
-- ~~`lintdiff-domain`~~ – **DEPRECATED**: compatibility facade over `lintdiff-core`
 - `lintdiff-render` – Markdown + GitHub annotations renderers
 - `lintdiff-app` – orchestration (delegates to `app-git`, `app-io`)
 - `lintdiff-app-git` – git adapter (diff acquisition, repo root, git info)

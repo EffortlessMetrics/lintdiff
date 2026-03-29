@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc 1d1080b3d0a2a3f0521112b182853107abfaa0982c6a196337b354bff7858903 # shrinks to prefix = "a", rest = "a/"
+cc 6af011fe45e7cefb35ded15c69c448141a6fe434c5313de9561b390882b983bb # shrinks to rest = "a/"

@@ -7,24 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-25
+
+### Summary
+
+This is the first stable release of lintdiff. The API is now considered stable and
+semantic versioning guarantees apply. This release removes the deprecated façade
+crates that were announced in v0.2.0.
+
+### Breaking Changes
+
+**Façade Crates Removed**
+
+The following deprecated façade crates have been **removed** from the workspace:
+
+- `lintdiff-domain` - Removed; use `lintdiff-ingest-core` instead
+- `lintdiff-core` - Removed; use `lintdiff-ingest-core` instead
+- `lintdiff-ingest` - Removed; use `lintdiff-ingest-core` instead
+
+If you were using any of these crates, you **must** migrate to `lintdiff-ingest-core`
+before upgrading to v1.0.0. See the [Migration Guide](docs/migration-guide.md) for
+detailed instructions.
+
+**Migration is straightforward:**
+
+```diff
+[dependencies]
+- lintdiff-domain = "0.4"
++ lintdiff-ingest-core = "1.0"
+```
+
+```diff
+- use lintdiff_domain::IngestPipeline;
++ use lintdiff_ingest_core::IngestPipeline;
+```
+
+All public APIs from the deprecated crates are available in `lintdiff-ingest-core`
+with identical functionality.
+
+### What's Changed
+
+- Removed `lintdiff-domain` façade crate
+- Removed `lintdiff-core` façade crate
+- Removed `lintdiff-ingest` façade crate
+- Updated all documentation to reflect the simplified crate structure
+- Marked EPIC-001 (Façade Deprecation) as complete
+
+### Migration Resources
+
+- **[Migration Guide](docs/migration-guide.md)** - Step-by-step migration instructions
+- **[Automated Migration Script](scripts/migrate-to-ingest-core.sh)** - Automate the migration
+- **[Migration Examples](docs/examples/migration-example.md)** - Code examples
+
+## [0.4.1] - 2026-03-25
+
+### Internal
+- Migrated `lintdiff-app` from deprecated `lintdiff-domain` façade to `lintdiff-ingest-core` (PR-101)
+- Migrated `lintdiff-bdd-harness` from deprecated `lintdiff-core` façade to `lintdiff-ingest-core` (PR-102)
+- Verified zero internal usage of deprecated façade crates across the entire codebase (PR-109)
+- All 155 BDD scenarios pass with the new internal dependencies (PR-105)
+
 ### Added
-- Crates.io publication readiness metadata
-
-### Changed
-- Documentation updates for public API
-
-### Deprecated
-- `lintdiff-ingest` façade crate: Use `lintdiff-ingest-core` instead
-- `lintdiff-core` façade crate: Use `lintdiff-ingest-core` instead
-- `lintdiff-domain` façade crate: Use `lintdiff-ingest-core` instead
-
-  All three façade crates now emit deprecation warnings at compile time.
-  They will be maintained for backward compatibility until v1.0.0.
-  
-  **Migration Guide**: See the [deprecation plan](docs/deprecation-plan.md) for:
-  - Import path transformations (e.g., `lintdiff_domain::Something` → `lintdiff_ingest_core::Something`)
-  - Timeline and version requirements
-  - Migration examples and tooling
+- Automated migration script at `scripts/migrate-to-ingest-core.sh` for external users to update their codebases to use `lintdiff-ingest-core` directly (PR-106)
 
 ## [0.4.0] - 2026-03-17
 
