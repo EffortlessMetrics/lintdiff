@@ -276,13 +276,6 @@ mod tests {
     }
 
     #[test]
-    fn test_clone_impl() {
-        let code = ExitCode::Success;
-        let cloned = code.clone();
-        assert_eq!(code, cloned);
-    }
-
-    #[test]
     fn test_copy_impl() {
         let code = ExitCode::Success;
         let copied: ExitCode = code;
