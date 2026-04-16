@@ -269,7 +269,7 @@ jobs:
       # Create GitHub issue if mutation score drops below threshold
       - name: Create issue for low mutation score
         if: steps.aggregate.outputs.overall_score < env.MUTATION_THRESHOLD && github.event_name == 'schedule'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const score = '${{ steps.aggregate.outputs.overall_score }}';
