@@ -628,9 +628,9 @@ dependencies = [
 
 [[package]]
 name = "cucumber"
-version = "0.22.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16cbb27bc2064274afa3a3d8bc9a0e71333589850573aa632ec4520e4af14d94"
+checksum = "96a87e18d925b19ebe0fd47ea45316abd216d81ec0879c2448c3f9a0e9da62be"
 dependencies = [
  "anyhow",
  "clap",
@@ -655,9 +655,9 @@ dependencies = [
 
 [[package]]
 name = "cucumber-codegen"
-version = "0.22.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a1afaf9c422380861111c6be56f39b324e351fd9efc07a1486268798bf79cfd"
+checksum = "ed2fc8a8bbb73af3230db699e8690c5c786655f75eb89e5f18d76055fa1a9a4d"
 dependencies = [
  "cucumber-expressions",
  "inflections",
@@ -940,9 +940,9 @@ dependencies = [
 
 [[package]]
 name = "fancy-regex"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72cf461f865c862bb7dc573f643dd6a2b6842f7c30b07882b56bd148cc2761b8"
+checksum = "e1e1dacd0d2082dfcf1351c4bdd566bbe89a2b263235a2b50058f1e130a47277"
 dependencies = [
  "bit-set",
  "regex-automata",
@@ -1074,9 +1074,9 @@ checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
 name = "futures"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65bc07b1a8bc7c85c5f2e110c476c7389b4554ba72af57d8445ea63a576b0876"
+checksum = "8b147ee9d1f6d097cef9ce628cd2ee62288d963e16fb287bd9286455b241382d"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -1089,9 +1089,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dff15bf788c671c1934e366d07e30c1814a8ef514e1af724a602e8a2fbe1b10"
+checksum = "07bbe89c50d7a535e539b8c17bc0b49bdb77747034daa8087407d655f3f7cc1d"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -1099,15 +1099,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05f29059c0c2090612e8d742178b0580d2dc940c837851ad723096f87af6663e"
+checksum = "7e3450815272ef58cec6d564423f6e755e25379b217b0bc688e295ba24df6b1d"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e28d1d997f585e54aebc3f97d39e72338912123a67330d723fdbb564d646c9f"
+checksum = "baf29c38818342a3b26b5b923639e7b1f4a61fc5e76102d4b1981c6dc7a7579d"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -1116,15 +1116,15 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e5c1b78ca4aae1ac06c48a526a655760685149f0d465d21f37abfe57ce075c6"
+checksum = "cecba35d7ad927e23624b22ad55235f2239cfa44fd10428eecbeba6d6a717718"
 
 [[package]]
 name = "futures-macro"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
+checksum = "e835b70203e41293343137df5c0664546da5745f82ec9b84d40be8336958447b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1133,21 +1133,21 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e575fab7d1e0dcb8d0c7bcf9a63ee213816ab51902e6d244a95819acacf1d4f7"
+checksum = "c39754e157331b013978ec91992bde1ac089843443c49cbc7f46150b0fad0893"
 
 [[package]]
 name = "futures-task"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f90f7dce0722e95104fcb095585910c0977252f286e354b5e3bd38902cd99988"
+checksum = "037711b3d59c33004d3856fbdc83b99d4ff37a24768fa1be9ce3538a1cde4393"
 
 [[package]]
 name = "futures-util"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fa08315bb612088cc391249efdc3bc77536f16c91f6cf495e6fbe85b20a4a81"
+checksum = "389ca41296e6190b48053de0321d02a77f32f8a5d2461dd38762c0593805c6d6"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -1157,7 +1157,6 @@ dependencies = [
  "futures-task",
  "memchr",
  "pin-project-lite",
- "pin-utils",
  "slab",
 ]
 
@@ -1212,9 +1211,9 @@ dependencies = [
 
 [[package]]
 name = "gherkin"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70197ce7751bfe8bc828e3a855502d3a869a1e9416b58b10c4bde5cf8a0a3cb3"
+checksum = "9e2c0d8c632f8a251ce9a8198079b1022adc586ff4e3d33e18debd40eb463b31"
 dependencies = [
  "heck",
  "peg",
@@ -1728,9 +1727,9 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.45.0"
+version = "0.46.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f29616f6e19415398eb186964fb7cbbeef572c79bede3622a8277667924bbe3"
+checksum = "fc59d2432e047d6090ba1d83c782d0128bd6203857978218f5614dbd3287281f"
 dependencies = [
  "ahash",
  "bytecount",
@@ -2454,6 +2453,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
+name = "micromap"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2a86d3146ed3995b5913c414f6664344b9617457320782e64f0bb44afd49d74"
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3133,14 +3138,16 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.45.0"
+version = "0.46.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8a618c14f8ba29d8193bb55e2bf13e4fb2b1115313ecb7ae94b43100c7ac7d5"
+checksum = "cb674900ca31acd75c4aaf63f48e43e719631c0539ea5a9e64163d1296bcb730"
 dependencies = [
  "ahash",
  "fluent-uri",
  "getrandom 0.3.4",
  "hashbrown 0.16.1",
+ "itoa",
+ "micromap",
  "parking_lot",
  "percent-encoding",
  "serde_json",
@@ -3160,9 +3167,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.13"
+version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5276caf25ac86c8d810222b3dbb938e512c55c6831a10f3e6ed1c93b84041f1c"
+checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -3556,9 +3563,9 @@ dependencies = [
 
 [[package]]
 name = "serde_spanned"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "876ac351060d4f882bb1032b6369eb0aef79ad9df1ea8bc404874d8cc3d0cd98"
+checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
 dependencies = [
  "serde_core",
 ]
@@ -3969,9 +3976,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "1.1.0+spec-1.1.0"
+version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8195ca05e4eb728f4ba94f3e3291661320af739c4e43779cbdfae82ab239fcc"
+checksum = "81f3d15e84cbcd896376e6730314d59fb5a87f31e4b038454184435cd57defee"
 dependencies = [
  "indexmap",
  "serde_core",
@@ -3984,27 +3991,27 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "1.1.0+spec-1.1.0"
+version = "1.1.1+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97251a7c317e03ad83774a8752a7e81fb6067740609f75ea2b585b569a59198f"
+checksum = "3165f65f62e28e0115a00b2ebdd37eb6f3b641855f9d636d3cd4103767159ad7"
 dependencies = [
  "serde_core",
 ]
 
 [[package]]
 name = "toml_parser"
-version = "1.1.0+spec-1.1.0"
+version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2334f11ee363607eb04df9b8fc8a13ca1715a72ba8662a26ac285c98aabb4011"
+checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
  "winnow",
 ]
 
 [[package]]
 name = "toml_writer"
-version = "1.1.0+spec-1.1.0"
+version = "1.1.1+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d282ade6016312faf3e41e57ebbba0c073e4056dab1232ab1cb624199648f8ed"
+checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
 
 [[package]]
 name = "tower"
@@ -4191,9 +4198,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85cb7c9ebbc99ebeeb242466b1f5b65ce18314fa65124116ae30abf6792da86f"
+checksum = "5037d00ef5df9601fa84b4cfde18417dfcfb5f81e7055b1cf2ff2e32dc8572ee"
 dependencies = [
  "uselesskey-core",
  "uselesskey-ecdsa",
@@ -4207,9 +4214,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa6972fd4eace29958c694b1a674484efd61e161780ba512d3187366afa3391f"
+checksum = "1a49034f2b559bafd9a0c31d58b07e678ca80e9b00601abf8ac1feae668d2340"
 dependencies = [
  "thiserror 2.0.18",
  "uselesskey-core-cache",
@@ -4221,9 +4228,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-base62"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df7fbeea26d8a864ff26f26a495e573d341c07020d66fd98d9c1277cb16a555"
+checksum = "95379f6e21ac27ad9c650c49615203a8aa4389812f2b0333bf90ba5eea79be18"
 dependencies = [
  "rand_chacha 0.10.0",
  "rand_core 0.10.0",
@@ -4232,9 +4239,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-cache"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70b7fb00acbeb3c5494f6ffe3b7a6a01202b851cc651842dc1e2f382b47a0606"
+checksum = "50ec288b2940d848a3c407789d8c81e9578f12a97a0aad489a9cae34783685f0"
 dependencies = [
  "dashmap",
  "spin 0.10.0",
@@ -4243,9 +4250,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-factory"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bf46a46655ddc51eed1c165cd69357f6fd5af027536de050d45c8d53b248a6c"
+checksum = "2cb5e58577b2ece0f81e51197355530be26f37e0b8c9927238d114fd98d97173"
 dependencies = [
  "rand 0.10.0",
  "uselesskey-core-cache",
@@ -4254,24 +4261,24 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-hash"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e481e13c5ae0dafd07f1f1ed0a6a91abccc64f7baf6905737a52f17928956b78"
+checksum = "5232e8183029c2a1a325e99abfa67a006a1b84d11ebebb8a75ec886fc7167bd4"
 dependencies = [
  "blake3",
 ]
 
 [[package]]
 name = "uselesskey-core-hmac-spec"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c943c6343e0606f6c22a311e83ae9d4ed5bfa84ec0ab42cdea010be9d78a85"
+checksum = "da0e21a3c031e9e9a42da68a8132f6fbe8e794e34dd3fa91028a1b79559ac0b1"
 
 [[package]]
 name = "uselesskey-core-id"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6de7ab748e8513664720a90a1f96f354ff52ae10cab703c85d55ef106944f8c2"
+checksum = "9ab1c3bc58133dca38bc13fd7b1ebe4cd2ce092c650eba0057992b8be8b14fe4"
 dependencies = [
  "uselesskey-core-hash",
  "uselesskey-core-seed",
@@ -4279,9 +4286,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-jwk"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "806ed9f67d074e2b22bfb72d13ea67a894e0657cbb0a2cda62904715081e704b"
+checksum = "dd20c3ebeea782f9be6f2552991140dbde0b1cbaefcfec14379f91388793d53f"
 dependencies = [
  "uselesskey-core-jwk-builder",
  "uselesskey-core-jwk-shape",
@@ -4289,9 +4296,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-jwk-builder"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ded0b9720985f21a5f7d18e189b9503e32e4fe268e093ab3d98916323857e54"
+checksum = "f4575c1d0ce8749f00aeb01ebdb89d0c9251aefc54dbd948572dfa88a2fd6bea"
 dependencies = [
  "serde_json",
  "uselesskey-core-jwk-shape",
@@ -4300,9 +4307,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-jwk-shape"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aab164de44609506d89da8bcf59fc93d0b12a42eaf97eca159abfe419e4d1263"
+checksum = "80dcdf4fba54186f1ef5be74e1906f4b9c75327c5a568fce5ea63e4567c0dd13"
 dependencies = [
  "serde",
  "serde_json",
@@ -4310,15 +4317,15 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-jwks-order"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e15b69e734f2e7595e1ff6daa1b6a19d664b5b715051d4330b10a22eda19b1e7"
+checksum = "8c0325715d37037cd111fe8dad9462ab2aa6843aa397a2f6b1e287ee40d67138"
 
 [[package]]
 name = "uselesskey-core-keypair-material"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "707fb74cd170ea3bdc1bca7f904db6d3b52a07ca983653d9a94f0834362c8390"
+checksum = "b54b07968269f6ca9ac940225d2c8dd41d0f4eae4b23f359f4aeb119eed53165"
 dependencies = [
  "uselesskey-core",
  "uselesskey-core-kid",
@@ -4326,9 +4333,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-kid"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a1f14829f539079c19f56f22d29bcd253d1a38f63fd58c712bd0b4479265022"
+checksum = "9f71a62b37f1569b6d47de74f510e1bfde378cbef83f11cf4d694b9facac0694"
 dependencies = [
  "base64",
  "blake3",
@@ -4336,9 +4343,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-negative"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e416a896ba31c86eb26b0f9674372594d4a59ff5d73a8e17b32adf3d0620fa61"
+checksum = "b9a8f46a0fdb4631dae3b756d511327a6f7d482aeff3ee6ea5dfb459b5e4b87e"
 dependencies = [
  "uselesskey-core-negative-der",
  "uselesskey-core-negative-pem",
@@ -4346,27 +4353,27 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-negative-der"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5045f08ad993e0b44b866ae2063dd1fd531838a4cde554ecbb31d67c77d16313"
+checksum = "ad2aa964e6f811f2b7884128872f5e010b961b646242fca8f63112352548926c"
 dependencies = [
  "uselesskey-core-hash",
 ]
 
 [[package]]
 name = "uselesskey-core-negative-pem"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc8655e538f40ed19d05dacbf873984cae15eba9cdf607a004c8566f100e228d"
+checksum = "01adecaf05daaf21bdf4a2005ac6de89b4feff5fdcb0be2d8e17c10ab8b499bc"
 dependencies = [
  "uselesskey-core-hash",
 ]
 
 [[package]]
 name = "uselesskey-core-seed"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d5f8a13d928d399fe950487fbac66f7b11b8a6544ff0021bc0316305dcaf68f"
+checksum = "4fc0cc3aa36afccf4a46226cf40e0f77890cc17d647c077276e4a39456b38c47"
 dependencies = [
  "blake3",
  "rand_chacha 0.10.0",
@@ -4375,27 +4382,27 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-sink"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27f16a6c364acde821cba60dfc983f24794cac577d554ddb7f67b98020bce834"
+checksum = "d6920149c4117dea754270b14855a1ab243ba79781c83d28f34fc31657dacc7d"
 dependencies = [
  "tempfile",
 ]
 
 [[package]]
 name = "uselesskey-core-token"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e215853878d4a4a31221e1509403e2e029c3cff72b4b70c5d6faa1ec99ce73dc"
+checksum = "1c7d03aa27e64b990e219cbd8535910ef86e2ce89439314a67829d1ab06d7408"
 dependencies = [
  "uselesskey-core-token-shape",
 ]
 
 [[package]]
 name = "uselesskey-core-token-shape"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0073b187565328858e4ece4e8c6bf94fa83c08eff401c0f7e986623008d25c19"
+checksum = "755355860417b343e6d3de2dddd6feac7fedd99cfd59e20b812571abd4a08cc0"
 dependencies = [
  "base64",
  "rand_chacha 0.10.0",
@@ -4408,9 +4415,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-x509"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b227b7d146f980bb4b78fd5fc7a1405c2798c97c2730c2e175d32351cf4fedc0"
+checksum = "0c83ea50c2e07a7080d2190c05a93c52634384cde05e47771b85e89bec33f04b"
 dependencies = [
  "uselesskey-core-x509-derive",
  "uselesskey-core-x509-negative",
@@ -4419,18 +4426,18 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-x509-chain-negative"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77066ba2bb0adeebd0d716f41667cbc506f65ad00495397d6de4bcff54fe9365"
+checksum = "4c52d22bcb41e196682a1380a79ae166897ec57eb777536291de90a403d95423"
 dependencies = [
  "uselesskey-core-x509-spec",
 ]
 
 [[package]]
 name = "uselesskey-core-x509-derive"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30b3567b6301544a05c3bb5b78bd204c14655e2488a2ddb9a161ebc248315d26"
+checksum = "217d480bd07b2c3b1d80575e0a2075d7d0a607c80d1ad9220baa0a8c2dcdb761"
 dependencies = [
  "rand_chacha 0.10.0",
  "rand_core 0.10.0",
@@ -4442,9 +4449,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-x509-negative"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a55369c06e476ec528c976b8056533001f75f146cae0e795c92bb02ed92ec6e"
+checksum = "689f7358a4ad52cbdbf68b80fc710fc255cce3bc9bf8d99bc80509f35da33d83"
 dependencies = [
  "uselesskey-core-x509-chain-negative",
  "uselesskey-core-x509-spec",
@@ -4452,15 +4459,15 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-core-x509-spec"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "286c74c6b370dbe744ce75572c0a1f317d95776de987e581814084d0daf8d9cc"
+checksum = "5fc6ad9672e077cef6f998aa17ba336e07ce9f1717a45bbd2356ce3048e89f0e"
 
 [[package]]
 name = "uselesskey-ecdsa"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75e6fa165a879b75ca9c49042960c9aaa00a5cbb3cf933113d57bce4594a0541"
+checksum = "527b0b75025c977d204d4d88309e29f7a30b90502bfbe4fe3299d5111f2e4092"
 dependencies = [
  "base64",
  "elliptic-curve",
@@ -4476,9 +4483,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-ed25519"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "473203a10d4c44948cf507a18cc39ebe5ecb69588b6743adadc662899c0a1766"
+checksum = "51cd39a83e5517e17ceafee5c86ec164f324978464a360ad9a8d7e5cec66240f"
 dependencies = [
  "base64",
  "ed25519-dalek",
@@ -4491,9 +4498,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-hmac"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "103d1015630e5f48529a6f51805b06591e3fe0829a9e95040fd18cb05ba19322"
+checksum = "0db858c913e13e5db38468a1b1e007f4cba37b360d6c2fa38162e8128b7fc1eb"
 dependencies = [
  "base64",
  "rand_chacha 0.10.0",
@@ -4506,9 +4513,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-jwk"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83866bbfff1713b5789be3ad285907ffa6ea3328fec2966f951bce0bd1b5ba69"
+checksum = "ab4dd6cd9b3df1b603e4ab405d0bea90a676cc9e943eb881620db65e5cdd9e67"
 dependencies = [
  "uselesskey-core-jwk",
  "uselesskey-core-jwk-builder",
@@ -4516,9 +4523,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-rsa"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5579cadfac51dc59aea6fbb77d42dbc57991b2369418630f74fd9231d1cc743"
+checksum = "91b644601273467360134f3f7923dfb32d011ed9c604fc71554a3ab2c96c425f"
 dependencies = [
  "base64",
  "rand_chacha 0.10.0",
@@ -4535,9 +4542,9 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-token"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8f36830ad3a36af362be10defa0e518163e841281f5993f6dffa47a176779f7"
+checksum = "4e6be48605c608917d10e69eb32b0ab72a5269ca17552fb8a636245eed7d170c"
 dependencies = [
  "uselesskey-core",
  "uselesskey-core-token",
@@ -4546,15 +4553,15 @@ dependencies = [
 
 [[package]]
 name = "uselesskey-token-spec"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e935f0fdf3799535b759c45a5fada29f796d4cdb3274a753175bd34f80dac5b"
+checksum = "150707a5b39878976a2bcc00ae9b00aa4ed8e024593ca453fe0df44cb834ae60"
 
 [[package]]
 name = "uselesskey-x509"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e88570a61395fed4a20e560644d1a11ca9058245784c6157a837172e95526de3"
+checksum = "3c0f29a46ec4c4a6111267dcbf00bb9c97ba6ef3703d3dfba29b53e1d5a37528"
 dependencies = [
  "base64",
  "rand_chacha 0.3.1",
