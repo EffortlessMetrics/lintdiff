@@ -27,7 +27,7 @@ serde_json.workspace = true
 lintdiff-bdd = { path = "../lintdiff-bdd" }
 lintdiff-match = { path = "../lintdiff-match" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-cucumber = "0.22"
+cucumber = "0.23"
 uselesskey.workspace = true
 regex = "1"
 
