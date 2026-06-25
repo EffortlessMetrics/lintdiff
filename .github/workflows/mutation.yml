@@ -52,14 +52,14 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
       
       # Cache cargo registry and build artifacts for faster runs
       - name: Cache cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -269,7 +269,7 @@ jobs:
       # Create GitHub issue if mutation score drops below threshold
       - name: Create issue for low mutation score
         if: fromJson(steps.aggregate.outputs.overall_score) < fromJson(env.MUTATION_THRESHOLD) && github.event_name == 'schedule'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const score = '${{ steps.aggregate.outputs.overall_score }}';
