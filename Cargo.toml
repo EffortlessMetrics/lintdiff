@@ -98,7 +98,7 @@ globset = "0.4"
 sha2 = "0.11"
 hex = "0.4"
 time = { version = "0.3", features = ["formatting", "parsing"] }
-uselesskey = { version = "0.5.1", features = ["token", "x509", "jwk"] }
+uselesskey = { version = "0.10.0", features = ["token", "x509", "jwk"] }
 tempfile = "3"
 temp-env = "0.3"
 proptest = "1"
