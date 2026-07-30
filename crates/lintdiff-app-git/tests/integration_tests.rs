@@ -43,7 +43,7 @@ fn cwd_lock() -> MutexGuard<'static, ()> {
     CWD_LOCK
         .get_or_init(|| Mutex::new(()))
         .lock()
-        .expect("cwd lock poisoned")
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 struct CurrentDirGuard {
@@ -73,6 +73,7 @@ fn create_test_repo() -> Result<TempDir, String> {
     git_run(repo_path, &["init", "--initial-branch=main"])?;
     git_run(repo_path, &["config", "user.email", "test@example.com"])?;
     git_run(repo_path, &["config", "user.name", "Test User"])?;
+    git_run(repo_path, &["config", "commit.gpgsign", "false"])?;
 
     // Create initial commit
     fs::write(repo_path.join("README.md"), "# Test Repository\n").map_err(|e| e.to_string())?;
@@ -165,6 +166,7 @@ mod repo_root_detection {
         git_run(&inner_path, &["init"]).expect("failed to init inner repo");
         git_run(&inner_path, &["config", "user.email", "test@example.com"]).expect("failed config");
         git_run(&inner_path, &["config", "user.name", "Test User"]).expect("failed config");
+        git_run(&inner_path, &["config", "commit.gpgsign", "false"]).expect("failed config");
 
         // Create a file in inner repo
         fs::write(inner_path.join("inner.txt"), "inner content").expect("failed to write");
