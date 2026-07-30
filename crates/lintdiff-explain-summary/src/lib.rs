@@ -683,7 +683,7 @@ pub fn percentage(count: usize, total: usize) -> f64 {
 #[must_use]
 pub fn top_files_by_findings(summary: &ExplainSummary, n: usize) -> Vec<&FileSummary> {
     let mut files: Vec<_> = summary.by_file.values().collect();
-    files.sort_by(|a, b| b.finding_count.cmp(&a.finding_count));
+    files.sort_by_key(|b| std::cmp::Reverse(b.finding_count));
     files.into_iter().take(n).collect()
 }
 
