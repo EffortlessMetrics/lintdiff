@@ -497,9 +497,7 @@ impl PolicyEvaluator {
 
         let mut matches = Vec::new();
         let mut line_start = 0;
-        let mut line_num = 1;
-
-        for line in code.lines() {
+        for (line_num, line) in (1_usize..).zip(code.lines()) {
             // Calculate the actual line end position (including newline if present)
             let line_len = line.len();
             let line_end = line_start + line_len;
@@ -525,7 +523,6 @@ impl PolicyEvaluator {
             }
 
             line_start = actual_line_end;
-            line_num += 1;
         }
 
         matches
@@ -663,9 +660,7 @@ pub fn find_matching_lines(glob: &str, code: &str) -> Result<Vec<Match>, PolicyE
     let compiled = Glob::new(&glob_pattern)?;
     let mut matches = Vec::new();
     let mut line_start = 0;
-    let mut line_num = 1;
-
-    for line in code.lines() {
+    for (line_num, line) in (1_usize..).zip(code.lines()) {
         // Calculate the actual line end position (including newline if present)
         let line_len = line.len();
         let line_end = line_start + line_len;
@@ -690,7 +685,6 @@ pub fn find_matching_lines(glob: &str, code: &str) -> Result<Vec<Match>, PolicyE
         }
 
         line_start = actual_line_end;
-        line_num += 1;
     }
 
     Ok(matches)
