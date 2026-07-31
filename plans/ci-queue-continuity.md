@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #51, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #52, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:43:00.2929816-04:00`
+- Verified at: `2026-07-31T07:43:28.6153882-04:00`
 - git status --short --branch: `#`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* 2675e3d (HEAD -> main, origin/main, origin/HEAD) docs(ci): correct continuity update pointer to merged PR #50 (#51)`
+- git log -n 1 --oneline on HEAD: `* a8c2eaa (HEAD -> main, origin/main, origin/HEAD) docs(ci): pin continuity baseline to merged PR #51 (#52)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -65,6 +65,7 @@ Each run appends machine-readable evidence to:
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
+
 
 
 
