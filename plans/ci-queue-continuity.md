@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest continuity head: 0964c14)
+- Baseline source of truth: `origin/main`
 - Current durable queue state:
   - BASELINE: #69 (currently merged on origin/main)
   - READY AFTER BASELINE: none
@@ -19,14 +19,14 @@
 - #19 (Factory Droid workflow, historical) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T18:37:13.3476868-04:00`
+- Verified at: `2026-07-31T18:38:02.9596737-04:00`
 - git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 0964c14 (HEAD -> main, origin/main, origin/HEAD) chore(ci): sync continuity snapshot with merged #81 head (#82)`
+- git log -n 1 --oneline on HEAD: `* 691a9a5 (HEAD -> main, origin/main, origin/HEAD) chore(ci): finalize continuity snapshot to current head (#83)`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -83,8 +83,8 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- origin/main head check: 0964c14 chore(ci): sync continuity snapshot with merged #81 head (#82)
-- Last continuity verification: 2026-07-31T18:37:13.3476868-04:00
+- Last continuity verification: 2026-07-31T18:38:02.9596737-04:00
+- origin/main was checked for this snapshot
 - Snapshot queue order: none
 
 ## Resume playbook (for next maintainer/Codex turn)
