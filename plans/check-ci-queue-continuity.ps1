@@ -272,6 +272,8 @@ if ($ApplyRestack) {
         }
     }
 }
+$ifApplyRestackReasonOutput = if ($ApplyRestack) { "dependency_restack_applied_reason=$dependencyRestackAppliedReason" } else { "dependency_restack_applied_reason=not_requested" }
+Write-Output $ifApplyRestackReasonOutput
 
 $currentBranch = git rev-parse --abbrev-ref HEAD
 $dependencySnapshot["DependencyRestackApplied"] = if ($ApplyRestack) { $dependencyRestackApplied.ToString() } else { "False" }

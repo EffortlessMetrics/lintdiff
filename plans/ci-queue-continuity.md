@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:04:32.4409865-04:00`
-- git status --short --branch: `## main...origin/main [ahead 9]`
+- Verified at: `2026-07-31T15:05:45.7421341-04:00`
+- git status --short --branch: `## main...origin/main [ahead 11]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* d1cec0b (HEAD -> main) docs(ci): add canonical ApplyRestack sample outcomes to queue playbook`
+- git log -n 1 --oneline on HEAD: `* a78f0de (HEAD -> main) docs(ci): add remote-merged-branch visibility to continuity playbook`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -133,6 +133,7 @@ dependency_order=
 dependency_restack_plan=
 dependency_restack_applied=false
 no_open_prs_or_missing_order
+dependency_restack_applied_reason=no_open_prs_or_missing_order
 ```
 
 Dependency warning case (example mock cycle `#201 -> #202 -> #201`):
@@ -144,6 +145,7 @@ dependency_cycle_or_unknown: no zero-inbound open PRs remain
 dependency_restack_plan=[]
 dependency_restack_applied=false
 blocked_by_dependency_warning
+dependency_restack_applied_reason=blocked_by_dependency_warning
 ```
 
 ## Verification notes
