@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:08:55.9661434-04:00`
-- git status --short --branch: `## main...origin/main [ahead 17]`
+- Verified at: `2026-07-31T15:09:32.2373463-04:00`
+- git status --short --branch: `## main...origin/main [ahead 18]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 2ff7b0c (HEAD -> main) ci: emit restack applied state once from single source`
+- git log -n 1 --oneline on HEAD: `* 318baf3 (HEAD -> main) docs(ci): refresh continuity snapshot after output contract consolidation`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -150,5 +150,5 @@ dependency_restack_applied_reason=blocked_by_dependency_warning
 ```
 
 ## Verification notes
-- Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
+- Source files changed in this lane include continuity queue metadata and script contract files [plans/ci-queue-continuity.ps1], unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
