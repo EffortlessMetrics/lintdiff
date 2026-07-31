@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #54, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #56, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -15,7 +15,7 @@
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* 4c91165 (HEAD -> main, origin/main, origin/HEAD) docs(ci): sync continuity header with PR #54 head (#55)`
+- git log -n 1 --oneline on HEAD: `* b378eec (HEAD -> main, origin/main, origin/HEAD) docs(ci): refresh continuity snapshot timestamp and head line (#56)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
