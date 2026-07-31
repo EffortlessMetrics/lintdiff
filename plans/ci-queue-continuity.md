@@ -9,6 +9,41 @@
   - #25 dependency updates (closed after split policy applied)
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
+## Latest continuity verification snapshot
+- Verified at: `2026-07-31T07:09:29.0897019-04:00`
+- git status --short --branch: `## main...origin/main`
+- gh pr list --state open --limit 100: no results (0 open PRs)
+- gh issue list --state open --limit 100: no results (0 open issues)
+- Local branches: * main
+- git log -n 1 --oneline on HEAD: `* 10a197f (HEAD -> main, origin/main, origin/HEAD) docs(ci): align queue ledger with PR 41 (#42)`
+
+## Repeatable continuity rehydrate command
+```powershell
+git fetch --prune origin
+git status --short --branch
+gh pr list --state open --limit 100
+gh issue list --state open --limit 100
+git branch --sort=-committerdate
+git log -n 5 --oneline --decorate --graph --all --max-count=5
+git show -s --oneline origin/main
+```
+
+To run the same check with JSON output for quick handoff capture, use:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1
+```
+
+To refresh this file’s verification timestamp automatically during a handoff check:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1 -UpdatePlan
+```
+
+Each run appends machine-readable evidence to:
+
+`artifacts/ci-queue-continuity-evidence.jsonl`
+
 ## Current queued work (ready order)
 1. None currently queued; #32-#36 and follow-up docs PRs (#38-#40) are merged.
 2. Rehydrate only from active dependabot PRs when new queue entries appear.
@@ -30,3 +65,5 @@
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
+
+
