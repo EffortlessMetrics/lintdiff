@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:12:33.4869200-04:00`
-- git status --short --branch: `## main...origin/main [ahead 24]`
-- gh pr list --state open --limit 100: no results (0 open PRs)
+- Verified at: `2026-07-31T15:13:54.9528238-04:00`
+- git status --short --branch: `## chore/ci-queue-continuity-snapshot...origin/chore/ci-queue-continuity-snapshot`
+- gh pr list --state open --limit 100: open PRs: 1
 - gh issue list --state open --limit 100: no results (0 open issues)
-- Dependency order: none
-- Local branches: main
+- Dependency order: #61
+- Local branches: chore/ci-queue-continuity-snapshot, main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* d84f0ce (HEAD -> main) docs(ci): refresh continuity snapshot after latest queue validation pass`
+- git log -n 1 --oneline on HEAD: `* 313f54e (HEAD -> chore/ci-queue-continuity-snapshot, origin/chore/ci-queue-continuity-snapshot, main) docs(ci): refresh continuity snapshot after latest validation cycle`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -78,7 +78,7 @@ Each run appends machine-readable evidence to:
 and `artifacts/ci-queue-dependency-order.jsonl`.
 
 ## Current queued work (ready order)
-1. No open PR work currently queued in this lane.
+1. Process PR #61.
 
 ## Completed queue snapshot
 - `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
