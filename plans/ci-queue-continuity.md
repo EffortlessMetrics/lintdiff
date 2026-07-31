@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest known good merge is PR #36)
+- Baseline source of truth: `origin/main` (latest known merged change is PR #38)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -14,9 +14,11 @@
 2. Rehydrate only from active dependabot PRs when new queue entries appear.
 
 ## Completed queue snapshot
+- `origin/main` now includes PR #38, which records queue state after dependency queue completion.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
-- Latest queue head SHA: `e647b4e`
-- Last merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
+- Latest dependency queue head SHA: `e647b4e` (`#36`)
+- Latest queue-record snapshot SHA: `56f5531` (`#38`)
+- Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
 1. Keep `main` synced: `git fetch origin && git checkout main && git reset --hard origin/main`.
