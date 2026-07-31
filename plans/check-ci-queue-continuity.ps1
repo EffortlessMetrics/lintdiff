@@ -442,19 +442,15 @@ if ($UpdatePlan) {
     }
     $bt = [char]96
 
-    $originMainHeadShort = "unknown"
-    if ($originMainHead -match '^(?<sha>[0-9a-f]{7,40})\s') {
-        $originMainHeadShort = $Matches['sha'].Substring(0, [Math]::Min(7, $Matches['sha'].Length))
-    }
-    $updatedBaselineLine = "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest continuity head: $originMainHeadShort)"
+    $updatedBaselineLine = "- Baseline source of truth: " + $bt + "origin/main" + $bt
     $snapshotQueueLine = if ($openPrDependencyOrder.Count -gt 0) {
         "- Snapshot queue order: #$($openPrDependencyOrder -join ', #')"
     } else {
         "- Snapshot queue order: none"
     }
     $completedQueueSummary = @(
-        "- `origin/main` head check: $originMainHead",
         "- Last continuity verification: $runTimestamp",
+        "- `origin/main` was checked for this snapshot",
         $snapshotQueueLine
     )
     $localBranchSummary = @(
