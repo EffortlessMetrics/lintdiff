@@ -114,6 +114,14 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 9. Treat PR closure as final ledger state unless replaced by an explicit new queue entry.
 10. Treat `blocked_by_dependency_warning` as the canonical hard-stop reason for dependency-graph issues in automation runs.
 
+### Canonical `ApplyRestack` signal matrix
+
+- `open PRs empty` (`dependency_order=[]`), dry-run: emits `no_open_prs_or_missing_order` and `dependency_restack_applied=false`.
+- `dependency warnings non-empty`, dry-run: emits `blocked_by_dependency_warning` and `dependency_restack_applied=false`.
+- `warnings empty` and `dependency_restack_plan` present:
+  - non-dry-run, confirmed: emits `completed` and `dependency_restack_applied=true`.
+  - dry-run: emits `dry_run_complete` and `dependency_restack_applied=false`.
+
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
