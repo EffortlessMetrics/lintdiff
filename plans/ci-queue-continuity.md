@@ -122,6 +122,28 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
   - non-dry-run, confirmed: emits `completed` and `dependency_restack_applied=true`.
   - dry-run: emits `dry_run_complete` and `dependency_restack_applied=false`.
 
+### Canonical sample outcomes
+
+Empty queue (`main` clean, no open PRs):
+
+```text
+dependency_order=
+dependency_restack_plan=
+dependency_restack_applied=false
+no_open_prs_or_missing_order
+```
+
+Dependency warning case (example mock cycle `#201 -> #202 -> #201`):
+
+```text
+dependency_order=
+dependency_warnings=
+dependency_cycle_or_unknown: no zero-inbound open PRs remain
+dependency_restack_plan=[]
+dependency_restack_applied=false
+blocked_by_dependency_warning
+```
+
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
