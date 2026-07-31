@@ -442,15 +442,11 @@ if ($UpdatePlan) {
     }
     $bt = [char]96
 
-    $originMainPr = $null
-    if ($originMainHead -match "#(?<pr>\d+)") {
-        $originMainPr = $Matches['pr']
+    $originMainHeadShort = "unknown"
+    if ($originMainHead -match '^(?<sha>[0-9a-f]{7,40})\s') {
+        $originMainHeadShort = $Matches['sha'].Substring(0, [Math]::Min(7, $Matches['sha'].Length))
     }
-    $updatedBaselineLine = if ($originMainPr) {
-        "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest merged continuity update is PR #$originMainPr)"
-    } else {
-        "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest merged continuity update from current head)"
-    }
+    $updatedBaselineLine = "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest continuity head: $originMainHeadShort)"
     $snapshotQueueLine = if ($openPrDependencyOrder.Count -gt 0) {
         "- Snapshot queue order: #$($openPrDependencyOrder -join ', #')"
     } else {
