@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:06:47.5571124-04:00`
-- git status --short --branch: `## main...origin/main [ahead 13]`
+- Verified at: `2026-07-31T15:07:23.0562206-04:00`
+- git status --short --branch: `## main...origin/main [ahead 14]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 421bdf2 (HEAD -> main) docs(ci): refresh continuity snapshot after ApplyRestack reason output`
+- git log -n 1 --oneline on HEAD: `* 116d76b (HEAD -> main) docs(ci): refresh continuity snapshot after latest verification run`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -123,6 +123,7 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 - `warnings empty` and `dependency_restack_plan` present:
   - non-dry-run, confirmed: emits `completed` and `dependency_restack_applied=true`.
   - dry-run: emits `dry_run_complete` and `dependency_restack_applied=false`.
+- when not using `-ApplyRestack`, emits `dependency_restack_applied=false` and `dependency_restack_applied_reason=not_requested` in check-only mode.
 
 ### Canonical sample outcomes
 
