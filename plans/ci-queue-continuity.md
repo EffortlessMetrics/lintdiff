@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #60, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #62)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:18:41.5421721-04:00`
+- Verified at: `2026-07-31T15:26:12.7557611-04:00`
 - git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* d1cd6f4 (HEAD -> main, origin/main, origin/HEAD) docs(ci): refresh queue continuity snapshot (#61)`
+- git log -n 1 --oneline on HEAD: `*   bf0149e (HEAD -> main, origin/main, origin/HEAD) Merge pull request #62 from EffortlessMetrics/chore/ci-queue-continuity-snapshot-post61`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -81,11 +81,9 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
-- `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
-- Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `e00c9a8` (`#58`)
-- Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
+- origin/main head check: bf0149e Merge pull request #62 from EffortlessMetrics/chore/ci-queue-continuity-snapshot-post61
+- Last continuity verification: 2026-07-31T15:26:12.7557611-04:00
+- Snapshot queue order: none
 
 ## Resume playbook (for next maintainer/Codex turn)
 1. Keep `main` synced: `git fetch origin && git checkout main && git reset --hard origin/main`.

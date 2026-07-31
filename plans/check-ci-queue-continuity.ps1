@@ -440,6 +440,27 @@ if ($UpdatePlan) {
     } else {
         "open issues: $($openIssuesObj.Count)"
     }
+    $bt = [char]96
+
+    $originMainPr = $null
+    if ($originMainHead -match "#(?<pr>\d+)") {
+        $originMainPr = $Matches['pr']
+    }
+    $updatedBaselineLine = if ($originMainPr) {
+        "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest merged continuity update is PR #$originMainPr)"
+    } else {
+        "- Baseline source of truth: $bt" + "origin/main" + "$bt (latest merged continuity update from current head)"
+    }
+    $snapshotQueueLine = if ($openPrDependencyOrder.Count -gt 0) {
+        "- Snapshot queue order: #$($openPrDependencyOrder -join ', #')"
+    } else {
+        "- Snapshot queue order: none"
+    }
+    $completedQueueSummary = @(
+        "- `origin/main` head check: $originMainHead",
+        "- Last continuity verification: $runTimestamp",
+        $snapshotQueueLine
+    )
     $localBranchSummary = @(
         if ($localBranchesClean) {
             $localBranchesClean | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" } | Select-Object -First 3
@@ -471,15 +492,34 @@ if ($UpdatePlan) {
     $updated = $false
     $rewrittenPlanLines = New-Object System.Collections.Generic.List[string]
     $inQueuedWorkSection = $false
+    $inCompletedQueueSnapshotSection = $false
     for ($index = 0; $index -lt $planLines.Length; $index++) {
         $line = $planLines[$index]
         $normalizedLine = $line.Trim()
+        if ($inCompletedQueueSnapshotSection) {
+            if ($line -match '^## ') {
+                $inCompletedQueueSnapshotSection = $false
+            } else {
+                continue
+            }
+        }
         if ($inQueuedWorkSection) {
             if ($line -match '^## ' ) {
                 $inQueuedWorkSection = $false
             } else {
                 continue
             }
+        }
+
+        if ($normalizedLine -eq '## Completed queue snapshot') {
+            $rewrittenPlanLines.Add($line)
+            foreach ($snapshotLine in $completedQueueSummary) {
+                $rewrittenPlanLines.Add($snapshotLine)
+            }
+            $rewrittenPlanLines.Add("")
+            $inCompletedQueueSnapshotSection = $true
+            $updated = $true
+            continue
         }
 
         if ($normalizedLine -eq '## Current queued work (ready order)') {
@@ -499,6 +539,11 @@ if ($UpdatePlan) {
         $normalizedLine = $line.Trim()
         if ($normalizedLine.StartsWith('- Verified at:')) {
             $rewrittenPlanLines.Add($verifiedLine)
+            $updated = $true
+            continue
+        }
+        if ($normalizedLine.StartsWith('- Baseline source of truth:')) {
+            $rewrittenPlanLines.Add($updatedBaselineLine)
             $updated = $true
             continue
         }
