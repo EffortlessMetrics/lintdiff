@@ -8,14 +8,24 @@
   - #26 dependency/action updates (merged)
   - #25 dependency updates (closed after split policy applied)
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
+- Durable queue model:
+  - BASELINE: #28
+  - READY AFTER BASELINE: #27
+  - GENERATED RESTACK: #26
+  - REVIEW/REDUCE: #17
+  - REPLACE/SPLIT: #25
+  - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:46:46.5732054-04:00`
-- git status --short --branch: `#`
+- Verified at: `2026-07-31T14:59:18.4753619-04:00`
+- git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
-- Local branches: * main
-- git log -n 1 --oneline on HEAD: `* e994661 (HEAD -> main, origin/main, origin/HEAD) docs(ci): sync continuity ledger verification block with latest merge (#59)`
+- Dependency order: none
+- Local branches: main
+- Queue branch hygiene candidates to prune: none
+- git log -n 1 --oneline on HEAD: `* c24d9e4 (HEAD -> main, origin/main, origin/HEAD) docs(ci): advance continuity handoff header to PR #60 (#60)`
+- Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -34,7 +44,29 @@ To run the same check with JSON output for quick handoff capture, use:
 ./plans/check-ci-queue-continuity.ps1
 ```
 
-To refresh this file’s verification timestamp automatically during a handoff check:
+To run and apply the computed dependency restack (only on clean `main` and only when dependency ordering is valid), use:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1 -ApplyRestack -ConfirmRestack
+```
+
+Use interactive confirmation mode for manual runs:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1 -ApplyRestack
+```
+
+(Type `APPLY` when prompted to continue.)
+
+To dry-run execution before writing anything back to remote branches:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1 -ApplyRestack -DryRunRestack
+```
+
+`-DryRunRestack` is non-interactive and reports the planned `dependency_restack_plan` without requiring `APPLY` confirmation.
+
+To refresh this file's verification timestamp automatically during a handoff check:
 
 ```powershell
 ./plans/check-ci-queue-continuity.ps1 -UpdatePlan
@@ -43,10 +75,10 @@ To refresh this file’s verification timestamp automatically during a handoff c
 Each run appends machine-readable evidence to:
 
 `artifacts/ci-queue-continuity-evidence.jsonl`
+and `artifacts/ci-queue-dependency-order.jsonl`.
 
 ## Current queued work (ready order)
-1. Rehydrate only from active dependabot PRs when new queue entries appear.
-2. No queue work is currently active in the continuity lane.
+1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
 - `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
@@ -58,19 +90,26 @@ Each run appends machine-readable evidence to:
 ## Resume playbook (for next maintainer/Codex turn)
 1. Keep `main` synced: `git fetch origin && git checkout main && git reset --hard origin/main`.
 2. Process any new queue strictly in arrival order to preserve deterministic conflict behavior.
-3. Prefer merge/rebase-based progression; avoid duplicating fixes already in merged lineage.
-4. Do not copy lockfile/clippy behavior changes into other PRs that do not own that scope.
-5. Treat PR closure as final ledger state unless replaced by an explicit new queue entry.
+3. Before processing, prune stale branch references and confirm a clean baseline:
+   - `git remote prune origin`
+   - `git branch --merged | ForEach-Object { $_ }`
+   - `git branch --no-merged`
+4. Prefer merge/rebase-based progression; avoid duplicating fixes already in merged lineage.
+5. Use dependency evidence to order work:
+   - Run `./plans/check-ci-queue-continuity.ps1` and read `dependency_order` first.
+   - If `dependency_warnings` is non-empty, stop and resolve dependency or cycle issues before proceeding.
+   - Work PRs in the published `#<number>` ready order (or use `dependency_restack_plan` output when present), then rerun the check.
+6. Apply queue restack only when the plan is clean:
+   - `./plans/check-ci-queue-continuity.ps1 -ApplyRestack` (interactive confirmation), or
+   - `./plans/check-ci-queue-continuity.ps1 -ApplyRestack -ConfirmRestack` (non-interactive automation).
+   - `./plans/check-ci-queue-continuity.ps1 -ApplyRestack -DryRunRestack` (non-interactive plan-only mode, no local or remote writes).
+7. After merging queued PRs, prune queue-local branches that are merged:
+   - `git fetch origin --prune`
+   - `git branch --merged`
+   - Prefer deleting only branches listed in the latest `stale_merged_local_branches` output from `plans/check-ci-queue-continuity.ps1` (or `DependencySnapshot` evidence field `StalePrunableBranches`).
+8. Do not copy lockfile/clippy behavior changes into other PRs that do not own that scope.
+9. Treat PR closure as final ledger state unless replaced by an explicit new queue entry.
 
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
-
-
-
-
-
-
-
-
-
