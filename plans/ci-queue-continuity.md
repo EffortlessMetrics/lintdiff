@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #58, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #59, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:44:31.9963499-04:00`
+- Verified at: `2026-07-31T07:46:09.8917499-04:00`
 - git status --short --branch: `#`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* b378eec (HEAD -> main, origin/main, origin/HEAD) docs(ci): refresh continuity snapshot timestamp and head line (#56)`
+- git log -n 1 --oneline on HEAD: `* e00c9a8 (HEAD -> main, origin/main, origin/HEAD) docs(ci): stabilize continuity metadata to current chain state (#58)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -52,7 +52,7 @@ Each run appends machine-readable evidence to:
 - `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
 - Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `3d6f6ce` (`#56`)
+- Latest queue-record snapshot SHA: `e00c9a8` (`#58`)
 - Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
@@ -65,6 +65,7 @@ Each run appends machine-readable evidence to:
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
+
 
 
 
