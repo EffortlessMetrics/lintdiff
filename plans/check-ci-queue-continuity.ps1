@@ -443,16 +443,75 @@ if ($UpdatePlan) {
     $bt = [char]96
 
     $updatedBaselineLine = "- Baseline source of truth: " + $bt + "origin/main" + $bt
+    $keepNoOpVerificationSnapshot = $false
+    $latestVerifiedLine = ""
+    $latestRecentLogLine = ""
+    $stableNoOpenQueueState = ($openPrsObj.Count -eq 0 -and $depOrderWarnings.Count -eq 0)
     $snapshotQueueLine = if ($openPrDependencyOrder.Count -gt 0) {
         "- Snapshot queue order: #$($openPrDependencyOrder -join ', #')"
     } else {
         "- Snapshot queue order: none"
     }
-    $completedQueueSummary = @(
-        "- Last continuity verification: $runTimestamp",
-        "- `origin/main` was checked for this snapshot",
-        $snapshotQueueLine
-    )
+    if ($stableNoOpenQueueState) {
+        $planLinesRaw = Get-Content $planPath
+        $existingVerificationLine = ""
+        $existingOriginCheckedLine = ""
+        $existingSnapshotLine = ""
+        $existingVerifiedLine = ""
+        $existingRecentLogLine = ""
+        foreach ($rawLine in $planLinesRaw) {
+            $trimmedLine = $rawLine.Trim()
+            if ($trimmedLine -like "- Last continuity verification:*") {
+                $existingVerificationLine = $trimmedLine
+            }
+            if ($trimmedLine -like "*origin/main*was checked for this snapshot") {
+                $existingOriginCheckedLine = $trimmedLine
+            }
+            if ($trimmedLine -like "- Snapshot queue order:*") {
+                $existingSnapshotLine = $trimmedLine
+            }
+            if ($trimmedLine -like "- Verified at:*") {
+                $existingVerifiedLine = $trimmedLine
+            }
+            if ($trimmedLine -like "- *git log -n 1 --oneline*") {
+                $existingRecentLogLine = $trimmedLine
+            }
+        }
+        if ($existingVerificationLine -and $existingOriginCheckedLine) {
+            $completedQueueSummary = @(
+                $existingVerificationLine,
+                $existingOriginCheckedLine,
+                $snapshotQueueLine
+            )
+            if ($existingSnapshotLine) {
+                $completedQueueSummary[2] = $existingSnapshotLine
+            }
+            if ($existingVerifiedLine) {
+                $latestVerifiedLine = $existingVerifiedLine
+            }
+            if ($existingRecentLogLine) {
+                $latestRecentLogLine = $existingRecentLogLine
+            }
+            $keepNoOpVerificationSnapshot = $true
+        }
+    }
+    $recentLogHead = if ($recentLog) { ($recentLog -split "`r?`n")[0] } else { "empty log" }
+    if (-not $keepNoOpVerificationSnapshot) {
+        $completedQueueSummary = @(
+            "- Last continuity verification: $runTimestamp",
+            "- `origin/main` was checked for this snapshot",
+            $snapshotQueueLine
+        )
+        $latestVerifiedLine = "- Verified at: $bt$runTimestamp$bt"
+        $latestRecentLogLine = "- `git log -n 1 --oneline` on HEAD: $bt$recentLogHead$bt"
+    } else {
+        if (-not $latestVerifiedLine) {
+            $latestVerifiedLine = "- Verified at: $bt$runTimestamp$bt"
+        }
+        if (-not $latestRecentLogLine) {
+            $latestRecentLogLine = "- `git log -n 1 --oneline` on HEAD: $bt$recentLogHead$bt"
+        }
+    }
     $localBranchSummary = @(
         if ($localBranchesClean) {
             $localBranchesClean | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" } | Select-Object -First 3
@@ -465,15 +524,12 @@ if ($UpdatePlan) {
     } else {
         "`* main"
     }
-    $recentLogHead = if ($recentLog) { ($recentLog -split "`r?`n")[0] } else { "empty log" }
     $bt = [char]96
 
-    $verifiedLine = "- Verified at: $bt$runTimestamp$bt"
     $branchStatusLine = "- `git status --short --branch`: $bt$branchLineToWrite$bt"
     $openPrLine = "- `gh pr list --state open --limit 100`: $openPrSummary"
     $openIssueLine = "- `gh issue list --state open --limit 100`: $openIssueSummary"
     $localBranchesLine = "- Local branches: $localBranchLine"
-    $recentLogLine = "- `git log -n 1 --oneline` on HEAD: $bt$recentLogHead$bt"
     $staleQueueLine = if ($prunedQueueBranchCandidates.Count -gt 0) {
         "- Queue branch hygiene candidates to prune: $bt$($prunedQueueBranchCandidates -join ', ')$bt"
     } else {
@@ -529,11 +585,6 @@ if ($UpdatePlan) {
         }
 
         $normalizedLine = $line.Trim()
-        if ($normalizedLine.StartsWith('- Verified at:')) {
-            $rewrittenPlanLines.Add($verifiedLine)
-            $updated = $true
-            continue
-        }
         if ($normalizedLine.StartsWith('- Baseline source of truth:')) {
             $rewrittenPlanLines.Add($updatedBaselineLine)
             $updated = $true
@@ -559,6 +610,16 @@ if ($UpdatePlan) {
             $updated = $true
             continue
         }
+        if ($normalizedLine.StartsWith('- Verified at:')) {
+            $rewrittenPlanLines.Add($latestVerifiedLine)
+            $updated = $true
+            continue
+        }
+        if ($normalizedLine.StartsWith('- git log -n 1 --oneline')) {
+            $rewrittenPlanLines.Add($latestRecentLogLine)
+            $updated = $true
+            continue
+        }
         if ($normalizedLine.StartsWith('- Local branches:')) {
             $rewrittenPlanLines.Add($localBranchesLine)
             $rewrittenPlanLines.Add($staleQueueLine)
@@ -566,11 +627,6 @@ if ($UpdatePlan) {
             continue
         }
         if ($normalizedLine.StartsWith('- Queue branch hygiene candidates to prune:')) {
-            continue
-        }
-        if ($normalizedLine.StartsWith('- git log -n 1 --oneline')) {
-            $rewrittenPlanLines.Add($recentLogLine)
-            $updated = $true
             continue
         }
         $rewrittenPlanLines.Add($line)
