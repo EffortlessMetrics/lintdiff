@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #41, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #43, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:13:26.9535018-04:00`
-- git status --short --branch: `#`
-- gh pr list --state open --limit 100: open PRs: 1
+- Verified at: `2026-07-31T07:38:13.2730980-04:00`
+- git status --short --branch: `## main...origin/main`
+- gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
-- Local branches: * chore/ci-queue-continuity-handoff, main
-- git log -n 1 --oneline on HEAD: `* 7cebf15 (HEAD -> chore/ci-queue-continuity-handoff, origin/chore/ci-queue-continuity-handoff) ci(queue): harden continuity snapshot updater`
+- Local branches: * main
+- git log -n 1 --oneline on HEAD: `* d09c84c (HEAD -> main, origin/main, origin/HEAD) ci: stabilize queue continuity handoff (#43)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -45,14 +45,14 @@ Each run appends machine-readable evidence to:
 `artifacts/ci-queue-continuity-evidence.jsonl`
 
 ## Current queued work (ready order)
-1. PR #43 (`ci: stabilize queue continuity handoff`) holds the current live queue-continuity handoff changes and is in-flight.
-2. Rehydrate only from active dependabot PRs when new queue entries appear.
+1. Rehydrate only from active dependabot PRs when new queue entries appear.
+2. No queue work is currently active in the continuity lane.
 
 ## Completed queue snapshot
-- `origin/main` now includes PR #41, which updates the queue ledger references after PR #40.
+- `origin/main` now includes PR #43, which contains the queue continuity handoff and path-idempotence repair.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
 - Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `3184bdf` (`#41`)
+- Latest queue-record snapshot SHA: `d09c84c` (`#43`)
 - Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
