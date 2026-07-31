@@ -210,7 +210,7 @@ if ($ApplyRestack) {
     $dependencyRestackAppliedReason = "not_applicable"
     $restackConfirmation = ""
     if ($dependencyRestackPlan.Count -eq 0) {
-        Write-Host "dependency_restack_applied=false"
+        Write-Output "dependency_restack_applied=false"
         if ($depOrderWarnings.Count -gt 0) {
             Write-Output "blocked_by_dependency_warning"
             $dependencyRestackAppliedReason = "blocked_by_dependency_warning"
@@ -245,15 +245,15 @@ if ($ApplyRestack) {
             }
         }
         if ($DryRunRestack) {
-            Write-Host "dependency_restack_applied=false"
+            Write-Output "dependency_restack_applied=false"
             Write-Output "dry_run_complete"
             $dependencyRestackAppliedReason = "dry_run"
         } elseif ($dependencyRestackPlan.Count -eq 0) {
-            Write-Host "dependency_restack_applied=false"
+            Write-Output "dependency_restack_applied=false"
             Write-Output "no_restack_plan_ready"
             $dependencyRestackAppliedReason = "no_restack_plan_ready"
         } elseif ($dependencyRestackAppliedReason -ne "blocked_by_dirty_working_tree" -and $dependencyRestackAppliedReason -ne "aborted_by_user_confirmation" -and $dependencyRestackPlan.Count -gt 0 -and ($ConfirmRestack -or $restackConfirmation -eq "APPLY")) {
-            Write-Host "dependency_restack_applied=true"
+            Write-Output "dependency_restack_applied=true"
             $dependencyRestackApplied = $true
             $dependencyRestackAppliedReason = "completed"
             $rebaseFrom = "origin/main"
