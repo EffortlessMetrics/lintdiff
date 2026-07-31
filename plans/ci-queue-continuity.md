@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:11:04.1053716-04:00`
-- git status --short --branch: `## main...origin/main`
-- gh pr list --state open --limit 100: no results (0 open PRs)
+- Verified at: `2026-07-31T07:12:45.9536398-04:00`
+- git status --short --branch: `## chore/ci-queue-continuity-handoff...origin/chore/ci-queue-continuity-handoff`
+- gh pr list --state open --limit 100: open PRs: 1
 - gh issue list --state open --limit 100: no results (0 open issues)
-- Local branches: * main
-- git log -n 1 --oneline on HEAD: `* 6b15224 (HEAD -> main) ci(queue): stabilize continuity check handoff`
+- Local branches: * chore/ci-queue-continuity-handoff, main
+- git log -n 1 --oneline on HEAD: `* 50a0a1d (HEAD -> chore/ci-queue-continuity-handoff, origin/chore/ci-queue-continuity-handoff, main) docs(ci): refresh continuity snapshot metadata`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -45,7 +45,7 @@ Each run appends machine-readable evidence to:
 `artifacts/ci-queue-continuity-evidence.jsonl`
 
 ## Current queued work (ready order)
-1. None currently queued; #32-#36 and follow-up docs PRs (#38-#40) are merged.
+1. PR #43 (`ci: stabilize queue continuity handoff`) holds the current live queue-continuity handoff changes and is in-flight.
 2. Rehydrate only from active dependabot PRs when new queue entries appear.
 
 ## Completed queue snapshot

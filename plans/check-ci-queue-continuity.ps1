@@ -153,32 +153,33 @@ if ($UpdatePlan) {
     $planLines = Get-Content $planPath
     $updated = $false
     for ($index = 0; $index -lt $planLines.Length; $index++) {
-        if ($planLines[$index] -like "- Verified at:*") {
+        $normalizedLine = $planLines[$index].Trim()
+        if ($normalizedLine.StartsWith('- Verified at:')) {
             $planLines[$index] = $verifiedLine
             $updated = $true
             continue
         }
-        if ($planLines[$index] -like "- `git status --short --branch*:") {
+        if ($normalizedLine.StartsWith('- git status --short --branch')) {
             $planLines[$index] = $branchStatusLine
             $updated = $true
             continue
         }
-        if ($planLines[$index] -like "- `gh pr list --state open --limit 100*:") {
+        if ($normalizedLine.StartsWith('- gh pr list --state open --limit 100')) {
             $planLines[$index] = $openPrLine
             $updated = $true
             continue
         }
-        if ($planLines[$index] -like "- `gh issue list --state open --limit 100*:") {
+        if ($normalizedLine.StartsWith('- gh issue list --state open --limit 100')) {
             $planLines[$index] = $openIssueLine
             $updated = $true
             continue
         }
-        if ($planLines[$index] -like "- Local branches:*") {
+        if ($normalizedLine.StartsWith('- Local branches:')) {
             $planLines[$index] = $localBranchesLine
             $updated = $true
             continue
         }
-        if ($planLines[$index] -like "- `git log -n 1 --oneline on HEAD:*") {
+        if ($normalizedLine.StartsWith('- git log -n 1 --oneline')) {
             $planLines[$index] = $recentLogLine
             $updated = $true
             continue
