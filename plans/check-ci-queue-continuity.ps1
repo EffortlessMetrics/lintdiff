@@ -211,7 +211,10 @@ if ($ApplyRestack) {
     $restackConfirmation = ""
     if ($dependencyRestackPlan.Count -eq 0) {
         Write-Host "dependency_restack_applied=false"
-        if ($openPrDependencyOrder.Count -eq 0) {
+        if ($depOrderWarnings.Count -gt 0) {
+            Write-Output "blocked_by_dependency_warning"
+            $dependencyRestackAppliedReason = "blocked_by_dependency_warning"
+        } elseif ($openPrDependencyOrder.Count -eq 0) {
             Write-Output "no_open_prs_or_missing_order"
             $dependencyRestackAppliedReason = "no_open_prs_or_missing_order"
         } else {
