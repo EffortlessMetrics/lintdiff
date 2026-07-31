@@ -210,7 +210,6 @@ if ($ApplyRestack) {
     $dependencyRestackAppliedReason = "not_applicable"
     $restackConfirmation = ""
     if ($dependencyRestackPlan.Count -eq 0) {
-        Write-Output "dependency_restack_applied=false"
         if ($depOrderWarnings.Count -gt 0) {
             Write-Output "blocked_by_dependency_warning"
             $dependencyRestackAppliedReason = "blocked_by_dependency_warning"
@@ -222,7 +221,6 @@ if ($ApplyRestack) {
             $dependencyRestackAppliedReason = "no_restack_plan_ready"
         }
     } elseif ($depOrderWarnings.Count -gt 0) {
-        Write-Host "dependency_restack_applied=false"
         Write-Output "blocked_by_dependency_warning"
         $dependencyRestackAppliedReason = "blocked_by_dependency_warning"
     } else {
@@ -231,29 +229,24 @@ if ($ApplyRestack) {
             throw "Restack applies only from main. Current branch: $currentBranch"
         }
         if (-not $DryRunRestack -and $workingTreeStatus.Count -gt 0) {
-            Write-Host "dependency_restack_applied=false"
             Write-Output "blocked_by_dirty_working_tree"
             $dependencyRestackAppliedReason = "blocked_by_dirty_working_tree"
         } else {
             if (-not $ConfirmRestack -and -not $DryRunRestack) {
                 $restackConfirmation = Read-Host "Apply dependency restack for #$($openPrDependencyOrder -join ', #')? Type APPLY to continue"
                 if ($restackConfirmation -ne "APPLY") {
-                    Write-Host "dependency_restack_applied=false"
                     Write-Output "aborted_by_user_confirmation"
                     $dependencyRestackAppliedReason = "aborted_by_user_confirmation"
                 }
             }
         }
-        if ($DryRunRestack) {
-            Write-Output "dependency_restack_applied=false"
-            Write-Output "dry_run_complete"
-            $dependencyRestackAppliedReason = "dry_run"
-        } elseif ($dependencyRestackPlan.Count -eq 0) {
-            Write-Output "dependency_restack_applied=false"
-            Write-Output "no_restack_plan_ready"
-            $dependencyRestackAppliedReason = "no_restack_plan_ready"
-        } elseif ($dependencyRestackAppliedReason -ne "blocked_by_dirty_working_tree" -and $dependencyRestackAppliedReason -ne "aborted_by_user_confirmation" -and $dependencyRestackPlan.Count -gt 0 -and ($ConfirmRestack -or $restackConfirmation -eq "APPLY")) {
-            Write-Output "dependency_restack_applied=true"
+    if ($DryRunRestack) {
+        Write-Output "dry_run_complete"
+        $dependencyRestackAppliedReason = "dry_run"
+    } elseif ($dependencyRestackPlan.Count -eq 0) {
+        Write-Output "no_restack_plan_ready"
+        $dependencyRestackAppliedReason = "no_restack_plan_ready"
+    } elseif ($dependencyRestackAppliedReason -ne "blocked_by_dirty_working_tree" -and $dependencyRestackAppliedReason -ne "aborted_by_user_confirmation" -and $dependencyRestackPlan.Count -gt 0 -and ($ConfirmRestack -or $restackConfirmation -eq "APPLY")) {
             $dependencyRestackApplied = $true
             $dependencyRestackAppliedReason = "completed"
             $rebaseFrom = "origin/main"
@@ -272,7 +265,9 @@ if ($ApplyRestack) {
         }
     }
 }
+$ifApplyRestackAppliedOutput = if ($ApplyRestack) { "dependency_restack_applied=$($dependencyRestackApplied.ToString().ToLower())" } else { "dependency_restack_applied=false" }
 $ifApplyRestackReasonOutput = if ($ApplyRestack) { "dependency_restack_applied_reason=$dependencyRestackAppliedReason" } else { "dependency_restack_applied_reason=not_requested" }
+Write-Output $ifApplyRestackAppliedOutput
 Write-Output $ifApplyRestackReasonOutput
 
 $currentBranch = git rev-parse --abbrev-ref HEAD
