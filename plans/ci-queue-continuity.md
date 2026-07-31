@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:09:29.0897019-04:00`
+- Verified at: `2026-07-31T07:11:04.1053716-04:00`
 - git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* 10a197f (HEAD -> main, origin/main, origin/HEAD) docs(ci): align queue ledger with PR 41 (#42)`
+- git log -n 1 --oneline on HEAD: `* 6b15224 (HEAD -> main) ci(queue): stabilize continuity check handoff`
 
 ## Repeatable continuity rehydrate command
 ```powershell
