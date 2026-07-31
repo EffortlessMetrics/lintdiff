@@ -72,6 +72,11 @@ pub fn normalize_path(raw: &str) -> NormPath {
         s = s.replace("//", "/");
     }
 
+    // Avoid non-idempotent trailing separator normalization (e.g., `a/a/`).
+    while s.ends_with('/') {
+        s.pop();
+    }
+
     NormPath(s)
 }
 
