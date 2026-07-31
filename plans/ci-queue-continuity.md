@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #46, dependency queue baseline is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #47, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:40:33.5153037-04:00`
+- Verified at: `2026-07-31T07:41:17.0942538-04:00`
 - git status --short --branch: `#`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* 4058160 (HEAD -> main, origin/main, origin/HEAD) docs(ci): correct queue-record SHA to current merged head (#46)`
+- git log -n 1 --oneline on HEAD: `* 99b2ba7 (HEAD -> main, origin/main, origin/HEAD) docs(ci): align continuity handoff metadata with PR #46 (#47)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -52,7 +52,7 @@ Each run appends machine-readable evidence to:
 - `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
 - Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `4058160` (`#46`)
+- Latest queue-record snapshot SHA: `99b2ba7` (`#47`)
 - Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
