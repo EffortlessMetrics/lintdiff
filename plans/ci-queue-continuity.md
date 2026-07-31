@@ -2,29 +2,31 @@
 
 ## Objective state (authoritative handoff)
 - Baseline source of truth: `origin/main` (latest merged continuity update is PR #69)
-- Legacy high-risk PR lineage:
-  - #28 baseline advisories + clippy compatibility (merged)
-  - #27 mutation threshold numeric fix (merged)
-  - #26 dependency/action updates (merged)
-  - #25 dependency updates (closed after split policy applied)
-- PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
-- Durable queue model:
-  - BASELINE: #28
-  - READY AFTER BASELINE: #27
-  - GENERATED RESTACK: #26
-  - REVIEW/REDUCE: #17
-  - REPLACE/SPLIT: #25
-  - CLOSE: #19
+- Current durable queue state:
+  - BASELINE: #69 (currently merged on origin/main)
+  - READY AFTER BASELINE: none
+  - GENERATED RESTACK: none
+  - REVIEW/REDUCE: none
+  - REPLACE/SPLIT: none
+  - CLOSE: none
+
+## Legacy high-risk PR lineage
+
+- #28 baseline advisories + clippy compatibility (historical)
+- #27 mutation threshold numeric fix (historical)
+- #26 dependency/action updates (historical)
+- #25 dependency updates (historical split applied)
+- #19 (Factory Droid workflow, historical) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T16:01:45.8161543-04:00`
-- git status --short --branch: `## main...origin/main`
+- Verified at: `2026-07-31T16:09:33.0691504-04:00`
+- git status --short --branch: `## main...origin/main [ahead 1]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 719177f (HEAD -> main, origin/main, origin/HEAD) chore(ci): bump continuity baseline marker to PR #68 (#69)`
+- git log -n 1 --oneline on HEAD: `* 4e5bef6 (HEAD -> main) chore(ci): refresh continuity handoff snapshot`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -81,8 +83,8 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- origin/main head check: 719177f chore(ci): bump continuity baseline marker to PR #68 (#69)
-- Last continuity verification: 2026-07-31T16:01:45.8161543-04:00
+- origin/main head check: 1e2f8a5 chore(ci): finalize continuity handoff pointer to PR #69 (#70)
+- Last continuity verification: 2026-07-31T16:09:33.0691504-04:00
 - Snapshot queue order: none
 
 ## Resume playbook (for next maintainer/Codex turn)
