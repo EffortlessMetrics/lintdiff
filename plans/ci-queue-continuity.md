@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:02:00.8889202-04:00`
-- git status --short --branch: `## main...origin/main [ahead 3]`
+- Verified at: `2026-07-31T15:02:18.9146488-04:00`
+- git status --short --branch: `## main...origin/main [ahead 4]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* fbba9c3 (HEAD -> main) ci: report dependency warning when restack blocked`
+- git log -n 1 --oneline on HEAD: `* 1267395 (HEAD -> main) docs: align continuity handoff snapshot and dependency blocker semantics`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
