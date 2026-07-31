@@ -109,6 +109,7 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
    - `git branch --merged`
    - Prefer deleting only branches listed in the latest `stale_merged_local_branches` output from `plans/check-ci-queue-continuity.ps1` (or `DependencySnapshot` evidence field `StalePrunableBranches`).
    - If `MergedLocalBranches` is empty in evidence, it simply means no local branches are currently merged relative to `origin/main` and not listed for deletion; this is not an error.
+   - Do not remove remote branches from this lane alone; remote branch cleanup needs queue owner coordination.
 8. Do not copy lockfile/clippy behavior changes into other PRs that do not own that scope.
 9. Treat PR closure as final ledger state unless replaced by an explicit new queue entry.
 10. Treat `blocked_by_dependency_warning` as the canonical hard-stop reason for dependency-graph issues in automation runs.
