@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:06:11.3179901-04:00`
-- git status --short --branch: `## main...origin/main [ahead 12]`
+- Verified at: `2026-07-31T15:06:47.5571124-04:00`
+- git status --short --branch: `## main...origin/main [ahead 13]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 4b9d155 (HEAD -> main) ci: emit ApplyRestack reason line in check output`
+- git log -n 1 --oneline on HEAD: `* 421bdf2 (HEAD -> main) docs(ci): refresh continuity snapshot after ApplyRestack reason output`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
