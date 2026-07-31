@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest merged continuity update is PR #66)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #67)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -24,7 +24,7 @@
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 79ba21f (HEAD -> main, origin/main, origin/HEAD) chore(ci): align continuity handoff with merged PR #66 (#67)`
+- git log -n 1 --oneline on HEAD: `* 79ba21f (HEAD -> main, origin/main, origin/HEAD) chore(ci): align continuity handoff with merged PR #67 (#67)`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -81,7 +81,7 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- origin/main head check: 79ba21f chore(ci): align continuity handoff with merged PR #66 (#67)
+- origin/main head check: 79ba21f chore(ci): align continuity handoff with merged PR #67 (#67)
 - Last continuity verification: 2026-07-31T15:58:21.1796975-04:00
 - Snapshot queue order: none
 
