@@ -13,9 +13,26 @@ updates:
       prefix: "deps"
       include: "scope"
     groups:
-      dependencies:
+      patch-dependencies:
+        update-types:
+          - "patch"
         patterns:
           - "*"
+      uselesskey:
+        update-types:
+          - "minor"
+        patterns:
+          - "uselesskey"
+      jsonschema:
+        update-types:
+          - "minor"
+        patterns:
+          - "jsonschema"
+      cucumber:
+        update-types:
+          - "minor"
+        patterns:
+          - "cucumber"
 
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -38,7 +38,7 @@ The project is organized as a Cargo workspace with multiple crates, each with sp
 
 ### Prerequisites
 
-- **Rust 1.92+** (see `rust-version` in `Cargo.toml`)
+- **Rust 1.95+** (see `rust-version` in `Cargo.toml`)
 - **git** for version control
 
 ### Building the Project
