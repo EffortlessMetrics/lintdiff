@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:38:53.8953623-04:00`
+- Verified at: `2026-07-31T07:40:01.7905606-04:00`
 - git status --short --branch: `#`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * main
-- git log -n 1 --oneline on HEAD: `* f626507 (HEAD -> main, origin/main, origin/HEAD) docs(ci): refresh continuity ledger metadata (#44)`
+- git log -n 1 --oneline on HEAD: `* 19f9f7d (HEAD -> main, origin/main, origin/HEAD) docs(ci): align queue record snapshot with merged PR #44 (#45)`
 
 ## Repeatable continuity rehydrate command
 ```powershell
@@ -52,7 +52,7 @@ Each run appends machine-readable evidence to:
 - `origin/main` now includes PR #44, which refreshes the queue continuity ledger metadata after PR #43.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
 - Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `f626507` (`#44`)
+ - Latest queue-record snapshot SHA: `19f9f7d` (`#45`)
 - Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
