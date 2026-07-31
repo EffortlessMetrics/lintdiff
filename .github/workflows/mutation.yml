@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     
     # Don't run scheduled mutation testing on forks
-    if: github.event_name != 'schedule' || github.repository_owner == github.repository_owner
+    if: github.event_name != 'schedule' || github.event.repository.fork == false
     
     steps:
       - name: Checkout repository
@@ -247,14 +247,17 @@ jobs:
           
           # Status indicator
           if [ "$OVERALL_SCORE" -ge "$MUTATION_THRESHOLD" ]; then
+            BELOW_THRESHOLD=false
             echo "✅ **Mutation score meets threshold (${OVERALL_SCORE}% >= ${MUTATION_THRESHOLD}%)**" >> $GITHUB_STEP_SUMMARY
           else
+            BELOW_THRESHOLD=true
             echo "⚠️ **Mutation score below threshold (${OVERALL_SCORE}% < ${MUTATION_THRESHOLD}%)**" >> $GITHUB_STEP_SUMMARY
           fi
           
           # Save values for later steps
           echo "overall_score=$OVERALL_SCORE" >> $GITHUB_OUTPUT
           echo "total_missed=$TOTAL_MISSED" >> $GITHUB_OUTPUT
+          echo "below_threshold=$BELOW_THRESHOLD" >> $GITHUB_OUTPUT
           echo "lowest_score=$LOWEST_SCORE" >> $GITHUB_OUTPUT
           echo "lowest_crate=$LOWEST_CRATE" >> $GITHUB_OUTPUT
       
@@ -268,7 +271,7 @@ jobs:
       
       # Create GitHub issue if mutation score drops below threshold
       - name: Create issue for low mutation score
-        if: fromJson(steps.aggregate.outputs.overall_score) < fromJson(env.MUTATION_THRESHOLD) && github.event_name == 'schedule'
+        if: fromJson(steps.aggregate.outputs.below_threshold) && github.event_name == 'schedule'
         uses: actions/github-script@v9
         with:
           script: |
