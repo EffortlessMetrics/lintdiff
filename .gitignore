@@ -2,6 +2,8 @@
 **/*.rs.bk
 .DS_Store
 artifacts/
+artifacts/*.log
+artifacts/*.jsonl
 fuzz/artifacts/
 fuzz/corpus/
 *.log

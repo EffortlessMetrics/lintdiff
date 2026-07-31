@@ -9,8 +9,43 @@
   - #25 dependency updates (closed after split policy applied)
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
+## Latest continuity verification snapshot
+- Verified at: `2026-07-31T07:13:26.9535018-04:00`
+- git status --short --branch: `#`
+- gh pr list --state open --limit 100: open PRs: 1
+- gh issue list --state open --limit 100: no results (0 open issues)
+- Local branches: * chore/ci-queue-continuity-handoff, main
+- git log -n 1 --oneline on HEAD: `* 7cebf15 (HEAD -> chore/ci-queue-continuity-handoff, origin/chore/ci-queue-continuity-handoff) ci(queue): harden continuity snapshot updater`
+
+## Repeatable continuity rehydrate command
+```powershell
+git fetch --prune origin
+git status --short --branch
+gh pr list --state open --limit 100
+gh issue list --state open --limit 100
+git branch --sort=-committerdate
+git log -n 5 --oneline --decorate --graph --all --max-count=5
+git show -s --oneline origin/main
+```
+
+To run the same check with JSON output for quick handoff capture, use:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1
+```
+
+To refresh this file’s verification timestamp automatically during a handoff check:
+
+```powershell
+./plans/check-ci-queue-continuity.ps1 -UpdatePlan
+```
+
+Each run appends machine-readable evidence to:
+
+`artifacts/ci-queue-continuity-evidence.jsonl`
+
 ## Current queued work (ready order)
-1. None currently queued; #32-#36 and follow-up docs PRs (#38-#40) are merged.
+1. PR #43 (`ci: stabilize queue continuity handoff`) holds the current live queue-continuity handoff changes and is in-flight.
 2. Rehydrate only from active dependabot PRs when new queue entries appear.
 
 ## Completed queue snapshot
@@ -30,3 +65,5 @@
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
 - If PR order changes, update this file immediately after merging the queue head.
+
+

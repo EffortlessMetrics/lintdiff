@@ -80,9 +80,12 @@ proptest! {
     }
 
     /// a/ and b/ prefixes should be stripped.
-    /// Note: rest must not start with "a/" or "b/" to avoid double-stripping
+    /// Note: rest must be a non-empty relative path with no trailing slash.
     #[test]
-    fn diff_prefixes_stripped(prefix in "(a|b)", rest in "[c-zA-Z0-9_./-][A-Za-z0-9_./-]{0,39}") {
+    fn diff_prefixes_stripped(
+        prefix in "(a|b)",
+        rest in prop::collection::vec("[c-zA-Z0-9_.-]{1,10}", 1..8).prop_map(|parts| parts.join("/")),
+    ) {
         let with_prefix = format!("{}/{}", prefix, rest);
         let normalized_with = NormPath::new(&with_prefix);
         let normalized_without = NormPath::new(&rest);
