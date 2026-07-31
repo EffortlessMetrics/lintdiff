@@ -10,12 +10,12 @@
 - PR #19 (Factory Droid workflow) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T07:12:45.9536398-04:00`
-- git status --short --branch: `## chore/ci-queue-continuity-handoff...origin/chore/ci-queue-continuity-handoff`
+- Verified at: `2026-07-31T07:13:26.9535018-04:00`
+- git status --short --branch: `#`
 - gh pr list --state open --limit 100: open PRs: 1
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Local branches: * chore/ci-queue-continuity-handoff, main
-- git log -n 1 --oneline on HEAD: `* 50a0a1d (HEAD -> chore/ci-queue-continuity-handoff, origin/chore/ci-queue-continuity-handoff, main) docs(ci): refresh continuity snapshot metadata`
+- git log -n 1 --oneline on HEAD: `* 7cebf15 (HEAD -> chore/ci-queue-continuity-handoff, origin/chore/ci-queue-continuity-handoff) ci(queue): harden continuity snapshot updater`
 
 ## Repeatable continuity rehydrate command
 ```powershell
