@@ -19,14 +19,14 @@
 - #19 (Factory Droid workflow, historical) is closed as obsolete and should not be reopened without explicit redesign.
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T16:12:42.7784683-04:00`
+- Verified at: `2026-07-31T16:13:56.1885804-04:00`
 - git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 61001f4 (HEAD -> main, origin/main, origin/HEAD) chore(ci): refresh continuity handoff snapshot (#71)`
+- git log -n 1 --oneline on HEAD: `* ef24755 (HEAD -> main, origin/main, origin/HEAD) chore(ci): finalize continuity handoff pointer to PR #71 (#72)`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -83,8 +83,8 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- origin/main head check: 61001f4 chore(ci): refresh continuity handoff snapshot (#71)
-- Last continuity verification: 2026-07-31T16:12:42.7784683-04:00
+- origin/main head check: ef24755 chore(ci): finalize continuity handoff pointer to PR #71 (#72)
+- Last continuity verification: 2026-07-31T16:13:56.1885804-04:00
 - Snapshot queue order: none
 
 ## Resume playbook (for next maintainer/Codex turn)
