@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:30:02.2512029-04:00`
+- Verified at: `2026-07-31T15:33:07.2960223-04:00`
 - git status --short --branch: `## main...origin/main`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* 2bfb2ca (HEAD -> main, origin/main, origin/HEAD) ci(queue): harden continuity handoff refresh (#63)`
+- git log -n 1 --oneline on HEAD: `* 61c537f (HEAD -> main, origin/main, origin/HEAD) docs(queue): refresh continuity handoff snapshot after #63 (#64)`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -81,8 +81,8 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 1. No open PR work currently queued in this lane.
 
 ## Completed queue snapshot
-- origin/main head check: 2bfb2ca ci(queue): harden continuity handoff refresh (#63)
-- Last continuity verification: 2026-07-31T15:30:02.2512029-04:00
+- origin/main head check: 61c537f docs(queue): refresh continuity handoff snapshot after #63 (#64)
+- Last continuity verification: 2026-07-31T15:33:07.2960223-04:00
 - Snapshot queue order: none
 
 ## Resume playbook (for next maintainer/Codex turn)
