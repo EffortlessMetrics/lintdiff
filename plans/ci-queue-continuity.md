@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T15:09:52.1557075-04:00`
-- git status --short --branch: `## main...origin/main [ahead 19]`
+- Verified at: `2026-07-31T15:10:19.8206484-04:00`
+- git status --short --branch: `## main...origin/main [ahead 20]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* c2b828c (HEAD -> main) docs(ci): clarify continuity lane includes script contract files`
+- git log -n 1 --oneline on HEAD: `* 6ca1619 (HEAD -> main) docs(ci): refresh continuity snapshot after latest handoff`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
