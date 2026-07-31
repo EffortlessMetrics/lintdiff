@@ -17,14 +17,14 @@
   - CLOSE: #19
 
 ## Latest continuity verification snapshot
-- Verified at: `2026-07-31T14:59:18.4753619-04:00`
-- git status --short --branch: `## main...origin/main`
+- Verified at: `2026-07-31T15:02:00.8889202-04:00`
+- git status --short --branch: `## main...origin/main [ahead 3]`
 - gh pr list --state open --limit 100: no results (0 open PRs)
 - gh issue list --state open --limit 100: no results (0 open issues)
 - Dependency order: none
 - Local branches: main
 - Queue branch hygiene candidates to prune: none
-- git log -n 1 --oneline on HEAD: `* c24d9e4 (HEAD -> main, origin/main, origin/HEAD) docs(ci): advance continuity handoff header to PR #60 (#60)`
+- git log -n 1 --oneline on HEAD: `* fbba9c3 (HEAD -> main) ci: report dependency warning when restack blocked`
 - Dependency evidence file: `artifacts/ci-queue-dependency-order.jsonl`
 
 ## Repeatable continuity rehydrate command
@@ -98,6 +98,7 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
 5. Use dependency evidence to order work:
    - Run `./plans/check-ci-queue-continuity.ps1` and read `dependency_order` first.
    - If `dependency_warnings` is non-empty, stop and resolve dependency or cycle issues before proceeding.
+   - If `dependency_restack_applied` is `false` and `blocked_by_dependency_warning` is printed, do not proceed to restacking; treat warnings as hard blockers.
    - Work PRs in the published `#<number>` ready order (or use `dependency_restack_plan` output when present), then rerun the check.
 6. Apply queue restack only when the plan is clean:
    - `./plans/check-ci-queue-continuity.ps1 -ApplyRestack` (interactive confirmation), or
@@ -110,6 +111,7 @@ and `artifacts/ci-queue-dependency-order.jsonl`.
    - If `MergedLocalBranches` is empty in evidence, it simply means no local branches are currently merged relative to `origin/main` and not listed for deletion; this is not an error.
 8. Do not copy lockfile/clippy behavior changes into other PRs that do not own that scope.
 9. Treat PR closure as final ledger state unless replaced by an explicit new queue entry.
+10. Treat `blocked_by_dependency_warning` as the canonical hard-stop reason for dependency-graph issues in automation runs.
 
 ## Verification notes
 - Source files changed in this model lane are queue metadata files (this document), unless a future lane opens.
