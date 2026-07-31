@@ -49,6 +49,7 @@ impl From<&str> for NormPath {
 /// - Collapses repeated slashes
 pub fn normalize_path(raw: &str) -> NormPath {
     let mut s = raw.trim().replace('\\', "/");
+    let mut had_diff_prefix = false;
 
     // strip leading ./ (repeat to be safe)
     while let Some(stripped) = s.strip_prefix("./") {
@@ -58,8 +59,10 @@ pub fn normalize_path(raw: &str) -> NormPath {
     // strip diff prefixes
     if let Some(stripped) = s.strip_prefix("a/") {
         s = stripped.to_string();
+        had_diff_prefix = true;
     } else if let Some(stripped) = s.strip_prefix("b/") {
         s = stripped.to_string();
+        had_diff_prefix = true;
     }
 
     // strip leading ./ again (handles cases like a/./path)
@@ -72,9 +75,12 @@ pub fn normalize_path(raw: &str) -> NormPath {
         s = s.replace("//", "/");
     }
 
-    // Avoid non-idempotent trailing separator normalization (e.g., `a/a/`).
-    while s.ends_with('/') {
-        s.pop();
+    // For diff-prefixed paths, normalize away a trailing separator so double-normalization
+    // is idempotent (e.g., `a/a/` becomes `a`).
+    if had_diff_prefix {
+        while s.ends_with('/') {
+            s.pop();
+        }
     }
 
     NormPath(s)
