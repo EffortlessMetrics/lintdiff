@@ -1,7 +1,7 @@
 # CI and dependency queue continuity
 
 ## Objective state (authoritative handoff)
-- Baseline source of truth: `origin/main` (latest known merged change is PR #40)
+- Baseline source of truth: `origin/main` (latest merged continuity update is PR #41, dependency queue baseline is PR #40)
 - Legacy high-risk PR lineage:
   - #28 baseline advisories + clippy compatibility (merged)
   - #27 mutation threshold numeric fix (merged)
@@ -14,10 +14,10 @@
 2. Rehydrate only from active dependabot PRs when new queue entries appear.
 
 ## Completed queue snapshot
-- `origin/main` now includes PR #40, which records queue state after dependency queue completion.
+- `origin/main` now includes PR #41, which updates the queue ledger references after PR #40.
 - `#32 -> #33 -> #34 -> #35 -> #36` are merged to `origin/main`.
 - Latest dependency queue head SHA: `e647b4e` (`#36`)
-- Latest queue-record snapshot SHA: `ba9da87` (`#40`)
+- Latest queue-record snapshot SHA: `3184bdf` (`#41`)
 - Last dependency queue merge timestamp: `2026-07-31T05:27:58Z` (`#36`).
 
 ## Resume playbook (for next maintainer/Codex turn)
