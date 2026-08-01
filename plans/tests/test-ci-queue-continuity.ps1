@@ -104,6 +104,52 @@ Test-Case "Explicit Depends-On line creates one dependency edge" {
     Assert-Equal @() $report.OpenPrDependencyWarnings "Unexpected dependency warning"
 }
 
+Test-Case "Dependency order keeps topo result and single dependency maps rebase_onto to dependency head" {
+    $input = @(
+        [pscustomobject]@{ number = 10; body = "Depends-On: #200" },
+        [pscustomobject]@{ number = 200; body = "" }
+    )
+    $report = Get-CiQueueDependencyReport -OpenPrs $input
+    Assert-Equal @("200", "10") $report.OpenPrDependencyOrder "Expected topo order #200 then #10"
+    Assert-Equal 2 ($report.OpenPrDependencyRestackPlan.Count) "Expected two entries in rebase plan"
+    $planEntry = $report.OpenPrDependencyRestackPlan | Where-Object { $_.pr -eq 10 } | Select-Object -First 1
+    Assert-Equal 10 $planEntry.pr "Expected dependency plan entry for #10"
+    Assert-Equal "#200" $planEntry.rebase_onto "Single dependency should rebase onto dependency head"
+    Assert-Equal $false $planEntry.manual_integration_required "Single dependency should not require manual integration"
+}
+
+Test-Case "Multiple dependencies report manual integration requirement" {
+    $input = @(
+        [pscustomobject]@{ number = 10; body = "Depends-On: #200`r`nDepends-On: #201" },
+        [pscustomobject]@{ number = 200; body = "" },
+        [pscustomobject]@{ number = 201; body = "" }
+    )
+    $report = Get-CiQueueDependencyReport -OpenPrs $input
+    Assert-Equal 3 $report.OpenPrDependencyOrder.Count "Expected three dependency nodes in order"
+    $first = $report.OpenPrDependencyRestackPlan | Where-Object { $_.pr -eq 10 } | Select-Object -First 1
+    Assert-True ($null -ne $first) "PR #10 plan entry missing"
+    Assert-Equal $true $first.manual_integration_required "Multiple dependencies should require manual integration"
+}
+
+Test-Case "Duplicate Depends-On lines are deduplicated deterministically" {
+    $input = @(
+        [pscustomobject]@{ number = 102; body = "Depends-On: #101`r`nDepends-On: #101`r`n" },
+        [pscustomobject]@{ number = 101; body = "" }
+    )
+    $report = Get-CiQueueDependencyReport -OpenPrs $input
+    Assert-Equal @("101") $report.OpenPrDependencyGraph["102"] "Duplicate dependency lines were not deduplicated"
+}
+
+Test-Case "Leading-space Depends-On is not parsed" {
+    $input = @(
+        [pscustomobject]@{ number = 102; body = "  Depends-On: #101" },
+        [pscustomobject]@{ number = 101; body = "" }
+    )
+    $report = Get-CiQueueDependencyReport -OpenPrs $input
+    Assert-Equal @() $report.OpenPrDependencyGraph["102"] "Leading-space depends-on should be ignored"
+    Assert-Equal @() $report.OpenPrDependencyWarnings "Leading-space depends-on emitted unexpected warning"
+}
+
 Test-Case "Independent PRs remain based on origin/main" {
     $input = @(
         [pscustomobject]@{ number = 202; body = "" },
@@ -158,6 +204,18 @@ depends-on: #43
     $reportCrlf = Get-CiQueueDependencyReport -OpenPrs $inputCrlf
     Assert-Equal $reportLf.OpenPrDependencyOrder $reportCrlf.OpenPrDependencyOrder "ORDER differs across line endings"
     Assert-Equal $reportLf.OpenPrDependencyWarnings $reportCrlf.OpenPrDependencyWarnings "Warnings differ across line endings"
+}
+
+Test-Case "Stale branch candidate extraction excludes protected branches" {
+    $localBranches = @('main', 'master', 'feature/foo', 'feature/bar', 'release')
+    $merged = @('feature/foo', 'feature/bar', 'release')
+    $openHeads = @('feature/bar')
+    $candidates = Get-CiQueueStaleBranchCandidates `
+        -LocalBranches $localBranches `
+        -MergedLocalBranches $merged `
+        -OpenPrHeadRefs $openHeads `
+        -CurrentBranch 'feature/bar'
+    Assert-Equal @('feature/foo', 'release') $candidates "Expected stale candidates to include merged, non-open, non-current branches"
 }
 
 Test-Case "Malformed dependency section raises controlled errors, but body parse remains deterministic" {

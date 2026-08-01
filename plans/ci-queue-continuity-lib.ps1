@@ -13,7 +13,7 @@ function Get-CiQueueDependenciesFromText {
     }
 
     $bodyText = [string]$PrBody
-    $dependPattern = '^\s*Depends-On:\s+#(?<pr>\d+)\s*$'
+    $dependPattern = '^Depends-On:\s+#(?<pr>\d+)\s*$'
     $dependencySet = [System.Collections.Generic.HashSet[int]]::new()
 
     foreach ($line in ($bodyText -split "`r?`n")) {
@@ -132,14 +132,48 @@ function Get-CiQueueReadyOrderPlan {
     )
 
     return @(
-        foreach ($pr in ($DependencyOrder | Sort-Object)) {
+        foreach ($pr in $DependencyOrder) {
+            $dependencies = @($DependencyGraph[[string]$pr] | Sort-Object)
+            $manualIntegration = [bool]($dependencies.Count -gt 1)
+            $rebaseOnto = if ($dependencies.Count -eq 1) {
+                "#$($dependencies[0])"
+            } elseif ($dependencies.Count -eq 0) {
+                "origin/main"
+            } else {
+                $null
+            }
+
             [ordered]@{
                 pr = $pr
-                rebase_onto = "origin/main"
-                dependencies = @($DependencyGraph[[string]$pr])
+                rebase_onto = $rebaseOnto
+                dependencies = $dependencies
+                manual_integration_required = $manualIntegration
             }
         }
     )
+}
+
+function Get-CiQueueStaleBranchCandidates {
+    [CmdletBinding()]
+    param(
+        [string[]]$LocalBranches = @(),
+        [string[]]$MergedLocalBranches = @(),
+        [string[]]$OpenPrHeadRefs = @(),
+        [string]$CurrentBranch
+    )
+
+    $candidates = New-Object System.Collections.Generic.List[string]
+    foreach ($branch in $LocalBranches) {
+        if ($branch -eq 'main' -or $branch -eq 'master' -or $branch -eq $CurrentBranch) {
+            continue
+        }
+
+        if ($mergedLocalBranches -contains $branch -and ($OpenPrHeadRefs -notcontains $branch)) {
+            [void]$candidates.Add($branch)
+        }
+    }
+
+    return @($candidates.ToArray() | Sort-Object -Unique)
 }
 
 function Get-CiQueueDependencyReport {
