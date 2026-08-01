@@ -2,6 +2,7 @@ param(
     [string]$ReadmePath = 'README.md',
     [string]$ActionPath = 'action.yml',
     [string]$ReleaseContractScript = 'scripts/verify-release-action-contract.ps1',
+    [string]$ExpectedReleaseTag = '',
     [string]$ArtifactsDir = 'artifacts/release-truth-audit',
     [string]$SmokeDiff = 'crates/lintdiff-cli/tests/fixtures/simple_addition.diff',
     [string]$SmokeDiagnostics = 'crates/lintdiff-cli/tests/fixtures/warning_on_changed_line.jsonl',
@@ -43,6 +44,17 @@ foreach ($line in ($lsRemoteTags -split "`r?`n")) {
     $remoteTagRefs[$matches[1]] = $true
 }
 
+$releaseMode = -not [string]::IsNullOrWhiteSpace($ExpectedReleaseTag)
+$expectedReleaseTag = $ExpectedReleaseTag
+if ($releaseMode) {
+    Assert-True ($expectedReleaseTag -match '^v(?<release>\d+\.\d+\.\d+)$') (
+        "Expected release tag '$expectedReleaseTag' is not a strict v-prefixed semver tag."
+    )
+    Assert-True ($remoteTagRefs.ContainsKey($expectedReleaseTag)) (
+        "Expected release tag '$expectedReleaseTag' was not found in remote refs/tags"
+    )
+}
+
 $lsRemoteHeads = git ls-remote --heads origin
 foreach ($line in ($lsRemoteHeads -split "`r?`n")) {
     if ($line -notmatch 'refs/heads/(.+)$') {
@@ -51,47 +63,156 @@ foreach ($line in ($lsRemoteHeads -split "`r?`n")) {
     $remoteBranchRefs[$matches[1]] = $true
 }
 
-$readmeText = Get-Content $ReadmePath -Raw
-$readmeActionRefs = [regex]::Matches(
-    $readmeText,
-    '(?im)^\s*-\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([^\s#]+)'
-)
+$workspaceCargo = Get-Content 'Cargo.toml' -Raw
 
-$readmeLintdiffRefs = @(
-    foreach ($match in $readmeActionRefs) {
-        if ($match.Groups[1].Value -like '*/lintdiff') {
-            $match
+function Get-CargoWorkspaceVersion {
+    param([Parameter(Mandatory)][string]$CargoText)
+
+    $sectionPatterns = @(
+        '(?ms)^\[workspace\.package\][\s\S]*?^\s*version\s*=\s*"(?<version>[^"]+)"',
+        '(?ms)^\[package\][\s\S]*?^\s*version\s*=\s*"(?<version>[^"]+)"'
+    )
+
+    foreach ($pattern in $sectionPatterns) {
+        $match = [regex]::Match($CargoText, $pattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
+        if ($match.Success) {
+            return $match.Groups['version'].Value
         }
     }
-)
+    return $null
+}
 
-Assert-True ($readmeLintdiffRefs.Count -gt 0) "No lintdiff action references found in $ReadmePath"
+function Get-LintdiffActionRefs {
+    param([Parameter(Mandatory)][string]$Text)
+
+    $readmeActionRefs = [regex]::Matches(
+        $Text,
+        '(?im)^\s*-\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([^\s#]+)'
+    )
+
+    return @(
+        foreach ($match in $readmeActionRefs) {
+            if ($match.Groups[1].Value -like '*/lintdiff') {
+                $match
+            }
+        }
+    )
+}
+
+function Validate-LintdiffReadmeRefs {
+    param(
+        [Parameter(Mandatory)][object[]]$Refs,
+        [Parameter(Mandatory)][hashtable]$RemoteTagRefs,
+        [Parameter(Mandatory)][hashtable]$RemoteBranchRefs,
+        [Parameter(Mandatory)][string]$AllowedActionRef,
+        [Parameter(Mandatory)][string]$SourceLabel,
+        [string]$ExpectedReleaseTag = '',
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$PinnedVersions,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[version]]$PinnedTagVersions
+    )
+
+    $isReleaseMode = -not [string]::IsNullOrWhiteSpace($ExpectedReleaseTag)
+
+    foreach ($match in $Refs) {
+        $actionRef = $match.Groups[1].Value
+        $versionRef = $match.Groups[2].Value
+
+        Assert-True ($actionRef -eq $AllowedActionRef) "$SourceLabel references unsupported action owner/repo: $actionRef"
+        Assert-True ($versionRef -ne '') "$SourceLabel has an empty action version"
+
+        if ($versionRef -match '^v\d+$') {
+            throw "$SourceLabel uses major alias '$versionRef' which is not allowed until an explicit remote alias contract is established"
+        }
+        elseif ($versionRef -match '^v\d+(\.\d+)*(\.\d+)?$') {
+            if ($isReleaseMode) {
+                Assert-True ($versionRef -eq $ExpectedReleaseTag) (
+                    "$SourceLabel uses '$versionRef' but release mode expects '$ExpectedReleaseTag'"
+                )
+            }
+            Assert-True ($RemoteTagRefs.ContainsKey($versionRef)) (
+                "$SourceLabel uses unpublished action tag '$versionRef' (not found in remote refs)"
+            )
+            $PinnedVersions.Add($versionRef)
+            $PinnedTagVersions.Add([version]($versionRef.TrimStart('v')))
+        }
+        elseif ($isReleaseMode) {
+            throw "$SourceLabel uses branch or non-version ref '$versionRef' in release mode"
+        }
+        elseif ($RemoteBranchRefs.ContainsKey($versionRef)) {
+            Write-Host ("$SourceLabel ref=branch:$versionRef")
+        }
+        else {
+            throw "$SourceLabel uses unsupported pin format '$versionRef'"
+        }
+
+        Write-Host ("$SourceLabel uses=$actionRef@$versionRef")
+    }
+}
+
+$workspaceVersionText = Get-CargoWorkspaceVersion -CargoText $workspaceCargo
+Assert-True ($null -ne $workspaceVersionText -and $workspaceVersionText -ne '') "Unable to parse workspace or package version from Cargo.toml"
+
+if ($workspaceVersionText -notmatch '^v?(?<release>\d+\.\d+\.\d+)$') {
+    throw "Cargo.toml version '$workspaceVersionText' is not a strict v-compatible semver version."
+}
+
+$workspaceVersion = "v$($Matches['release'])"
+$workspaceTagVersion = [version]($Matches['release'])
+if ($releaseMode) {
+    Assert-True ($expectedReleaseTag -eq $workspaceVersion) (
+        "Expected release tag '$expectedReleaseTag' does not match workspace/package version '$workspaceVersion'"
+    )
+}
+
+$readmeText = Get-Content $ReadmePath -Raw
+$readmeLintdiffRefs = @(Get-LintdiffActionRefs -Text $readmeText)
+$majorAliasFixturePath = Join-Path 'plans' 'fixtures' 'release-readme-major-alias-negative.md'
+
+Assert-True (($readmeLintdiffRefs | Measure-Object).Count -gt 0) "No lintdiff action references found in $ReadmePath"
 
 $allowedActionRef = 'EffortlessMetrics/lintdiff'
-foreach ($match in $readmeLintdiffRefs) {
-    $actionRef = $match.Groups[1].Value
-    $versionRef = $match.Groups[2].Value
+$readmePinnedVersions = New-Object System.Collections.Generic.List[string]
+$readmePinnedTagVersions = New-Object System.Collections.Generic.List[version]
+Validate-LintdiffReadmeRefs `
+    -Refs $readmeLintdiffRefs `
+    -RemoteTagRefs $remoteTagRefs `
+    -RemoteBranchRefs $remoteBranchRefs `
+    -AllowedActionRef $allowedActionRef `
+    -ExpectedReleaseTag $ExpectedReleaseTag `
+    -SourceLabel 'README' `
+    -PinnedVersions $readmePinnedVersions `
+    -PinnedTagVersions $readmePinnedTagVersions
 
-    Assert-True ($actionRef -eq $allowedActionRef) "README references unsupported action owner/repo: $actionRef"
-    Assert-True ($versionRef -ne '') "README has an empty action version"
+Assert-True (Test-Path $majorAliasFixturePath) (
+    "Negative major-alias fixture missing: $majorAliasFixturePath"
+)
+$negativeRefs = @(Get-LintdiffActionRefs -Text (Get-Content $majorAliasFixturePath -Raw))
+Assert-True (($negativeRefs | Measure-Object).Count -gt 0) "Negative major-alias fixture is empty: $majorAliasFixturePath"
 
-    if ($versionRef -match '^v\d+(\.\d+)*(\.\d+)?$') {
-        Assert-True ($remoteTagRefs.ContainsKey($versionRef)) (
-            "README uses unpublished action tag '$versionRef' (not found in remote refs)"
-        )
-    }
-    elseif ($remoteBranchRefs.ContainsKey($versionRef)) {
-        Write-Host ("readme_ref=branch:$versionRef")
-    }
-    elseif ($versionRef -match '^v\d+$') {
-        throw "README uses major alias '$versionRef', but no corresponding remote reference exists"
+$expectedError = $false
+try {
+    $ignorePinnedVersions = New-Object System.Collections.Generic.List[string]
+    $ignorePinnedTagVersions = New-Object System.Collections.Generic.List[version]
+    Validate-LintdiffReadmeRefs `
+        -Refs $negativeRefs `
+        -RemoteTagRefs $remoteTagRefs `
+        -RemoteBranchRefs $remoteBranchRefs `
+        -AllowedActionRef $allowedActionRef `
+        -ExpectedReleaseTag $ExpectedReleaseTag `
+        -SourceLabel 'NegativeFixture' `
+        -PinnedVersions $ignorePinnedVersions `
+        -PinnedTagVersions $ignorePinnedTagVersions
+}
+catch {
+    if ($_.Exception.Message -like '*major alias*') {
+        $expectedError = $true
     }
     else {
-        throw "README action reference uses unsupported pin format '$versionRef'"
+        throw
     }
-
-    Write-Host ("readme_uses=$actionRef@$versionRef")
 }
+Assert-True ($expectedError) "Negative fixture did not reject major-alias reference in $majorAliasFixturePath"
+Write-Host ("major_alias_fixture_rejects_major_alias=true")
 
 Assert-True ($readmeText -match 'artifacts/lintdiff/report\.json') (
     "README quickstart does not document canonical lintdiff report output path"
