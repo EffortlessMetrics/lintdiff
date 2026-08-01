@@ -1,0 +1,80 @@
+{
+  "schema": "lintdiff.publication-closure.evidence.v1",
+  "generated_at": "2026-08-01T07:45:20.3188860Z",
+  "git": {
+    "head": "0f358007903d6bc6fccfdea4404dfb615de8b4c1",
+    "branch": "recovery/slice2-bdd-consumer-migration"
+  },
+  "model": "Action+release-binary",
+  "distribution_decision": "Action and release binaries only; no supported cargo install channel for lintdiff CLI.",
+  "gate_phase": "D1_baseline",
+  "status": "blocked",
+  "blocker": [
+    "cargo package requires versioned deps for workspace path declarations in the candidate publish roots."
+  ],
+  "roots": [
+    {
+      "root": "lintdiff",
+      "publish_mode": "proposed_blocked",
+      "packageable_without_changes": false,
+      "workspace_normal_build_closure": [
+        "lintdiff-cli",
+        "lintdiff-app",
+        "lintdiff-app-git",
+        "lintdiff-app-io",
+        "lintdiff-render",
+        "lintdiff-types",
+        "lintdiff-bdd-harness",
+        "lintdiff-match",
+        "lintdiff-diff",
+        "lintdiff-feature-flags",
+        "lintdiff-ingest-core",
+        "lintdiff-diagnostics",
+        "lintdiff-policy",
+        "lintdiff-fingerprint"
+      ],
+      "publish_policy": {
+        "default_current": "unset",
+        "note": "No publish=false entries exist in these manifests yet."
+      },
+      "missing_versioned_deps": [
+        {"crate":"lintdiff-cli","dep":"lintdiff-app","file":"crates/lintdiff-cli/Cargo.toml","line":17,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-app-git","file":"crates/lintdiff-cli/Cargo.toml","line":18,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-app-io","file":"crates/lintdiff-cli/Cargo.toml","line":19,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-render","file":"crates/lintdiff-cli/Cargo.toml","line":20,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-types","file":"crates/lintdiff-cli/Cargo.toml","line":21,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-bdd-harness","file":"crates/lintdiff-cli/Cargo.toml","line":27,"issue":"path-only declaration"},
+        {"crate":"lintdiff-cli","dep":"lintdiff-match","file":"crates/lintdiff-cli/Cargo.toml","line":28,"issue":"path-only declaration"}
+      ]
+    },
+    {
+      "root": "lintdiff-ingest-core",
+      "publish_mode": "proposed_blocked",
+      "packageable_without_changes": false,
+      "workspace_normal_build_closure": [
+        "lintdiff-ingest-core",
+        "lintdiff-diagnostics",
+        "lintdiff-diff",
+        "lintdiff-match",
+        "lintdiff-policy",
+        "lintdiff-types",
+        "lintdiff-fingerprint"
+      ],
+      "publish_policy": {
+        "default_current": "unset",
+        "note": "No publish=false entries exist in these manifests yet."
+      },
+      "missing_versioned_deps": [
+        {"crate":"lintdiff-ingest-core","dep":"lintdiff-diagnostics","file":"crates/lintdiff-ingest-core/Cargo.toml","line":17,"issue":"path-only declaration"},
+        {"crate":"lintdiff-ingest-core","dep":"lintdiff-diff","file":"crates/lintdiff-ingest-core/Cargo.toml","line":18,"issue":"path-only declaration"},
+        {"crate":"lintdiff-ingest-core","dep":"lintdiff-match","file":"crates/lintdiff-ingest-core/Cargo.toml","line":19,"issue":"path-only declaration"},
+        {"crate":"lintdiff-ingest-core","dep":"lintdiff-policy","file":"crates/lintdiff-ingest-core/Cargo.toml","line":20,"issue":"path-only declaration"},
+        {"crate":"lintdiff-ingest-core","dep":"lintdiff-types","file":"crates/lintdiff-ingest-core/Cargo.toml","line":21,"issue":"path-only declaration"}
+      ]
+    }
+  ],
+  "command_verification": [
+    {"cmd":"cargo package -p lintdiff --allow-dirty","status":"failed","reason":"all dependencies must have a version requirement specified when packaging"},
+    {"cmd":"cargo package -p lintdiff-ingest-core --allow-dirty","status":"failed","reason":"all dependencies must have a version requirement specified when packaging"}
+  ]
+}
