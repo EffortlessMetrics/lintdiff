@@ -28,20 +28,17 @@ Runtime + manifest scan:
 - `crates/lintdiff-cli` runtime path remains unchanged.
 
 ### Test/tooling consumers
-- `crates/lintdiff-cli/tests/bdd.rs` (BDD test target `bdd`) is the only direct user of BDD helper APIs.
-- The shim crate `crates/lintdiff-bdd` remains referenced only through code structure (not by CI/runtime/test consumers once this migration is complete).
+- `crates/lintdiff-cli/tests/bdd.rs` (BDD test target `bdd`) is the direct user of BDD helper APIs via `lintdiff-bdd-harness`.
 
 ## Migration action (this PR slice)
 
 1. Replace `lintdiff-bdd` test dependency in `crates/lintdiff-cli/Cargo.toml` with `lintdiff-bdd-harness`.
 2. Switch `crates/lintdiff-cli/tests/bdd.rs` import from `lintdiff_bdd` to `lintdiff_bdd_harness`.
-3. Keep `crates/lintdiff-bdd` as deprecated, published-by-default disabled (`publish = false`) for compatibility surface.
+3. Retirement milestone reached: removed `crates/lintdiff-bdd` shim from workspace and dependency graph.
 
 ## Follow-up (separate slice)
 
-- Remove shim dependency edges entirely only if this classifies as non-consumed:
-  - confirm no remaining imports of `lintdiff_bdd` path/manifest symbols outside `crates/lintdiff-bdd`.
-  - add retirement PR that deletes façade crate and updates docs/receipts in a single review-forward change.
+- Retirement was completed on `recovery/slice2-bdd-facade-retirement` by removing shim crate and workspace membership (this branch state now represents that candidate).
 
 ## Verification snapshot (2026-08-01)
 
@@ -66,6 +63,12 @@ Observed: `lintdiff-bdd` and `lintdiff-bdd-harness` are absent from normal/build
 Command: `cargo test --package lintdiff --test bdd --no-run`
 
 Observed: `bdd` test target compiled successfully after import change, confirming direct test-path migration resolves with the harness crate.
+
+### 4) Optional shim retirement verification
+
+Command: `rg -n "name = \"lintdiff-bdd\"|path = \"../lintdiff-bdd\"|lintdiff_bdd::" crates -g "*.rs" -g "Cargo.toml"`
+
+Observed: no matches for shim crate declaration/import were found; remaining `lintdiff-bdd*` occurrences are in `lintdiff-bdd-harness` and `lintdiff-bdd-grid`.
 
 ## Notes
 

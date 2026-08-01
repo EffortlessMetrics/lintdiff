@@ -1862,13 +1862,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-bdd"
-version = "0.1.0"
-dependencies = [
- "lintdiff-bdd-harness",
-]
-
-[[package]]
 name = "lintdiff-bdd-grid"
 version = "0.1.0"
 dependencies = [
