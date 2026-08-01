@@ -85,21 +85,15 @@ See [action.yml](action.yml) for all available inputs and outputs.
 
 ## Workspace layout
 
-- `lintdiff-types` – DTOs, config model, schema ids, normalization helpers
-- `lintdiff-diff` – unified diff parsing → changed ranges (new-side)
-- `lintdiff-diagnostics` – cargo JSON parsing → normalized diagnostics
-- `lintdiff-match` – path/span matching primitives (filter compilation, span selection)
-- `lintdiff-policy` – code normalization, allow/suppress/deny, verdict, fingerprinting
-- `lintdiff-ingest-core` – core ingest pipeline (diagnostics + diff → report)
-- `lintdiff-render` – Markdown + GitHub annotations renderers
-- `lintdiff-app` – orchestration (delegates to `app-git`, `app-io`)
-- `lintdiff-app-git` – git adapter (diff acquisition, repo root, git info)
-- `lintdiff-app-io` – I/O adapter (config loading, diagnostics reading, artifact writing)
-- `lintdiff-feature-flags` – typed feature-flag registry and parsing
-- `lintdiff-cli` – CLI surface (`lintdiff` binary)
-- `lintdiff-bdd-grid` – BDD matrix helpers (feature-flag rows)
-- `lintdiff-bdd-harness` – fixture loading, ingest helpers, feature-flag matrix runners
-- `lintdiff-bdd` – fixture and scenario helpers used by tests/BDD
+- Consumer boundary classes (evidence date: 2026-08-01):
+  - **Candidate supported consumer surfaces** (current intended API promises): `lintdiff`, `lintdiff-ingest-core`.
+  - **Registry support crates** (publish support only until Gate D0/D1 outcome): `lintdiff-types`, `lintdiff-report-schema` (pending).
+  - **Workspace-internal crates** (internal modules and optional adapters): all other non-tooling workspace crates.
+  - **Test/tooling crates** (`lintdiff-bdd`, `lintdiff-bdd-harness`, `lintdiff-bdd-grid`, `lintdiff-bench`) and support tooling.
+- The current workspace has 69 crates, with 13 runtime-reachable from `lintdiff` by manifest edges and 55 non-runtime crates in this snapshot (not final).
+- Canonical evidence and follow-up lanes are tracked in:
+  - [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
+  - [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)
 
 ## License
 

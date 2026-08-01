@@ -28,10 +28,6 @@ lintdiff does **not**:
 
 lintdiff treats these as stable contracts:
 
-- Testing contracts:
-  - `lintdiff-bdd-grid` provides reusable scenario-grid primitives for feature-flag experiments.
-  - `lintdiff-bdd` provides reusable fixtures + scenario helpers for adapters and tests.
-
 - Canonical artifacts:
   - `artifacts/lintdiff/report.json` (**required**)
   - `artifacts/lintdiff/comment.md` (**optional**)
@@ -75,64 +71,51 @@ lintdiff is strict about not producing false confidence:
 
 ## Crate Architecture
 
-lintdiff follows a modular crate architecture with clear separation of concerns:
+As of 2026-08-01 evidence snapshot:
 
-### Recommended Crate (Public API)
+- Workspace members: **69**
+- Runtime non-dev/build reachability from `lintdiff`: **13 crates**
+- Non-runtime workspace crates: **55**
 
-For most use cases, you should depend on **`lintdiff-ingest-core`**:
+The workspace is intentionally modeled with four classes:
 
-```toml
-[dependencies]
-lintdiff-ingest-core = "0.2"
-```
+### 1) Candidate supported consumer surfaces
 
-This crate provides the complete public API for:
-- Ingest pipeline for processing diagnostics and diffs
-- Policy evaluation and verdict computation
-- Finding types and report generation
-- Fingerprinting for stable finding identity
+Public-facing surfaces that the project currently documents as intended consumer seams:
 
-### Crate Overview
+- `lintdiff` (`crates/lintdiff-cli`)
+  - CLI surface and GitHub Action behavior.
+- `lintdiff-ingest-core`
+  - Embedded ingestion core API.
 
-| Crate | Purpose | Status |
-|-------|---------|--------|
-| `lintdiff-ingest-core` | **Recommended**: Complete public API for ingestion and processing | ✅ Active |
-| `lintdiff-types` | Configuration and report types | Internal use |
-| `lintdiff-diagnostics` | Diagnostics parsing | Internal use |
-| `lintdiff-diff` | Diff parsing | Internal use |
-| `lintdiff-match` | Matching logic (spans, paths, filters) | Internal use |
-| `lintdiff-fingerprint` | Finding fingerprint computation | Internal use |
-| `lintdiff-render` | Output rendering (markdown, annotations) | Internal use |
-| `lintdiff-app` | Application orchestration | Internal use |
-| `lintdiff-cli` | Command-line interface | Binary only |
+### 2) Registry support crates
 
-### Architecture Diagram
+Crates that may be required to package/seal published products and must have a versioned package presence, but are not direct support promises:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Public API Surface                           │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              lintdiff-ingest-core                        │    │
-│  │   (IngestPipeline, Policy, Verdict, Finding, Report)    │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Internal Crates                             │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
-│  │lintdiff-types│ │lintdiff-diag │ │ lintdiff-diff│             │
-│  └──────────────┘ └──────────────┘ └──────────────┘             │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
-│  │lintdiff-match│ │lintdiff-fp   │ │lintdiff-render│            │
-│  └──────────────┘ └──────────────┘ └──────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Application Layer                           │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
-│  │ lintdiff-app │ │lintdiff-app-io│ │lintdiff-app-git│          │
-│  └──────────────┘ └──────────────┘ └──────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
-```
+- `lintdiff-types` — pending explicit contract decision.
+- `lintdiff-report-schema` — pending explicit contract decision.
+
+These remain unresolved until Gate D0/D1 publication-closure work confirms concrete required packages.
+
+### 3) Workspace-internal crates
+
+Runtime and utility crates used to satisfy internal implementation needs that are not currently documented as direct distribution contracts:
+
+- `lintdiff-app`, `lintdiff-app-git`, `lintdiff-app-io`
+- parsing, matching, policy, rendering, and feature/utility helper crates not listed in class 1 or 2
+- other non-test workspace crates not in public surface classes
+
+### 4) Test/tooling crates
+
+- `lintdiff-bdd`, `lintdiff-bdd-harness`, `lintdiff-bdd-grid`
+- `lintdiff-bench`
+
+Important: zero workspace indegree is not treated as proof of external safety; this is a dependency-shape signal, not a direct API guarantee.
+
+## Architecture evidence and change tracking
+
+- The 21-crate historical review is retained in [`plans/microcrate-review.md`](plans/microcrate-review.md) for archival reference only.
+- Current working evidence and follow-up decisions are tracked in:
+  - [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
+  - [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)
+- Counts are dated evidence snapshots and are not permanent, standalone policy; Gate D publication testing determines final class finalization.
