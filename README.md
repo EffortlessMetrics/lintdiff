@@ -68,7 +68,7 @@ jobs:
         with:
           fetch-depth: 0  # Required for git diff
       - run: cargo clippy --message-format=json > clippy.jsonl
-      - uses: effortless-metrics/lintdiff@v0
+      - uses: EffortlessMetrics/lintdiff@v0.1.0
         with:
           diagnostics: clippy.jsonl
           fail_on: warn  # Optional: error, warn, or never

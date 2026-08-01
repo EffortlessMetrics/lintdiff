@@ -1,0 +1,28 @@
+name: release-self-dogfood
+
+on:
+  push:
+    paths:
+      - "README.md"
+      - ".github/workflows/release.yml"
+      - "action.yml"
+      - "scripts/verify-release-action-contract.ps1"
+      - "scripts/verify-release-self-dogfood.ps1"
+  pull_request:
+    paths:
+      - "README.md"
+      - ".github/workflows/release.yml"
+      - "action.yml"
+      - "scripts/verify-release-action-contract.ps1"
+      - "scripts/verify-release-self-dogfood.ps1"
+  workflow_dispatch:
+
+jobs:
+  release-truth-audit:
+    name: Verify release truth + self-dogfood
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify release truth and action/report contract
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify-release-self-dogfood.ps1
