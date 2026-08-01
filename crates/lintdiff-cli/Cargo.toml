@@ -24,7 +24,7 @@ clap.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
-lintdiff-bdd = { path = "../lintdiff-bdd" }
+lintdiff-bdd-harness = { path = "../lintdiff-bdd-harness" }
 lintdiff-match = { path = "../lintdiff-match" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 cucumber = "0.23"
