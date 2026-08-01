@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -13,7 +13,9 @@ Running package checks on `main` currently fails because `cargo package` on `lin
 - `crates/lintdiff-cli/Cargo.toml`: `lintdiff-app` missing `version`
 - `crates/lintdiff-ingest-core/Cargo.toml`: `lintdiff-diagnostics` missing `version`
 
-Without an adopted distribution model, it is unsafe to claim that non-surface crates can be made private-only.
+For Gate D0 and until Gate D1 completion, this is the accepted distribution model.
+
+Without an adopted and evidence-verified distribution model, it is unsafe to claim that non-surface crates can be made private-only.
 
 ## Decision
 
