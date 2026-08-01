@@ -57,10 +57,11 @@ pub fn normalize_path(raw: &str) -> NormPath {
     }
 
     // strip diff prefixes
-    if let Some(stripped) = s.strip_prefix("a/") {
+    while let Some(stripped) = s.strip_prefix("a/") {
         s = stripped.to_string();
         had_diff_prefix = true;
-    } else if let Some(stripped) = s.strip_prefix("b/") {
+    }
+    while let Some(stripped) = s.strip_prefix("b/") {
         s = stripped.to_string();
         had_diff_prefix = true;
     }
@@ -84,6 +85,19 @@ pub fn normalize_path(raw: &str) -> NormPath {
     }
 
     NormPath(s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_path_diff_prefix_is_idempotent_for_nested_prefix() {
+        let first = normalize_path("a\\a\\0");
+        let second = normalize_path(first.as_str());
+
+        assert_eq!(first, second);
+    }
 }
 
 /// Inclusive 1-based line range.
