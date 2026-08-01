@@ -12,14 +12,14 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use lintdiff_diagnostics::parse_cargo_messages;
+use lintdiff_ingest_core::diagnostics::parse_cargo_messages;
 use std::io::{BufReader, Cursor};
 
 fuzz_target!(|data: &[u8]| {
     // Only process valid UTF-8 data
     if let Ok(s) = std::str::from_utf8(data) {
         let reader = BufReader::new(Cursor::new(s.as_bytes()));
-        
+
         // Parse the diagnostics - this should never panic
         let result = parse_cargo_messages(reader);
 

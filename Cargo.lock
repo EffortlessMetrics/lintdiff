@@ -1801,11 +1801,11 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "cucumber",
+ "globset",
  "lintdiff-app",
  "lintdiff-app-git",
  "lintdiff-app-io",
  "lintdiff-bdd-harness",
- "lintdiff-match",
  "lintdiff-render",
  "lintdiff-types",
  "regex",
@@ -1830,7 +1830,6 @@ version = "0.1.0"
 dependencies = [
  "lintdiff-app-git",
  "lintdiff-app-io",
- "lintdiff-diff",
  "lintdiff-feature-flags",
  "lintdiff-ingest-core",
  "lintdiff-render",
@@ -1852,7 +1851,7 @@ dependencies = [
 name = "lintdiff-app-io"
 version = "0.1.0"
 dependencies = [
- "lintdiff-diagnostics",
+ "lintdiff-ingest-core",
  "lintdiff-types",
  "serde_json",
  "tempfile",
@@ -1874,8 +1873,6 @@ name = "lintdiff-bdd-harness"
 version = "0.1.0"
 dependencies = [
  "lintdiff-bdd-grid",
- "lintdiff-diagnostics",
- "lintdiff-diff",
  "lintdiff-feature-flags",
  "lintdiff-ingest-core",
  "lintdiff-types",
@@ -1886,9 +1883,7 @@ name = "lintdiff-bench"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "lintdiff-diagnostics",
- "lintdiff-diff",
- "lintdiff-fingerprint",
+ "lintdiff-ingest-core",
  "lintdiff-types",
 ]
 
@@ -1975,25 +1970,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "lintdiff-diagnostics"
-version = "0.1.0"
-dependencies = [
- "lintdiff-types",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-diff"
-version = "0.1.0"
-dependencies = [
- "lintdiff-types",
- "proptest",
- "thiserror 2.0.19",
 ]
 
 [[package]]
@@ -2086,16 +2062,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-fingerprint"
-version = "0.1.0"
-dependencies = [
- "hex",
- "lintdiff-types",
- "proptest",
- "sha2 0.11.0",
-]
-
-[[package]]
 name = "lintdiff-git-info"
 version = "0.1.0"
 dependencies = [
@@ -2144,12 +2110,13 @@ dependencies = [
 name = "lintdiff-ingest-core"
 version = "0.1.0"
 dependencies = [
- "lintdiff-diagnostics",
- "lintdiff-diff",
- "lintdiff-match",
- "lintdiff-policy",
+ "globset",
+ "hex",
  "lintdiff-types",
+ "proptest",
  "serde_json",
+ "sha2 0.11.0",
+ "thiserror 2.0.19",
 ]
 
 [[package]]
@@ -2191,15 +2158,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-match"
-version = "0.1.0"
-dependencies = [
- "globset",
- "lintdiff-diagnostics",
- "lintdiff-types",
-]
-
-[[package]]
 name = "lintdiff-message-norm"
 version = "0.1.0"
 dependencies = [
@@ -2223,15 +2181,6 @@ dependencies = [
  "proptest",
  "serde",
  "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-policy"
-version = "0.1.0"
-dependencies = [
- "lintdiff-diagnostics",
- "lintdiff-fingerprint",
- "lintdiff-types",
 ]
 
 [[package]]

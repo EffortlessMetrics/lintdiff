@@ -11,7 +11,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use lintdiff_diff::parse_unified_diff;
+use lintdiff_ingest_core::diff::parse_unified_diff;
 
 fuzz_target!(|data: &[u8]| {
     // Only process valid UTF-8 data

@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Diff path extraction utilities for lintdiff"
+publish = false
 
 [dependencies]
 thiserror.workspace = true

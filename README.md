@@ -85,12 +85,21 @@ See [action.yml](action.yml) for all available inputs and outputs.
 
 ## Workspace layout
 
-- Consumer boundary classes (evidence date: 2026-08-01):
-  - **Candidate supported consumer surfaces** (current intended API promises): `lintdiff`, `lintdiff-ingest-core`.
-  - **Registry support crates** (publish support only until Gate D0/D1 outcome): `lintdiff-types`, `lintdiff-report-schema` (pending).
-  - **Workspace-internal crates** (internal modules and optional adapters): all other non-tooling workspace crates.
-  - **Test/tooling crates** (`lintdiff-bdd`, `lintdiff-bdd-harness`, `lintdiff-bdd-grid`, `lintdiff-bench`) and support tooling.
-- The current workspace has 69 crates, with 13 runtime-reachable from `lintdiff` by manifest edges and 55 non-runtime crates in this snapshot (not final).
+- Distribution classes:
+  - **CLI/product surface:** `lintdiff` (GitHub Action + GitHub release archives only; not publishable)
+  - **Embedded API:** `lintdiff-ingest-core` (published)
+  - **Protocol/support root:** `lintdiff-types` (published)
+  - **Workspace-internal:** all other workspace crates plus test/tooling crates.
+- `cargo install lintdiff` is intentionally not a supported install surface.
+- Active workspace and boundary evidence is tracked in:
+  - [`contracts/publication.toml`](contracts/publication.toml) (contract)
+  - [`docs/architecture.md`](docs/architecture.md) (boundary rationale)
+  - [`docs/adr/ADR-005-publication-distribution-model.md`](docs/adr/ADR-005-publication-distribution-model.md) (decision record)
+
+## Migration status note
+
+- `lintdiff-bdd` is retired from active workspace membership.
+- Legacy microcrates (`lintdiff-diagnostics`, `lintdiff-diff`, `lintdiff-match`, `lintdiff-policy`, `lintdiff-fingerprint`) were internalized into `lintdiff-ingest-core` during this migration.
 - Canonical evidence and follow-up lanes are tracked in:
   - [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
   - [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)

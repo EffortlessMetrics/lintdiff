@@ -1,10 +1,8 @@
 use std::io::Cursor;
 
 pub use lintdiff_bdd_grid::{FeatureFlagGrid, FeatureFlagGridRow};
-use lintdiff_diagnostics::parse_cargo_messages;
-use lintdiff_diff::parse_unified_diff;
 use lintdiff_feature_flags::set_feature_flag_by_name_and_value;
-use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_ingest_core::{diagnostics, diff, ingest_on_diff, IngestOnDiffParams};
 use lintdiff_types::{LintdiffConfig, NormPath, Report, RunInfo, ToolInfo, TOOL_NAME};
 
 const TEST_TOOL_VERSION: &str = "test";
@@ -91,10 +89,10 @@ pub fn run_ingest_from_fixtures(
         git: None,
     };
 
-    let diff_map = diff.as_ref().map(|d| parse_unified_diff(d).unwrap());
+    let diff_map = diff.as_ref().map(|d| diff::parse_unified_diff(d).unwrap());
     let diagnostics = diagnostics
         .as_ref()
-        .map(|d| parse_cargo_messages(Cursor::new(d.as_bytes())).unwrap());
+        .map(|d| diagnostics::parse_cargo_messages(Cursor::new(d.as_bytes())).unwrap());
 
     ingest_on_diff(IngestOnDiffParams {
         tool,

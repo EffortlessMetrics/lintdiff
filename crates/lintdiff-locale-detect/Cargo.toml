@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "System locale detection for lintdiff internationalization."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true

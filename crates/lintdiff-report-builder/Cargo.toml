@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Builder for constructing lintdiff reports."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true

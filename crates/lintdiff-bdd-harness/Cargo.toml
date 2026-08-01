@@ -17,8 +17,5 @@ publish = false
 [dependencies]
 lintdiff-bdd-grid = { path = "../lintdiff-bdd-grid" }
 lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
-lintdiff-diff = { path = "../lintdiff-diff" }
 lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }
-

@@ -37,7 +37,8 @@ $remoteTagRefs = @{}
 $remoteBranchRefs = @{}
 
 $lsRemoteTags = git ls-remote --tags --refs origin
-foreach ($line in ($lsRemoteTags -split "`r?`n")) {
+foreach ($line in ($lsRemoteTags -split "`r?
+")) {
     if ($line -notmatch 'refs/tags/(.+)$') {
         continue
     }
@@ -56,7 +57,8 @@ if ($releaseMode) {
 }
 
 $lsRemoteHeads = git ls-remote --heads origin
-foreach ($line in ($lsRemoteHeads -split "`r?`n")) {
+foreach ($line in ($lsRemoteHeads -split "`r?
+")) {
     if ($line -notmatch 'refs/heads/(.+)$') {
         continue
     }
@@ -87,7 +89,7 @@ function Get-LintdiffActionRefs {
 
     $readmeActionRefs = [regex]::Matches(
         $Text,
-        '(?im)^\s*-\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([^\s#]+)'
+        '(?i)uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([^\s#]+)'
     )
 
     return @(

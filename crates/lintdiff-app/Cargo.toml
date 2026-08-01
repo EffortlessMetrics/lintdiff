@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Orchestration adapters for lintdiff."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
@@ -18,7 +19,6 @@ lintdiff-app-git = { path = "../lintdiff-app-git" }
 lintdiff-app-io = { path = "../lintdiff-app-io" }
 lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }
-lintdiff-diff = { path = "../lintdiff-diff" }
 lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
 lintdiff-render = { path = "../lintdiff-render" }
 

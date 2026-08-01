@@ -4,33 +4,22 @@ lintdiff is a gatekeeper-style tool. The "architecture" is mostly the test disci
 
 ## Test Coverage Summary
 
-### Test Counts by Crate
+### Coverage shape by layer
 
-| Crate | Unit Tests | Integration Tests | Property Tests | Doc Tests | Total |
-|-------|------------|-------------------|----------------|-----------|-------|
-| lintdiff-diff | 3 | 106 | 19 | 1 | **110** |
-| lintdiff-diagnostics | 1 | 109 | - | 6 | **116** |
-| lintdiff-match | 14 | 115 | - | 6 | **135** |
-| lintdiff-policy | 15 | 143 | - | 3 | **161** |
-| lintdiff-fingerprint | 4 | 65 | 18 | 5 | **92** |
-| lintdiff-render | 6 | 119 | - | 5 | **130** |
-| lintdiff-app-git | - | 34 | - | - | **34** |
-| lintdiff-ingest-core | 11 | 4 | - | - | **15** |
-| lintdiff-types | - | 1 | - | - | **1** |
-| lintdiff-feature-flags | 6 | - | - | - | **6** |
-| lintdiff-bdd-grid | 4 | - | - | - | **4** |
-| lintdiff-cli | - | 3 | - | - | **3** |
-| **Total** | **64** | **699** | **37** | **26** | **807** |
+- Runtime/domain behavior is covered in `crates/lintdiff-ingest-core` through deterministic golden tests, fixture contract suites, and property-oriented checks embedded in the migrated modules.
+- CLI and I/O adapters are covered in `crates/lintdiff-app`, `crates/lintdiff-app-git`, and `crates/lintdiff-app-io` integration tests.
+- Output/rendering paths are covered in dedicated renderer and report tests.
+- Fuzzing continues to cover diff and diagnostic parsers in `fuzz/fuzz_targets/*.rs`.
 
 ### Test Categories
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| Unit Tests | 64 | Fast, isolated tests for individual functions |
-| Integration Tests | 699 | Tests that verify component interactions |
-| Property-based Tests | 37 | Proptest-driven tests for algorithmic correctness |
-| Doc Tests | 26 | Inline documentation examples |
-| BDD Scenarios | 6 | Behavior-driven tests for user-facing features |
+| Unit Tests | Varies by crate | Fast, isolated tests for individual functions |
+| Integration Tests | Varies by crate | Tests that verify component interactions |
+| Property-based Tests | Varies by crate | Proptest-driven checks where algorithmic invariants apply |
+| Doc Tests | Varies by crate | Inline documentation examples |
+| BDD Scenarios | 1 harness + fixture suite | Behavior-driven tests for user-facing features |
 | Fuzz Targets | 3 | cargo-fuzz targets for parser robustness |
 
 ---
@@ -49,9 +38,9 @@ Unit tests are embedded in each crate's `src/lib.rs` file using the `#[cfg(test)
 - Test individual functions and edge cases
 
 **Example crates with unit tests**:
-- [`lintdiff-diff`](../crates/lintdiff-diff/src/lib.rs) - Range merging, line parsing
-- [`lintdiff-policy`](../crates/lintdiff-policy/src/lib.rs) - Code normalization, verdict logic
-- [`lintdiff-fingerprint`](../crates/lintdiff-fingerprint/src/lib.rs) - Fingerprint generation
+- [`lintdiff-ingest-core`](../crates/lintdiff-ingest-core/src/lib.rs) - Diff parsing, matching, policy composition
+- [`lintdiff-types`](../crates/lintdiff-types/src/lib.rs) - DTO and config contracts
+- [`lintdiff-report-builder`](../crates/lintdiff-report-builder/src/lib.rs) - Receipt assembly
 
 ### Layer 2: Integration Tests
 
@@ -59,18 +48,12 @@ Integration tests verify that components work correctly together. They are locat
 
 **Location**: `crates/<crate>/tests/*.rs`
 
-**Test files by crate**:
+**Representative integration suites**:
 
-| Crate | Test Files | Tests |
-|-------|------------|-------|
-| lintdiff-diff | `diff_parsing.rs`, `hunk_handling.rs`, `path_normalization.rs` | 87 |
-| lintdiff-diagnostics | `json_parsing.rs`, `span_extraction.rs`, `stream_handling.rs` | 109 |
-| lintdiff-match | `filter_tests.rs`, `path_tests.rs`, `span_tests.rs` | 115 |
-| lintdiff-policy | `code_tests.rs`, `fingerprint_tests.rs`, `verdict_tests.rs` | 143 |
-| lintdiff-fingerprint | `fingerprint_tests.rs`, `stability_tests.rs` | 65 |
-| lintdiff-render | `annotations_tests.rs`, `budget_tests.rs`, `markdown_tests.rs` | 119 |
-| lintdiff-app-git | `integration_tests.rs` | 34 |
-| lintdiff-ingest-core | `determinism.rs`, `fingerprint_integration.rs` | 4 |
+- `crates/lintdiff-ingest-core/tests/determinism.rs`
+- `crates/lintdiff-ingest-core/tests/fingerprint_integration.rs`
+- `crates/lintdiff-app-io/tests/diagnostics_io_tests.rs`
+- `fuzz/fuzz_targets/*.rs` are validated through fixture-backed CI targets.
 
 **Golden Fixtures** (contract tests):
 
@@ -102,7 +85,6 @@ BDD tests ensure the tool behaves as reviewers expect using "Given/When/Then" sc
 - Missing input semantics (`skip`, not `pass`)
 
 **Related crates**:
-- [`lintdiff-bdd`](../crates/lintdiff-bdd/) - BDD types and utilities
 - [`lintdiff-bdd-harness`](../crates/lintdiff-bdd-harness/) - Test harness
 - [`lintdiff-bdd-grid`](../crates/lintdiff-bdd-grid/) - Feature flag matrix testing
 
@@ -115,14 +97,8 @@ Property tests protect core algorithms using [`proptest`](https://proptest-rs.gi
 **Location**: `crates/<crate>/tests/property_tests.rs`
 
 **Crates with property tests**:
-- [`lintdiff-diff`](../crates/lintdiff-diff/tests/property_tests.rs) - 19 tests
-  - Diff parsing invariants
-  - Path normalization idempotence
-  - Line range ordering
-- [`lintdiff-fingerprint`](../crates/lintdiff-fingerprint/tests/property_tests.rs) - 18 tests
-  - Fingerprint determinism
-  - Whitespace normalization
-  - Collision resistance
+- `lintdiff-ingest-core` (range merging, path normalization and fingerprint invariants)
+- Additional utility crates in workspace modules where algorithmic invariants are useful.
 
 **Properties tested**:
 - Range merge/idempotence
@@ -161,14 +137,13 @@ cargo test --workspace --all-features
 
 ```bash
 # Unit tests for a specific crate
-cargo test -p lintdiff-diff --lib
+cargo test -p lintdiff-ingest-core --lib
 
 # Integration tests for a specific crate
-cargo test -p lintdiff-diff --test diff_parsing
+cargo test -p lintdiff-ingest-core --test determinism
 
 # Property tests
-cargo test -p lintdiff-diff --test property_tests
-cargo test -p lintdiff-fingerprint --test property_tests
+cargo test -p lintdiff-ingest-core --test fingerprint_integration
 
 # BDD tests
 cargo test -p lintdiff --test bdd
@@ -181,10 +156,10 @@ cargo test --workspace --doc
 
 ```bash
 # Run tests matching a pattern
-cargo test -p lintdiff-diff --test diff_parsing -- parses_simple
+cargo test -p lintdiff-ingest-core --test determinism -- no-skip
 
 # Run a single test
-cargo test -p lintdiff-policy --test verdict_tests -- fail_on_error_with_errors_is_fail
+cargo test -p lintdiff-app-io --test diagnostics_io_tests -- no-skip
 ```
 
 ### Run Fuzz Tests
@@ -351,7 +326,7 @@ cargo install cargo-mutants
 cargo mutants --workspace
 
 # Run on specific crate
-cargo mutants -p lintdiff-diff
+cargo mutants -p lintdiff-ingest-core
 ```
 
 ---

@@ -1,12 +1,46 @@
 //! Benchmarks for fingerprint generation performance.
 //!
-//! Measures the performance of `lintdiff_fingerprint::fingerprint` across
+//! Measures the performance of the internal fingerprint implementation across
 //! various input sizes and configurations.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
-use lintdiff_fingerprint::fingerprint;
 use lintdiff_types::{Location, NormPath};
+use sha2::{Digest, Sha256};
+
+fn normalize_message(msg: &str) -> String {
+    let mut out = String::new();
+    let mut prev_ws = false;
+    for ch in msg.trim().chars() {
+        let ws = ch.is_whitespace();
+        if ws {
+            if !prev_ws {
+                out.push(' ');
+            }
+            prev_ws = true;
+        } else {
+            out.push(ch);
+            prev_ws = false;
+        }
+    }
+    out
+}
+
+fn benchmark_fingerprint(code: &str, loc: Option<&Location>, msg: &str) -> String {
+    let mut h = Sha256::new();
+    h.update(code.as_bytes());
+    h.update(b"|");
+    if let Some(loc) = loc {
+        h.update(loc.path.as_str().as_bytes());
+        h.update(b":");
+        if let Some(line) = loc.line {
+            h.update(line.to_string().as_bytes());
+        }
+        h.update(b":");
+    }
+    h.update(normalize_message(msg).as_bytes());
+    hex::encode(h.finalize())
+}
 
 /// Generate a message of specified length with realistic content.
 fn generate_message(length: usize) -> String {
@@ -29,7 +63,7 @@ fn bench_fingerprint(c: &mut Criterion) {
 
     basic_group.bench_function("no_location", |b| {
         b.iter(|| {
-            fingerprint(
+            benchmark_fingerprint(
                 black_box("clippy::unwrap_used"),
                 black_box(None),
                 black_box("called `.unwrap()` on an `Option` value"),
@@ -44,7 +78,7 @@ fn bench_fingerprint(c: &mut Criterion) {
     };
     basic_group.bench_function("with_location", |b| {
         b.iter(|| {
-            fingerprint(
+            benchmark_fingerprint(
                 black_box("clippy::unwrap_used"),
                 black_box(Some(&loc)),
                 black_box("called `.unwrap()` on an `Option` value"),
@@ -60,7 +94,9 @@ fn bench_fingerprint(c: &mut Criterion) {
     for length in [50, 200, 500, 1000, 5000].iter() {
         let message = generate_message(*length);
         message_group.bench_with_input(BenchmarkId::new("msg_len", length), &message, |b, msg| {
-            b.iter(|| fingerprint(black_box("E0001"), black_box(None), black_box(msg.as_str())));
+            b.iter(|| {
+                benchmark_fingerprint(black_box("E0001"), black_box(None), black_box(msg.as_str()))
+            });
         });
     }
 
@@ -78,7 +114,7 @@ fn bench_fingerprint(c: &mut Criterion) {
         };
         path_group.bench_with_input(BenchmarkId::new("depth", depth), &loc, |b, loc| {
             b.iter(|| {
-                fingerprint(
+                benchmark_fingerprint(
                     black_box("clippy::complexity"),
                     black_box(Some(loc)),
                     black_box("complex type definition"),
@@ -103,7 +139,7 @@ fn bench_fingerprint(c: &mut Criterion) {
     for code in codes.iter() {
         code_group.bench_with_input(BenchmarkId::new("code", code.len()), code, |b, code| {
             b.iter(|| {
-                fingerprint(
+                benchmark_fingerprint(
                     black_box(*code),
                     black_box(None),
                     black_box("sample message"),
@@ -144,7 +180,7 @@ fn bench_fingerprint(c: &mut Criterion) {
     batch_group.bench_function("100_fingerprints", |b| {
         b.iter(|| {
             for (code, loc, msg) in &batch_data {
-                black_box(fingerprint(code, loc.as_ref(), msg));
+                black_box(benchmark_fingerprint(code, loc.as_ref(), msg));
             }
         });
     });
@@ -158,11 +194,11 @@ fn bench_fingerprint(c: &mut Criterion) {
     let messy_msg = "  This   is   a   message   with   lots   of   extra   whitespace  \n\t  ";
 
     whitespace_group.bench_function("clean_message", |b| {
-        b.iter(|| fingerprint(black_box("CODE"), black_box(None), black_box(clean_msg)));
+        b.iter(|| benchmark_fingerprint(black_box("CODE"), black_box(None), black_box(clean_msg)));
     });
 
     whitespace_group.bench_function("messy_message", |b| {
-        b.iter(|| fingerprint(black_box("CODE"), black_box(None), black_box(messy_msg)));
+        b.iter(|| benchmark_fingerprint(black_box("CODE"), black_box(None), black_box(messy_msg)));
     });
 
     whitespace_group.finish();

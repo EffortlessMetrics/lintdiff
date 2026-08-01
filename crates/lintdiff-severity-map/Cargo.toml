@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Severity mapping utilities for converting between linter-specific and canonical severity levels"
+publish = false
 
 [dependencies]
 thiserror.workspace = true

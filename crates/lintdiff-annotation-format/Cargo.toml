@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Annotation format handling and CI detection for lintdiff."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true

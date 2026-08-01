@@ -2,34 +2,34 @@
 
 ## Scope
 
-This plan is post-PR-C cleanup. It is intentionally deferred until publication-closure evidence from Gate D0/D1 determines final package obligations.
+Historical boundary memo from recovery lane. The publication boundary is now implemented as a two-crate public API closure (`lintdiff-types` + `lintdiff-ingest-core`) with release-only CLI/action distribution, and this memo is retained for traceability only.
 
 ## Current evidence position
 
-- Workspace members: 69 (snapshot)
-- Runtime reachability from `lintdiff`: 13
-- Non-runtime support crates: 55
+- Snapshot evidence from this historical lane is preserved for continuity.
+- `lintdiff` runtime reachability and support-crate counts are preserved in archival command logs.
 
 ## Boundaries (working model)
 
 1. **Candidate supported consumer surfaces**
-   - `lintdiff`
-   - `lintdiff-ingest-core`
+  - `lintdiff`
+  - `lintdiff-ingest-core`
 2. **Registry support crates (pending)**
-   - `lintdiff-types`
-   - `lintdiff-report-schema`
+  - `lintdiff-types` (published)
+  - `lintdiff-ingest-core` (published; supported API root)
+  - `lintdiff-report-schema` (internal-only; no direct public contract)
 3. **Workspace-internal and test/tooling**
-   - all remaining workspace and tool-support crates until Gate D resolves publish obligations
+  - all remaining workspace and tool-support crates until Gate D resolves publish obligations
 
 ## Follow-up slices
 
 ### Slice 1 — Publication closure proof (Gate D0/D1)
 
-Use an ADR + evidence to decide the distribution model before any additional `publish = false` expansion.
+Use an ADR + evidence to decide final distribution model before additional `publish = false` expansion.
 
-### Slice 2 — Façade consolidation (`lintdiff-bdd` lane)
+### Slice 2 — Facade consolidation (retired)
 
-Concentrate on façade migration/deprecation once manifest boundaries are stable.
+Façade consolidation was completed in a prior slice (`lintdiff-bdd` retirement).
 
 ### Slice 3 — Utility reduction
 

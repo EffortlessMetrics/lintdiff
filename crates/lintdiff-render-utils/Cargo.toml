@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Rendering utilities for lintdiff"
+publish = false
 
 [dependencies]
 thiserror.workspace = true

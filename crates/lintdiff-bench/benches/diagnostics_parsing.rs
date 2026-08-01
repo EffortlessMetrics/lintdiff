@@ -1,13 +1,13 @@
 //! Benchmarks for diagnostics parsing performance.
 //!
-//! Measures the performance of `lintdiff_diagnostics::parse_cargo_messages` across
+//! Measures the performance of `lintdiff_ingest_core::parse_cargo_messages` across
 //! various diagnostic sizes and complexities.
 
 use std::io::Cursor;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
-use lintdiff_diagnostics::parse_cargo_messages;
+use lintdiff_ingest_core::diagnostics::parse_cargo_messages;
 
 /// Generate a single diagnostic JSON message.
 fn generate_diagnostic_json(

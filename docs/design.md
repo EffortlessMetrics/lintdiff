@@ -1,141 +1,63 @@
 # lintdiff design
 
-lintdiff is implemented as a hexagonal (ports/adapters) tool with a microcrate workspace. The goal is to keep the core deterministic and testable, and push I/O variance to the edges.
+`lintdiff` is implemented as a hexagonal (ports/adapters) tool with a small domain core.
 
 ## Architectural principles
 
-- **Domain first**: matching and verdict logic are pure functions over inputs.
-- **Adapters are thin**: git, filesystem, and clocks live outside the domain.
-- **Schemas are contracts**: DTOs are versioned and validated in CI.
+- **Domain first**: matching, ordering, and verdict logic are pure functions over inputs.
+- **Adapters are thin**: git, filesystem, and environment access live outside the domain.
+- **Schemas are contracts**: DTOs are explicit and validated in CI.
 - **Determinism is enforced**: stable ordering and stable truncation.
 - **Small extension points**: `report.data` and `finding.data` only.
 
-## Microcrate layout
+## Ingest-core architecture
 
 - `lintdiff-types`
-  - Receipt DTOs and config model (serde)
-  - Schema id constants
-  - Path normalization helpers
-  - Stable finding ordering key
-- `lintdiff-diff`
-  - Unified diff parsing into `DiffMap` (new-side changed lines)
-  - Rename handling (best effort)
-  - Property tests for range merging and intersection correctness
-- `lintdiff-diagnostics`
-  - Cargo JSON parsing into `Diagnostic` + spans
-  - Tolerant parsing (ignores non-diagnostic messages)
-  - Clear failure on invalid JSON (tool error)
-- `lintdiff-match`
-  - Path/span matching primitives (filter compilation, span selection, path relativization)
-- `lintdiff-policy`
-  - Code normalization, allow/suppress/deny, verdict computation, fingerprinting
+  - Shared protocol, config DTOs, and receipt schema constants.
+  - Path normalization helpers.
+  - Stable finding ordering key.
 - `lintdiff-ingest-core`
-  - Core ingest pipeline (diagnostics + diff → report)
-  - Domain engine for matching diagnostics to changed lines
-  - Policy mapping (`fail_on`, allow/suppress/deny)
-  - Receipt generation (verdict + findings + tool-specific data)
-- `lintdiff-bdd-grid`
-  - BDD matrix representation and feature-flag cell parsing
-  - Deterministic assignment serialization for fixture-driven scenario combinatorics
-- `lintdiff-render`
-  - Markdown renderer (budgeted)
-  - GitHub annotations renderer (budgeted)
-- `lintdiff-bdd`
-  - Fixture loading and deterministic BDD ingest harness
-  - Stable feature flag assignment helpers used by scenario grids
-- `lintdiff-bdd-harness`
-  - Fixture loading, ingest helpers, feature-flag matrix runners
-- `lintdiff-app`
-  - Orchestration layer, delegates to `lintdiff-app-git` and `lintdiff-app-io`
-  - Converts I/O failures into tool-error receipts when possible
-- `lintdiff-app-git`
-  - Git adapter (diff acquisition, repo root, git info)
-- `lintdiff-app-io`
-  - I/O adapter (config loading, diagnostics reading, artifact writing)
-- `lintdiff-feature-flags`
-  - Typed feature-flag registry and parsing
-- `lintdiff-cli`
-  - Clap CLI, subcommands, exit code mapping
+  - Unified diff parsing (`DiffMap`).
+  - Diagnostics parsing (`Diagnostic`, `Span`).
+  - Matching, policy mapping (`fail_on`, allow/suppress/deny), and verdict computation.
+  - Receipt/report generation and fingerprinting.
+  - Path filters and canonicalization.
+  - `matching`, `policy`, and `fingerprint` are private modules unless an explicit consumer contract is established.
 
-## Ports and adapters (hexagonal boundary)
+## Other crates in the workspace
 
-The current API still favors pure-function domain usage. Adapter boundaries
-now have dedicated microcrates (`lintdiff-app-git`, `lintdiff-app-io`).
+- `lintdiff-app`, `lintdiff-app-git`, `lintdiff-app-io`
+  - Orchestration and I/O adapters around the core.
+- `lintdiff-render`, `lintdiff-cli`
+  - Rendering and CLI surfaces.
+- `lintdiff-bdd-harness`, `lintdiff-bdd-grid`, `lintdiff-bench`
+  - Test/tooling suites.
 
-Concrete adapters are orchestrated by `lintdiff-app`.
+## Ports and adapters
 
-The goal is: **you can run domain logic in tests with strings**, no git subprocess, no filesystem.
+Adapter boundaries still use dedicated workspace crates (`lintdiff-app-git`, `lintdiff-app-io`).
+The goal remains: run domain logic in tests with strings and avoid filesystem/git dependence.
 
 ## Data flow
 
 1. Acquire diff (git base/head or `--diff-file`).
 2. Parse diff to `DiffMap`:
-   - `path → merged line ranges` for new-side changed lines
+   - `path → merged line ranges` for new-side changed lines.
 3. Parse diagnostics stream to `Vec<Diagnostic>`.
 4. Normalize diagnostic paths to repo-relative canonical form.
-5. Match diagnostics:
-   - select primary spans (or all)
-   - check span line range intersects changed ranges
-6. Apply policy:
-   - allow/suppress/deny code lists
-   - `fail_on`
-   - profile severity mapping (optional)
-7. Emit report:
-   - stable finding ordering
-   - stable truncation behavior
+5. Match diagnostics by span/path against changed ranges.
+6. Apply policy (`fail_on`, allow/suppress/deny).
+7. Emit report with deterministic ordering and truncation.
 8. Render optional outputs (Markdown, annotations).
 
-## Path normalization
+## Legacy crate migration status
 
-This is the real footgun; treat it like protocol discipline.
-
-Canonical path format everywhere:
-
-- repo-relative
-- forward slashes
-- no leading `./`
-
-Normalization handles:
-
-- diff headers (`+++ b/<path>`)
-- rustc spans (`file_name`, often absolute paths)
-- Windows paths (`\` to `/`)
-- optional stripping of repo root prefix
-
-If `workspace_only=true` and a span cannot be mapped to repo-relative form, it is ignored.
-
-## Diagnostic code mapping
-
-lintdiff does not invent lints; it re-keys diagnostics into stable namespaced codes:
-
-- rustc errors: `lintdiff.diagnostic.rustc.E0502`
-- clippy lints: `lintdiff.diagnostic.clippy.needless_borrow`
-- unknown: `lintdiff.diagnostic.other.<slug>`
-
-The original raw code and level are preserved in `finding.data`.
-
-## Deterministic ordering and fingerprinting
-
-- Findings are sorted by the ordering key from `docs/requirements.md`.
-- Fingerprint is SHA-256 over a stable tuple:
-  - code + path + line + normalized(message)
-
-Director can further dedupe across sensors using fingerprint.
-
-## Rendering
-
-Markdown output is compact:
-
-- totals table (seen/matched/suppressed)
-- status line (pass/warn/fail) and threshold policy
-- top N findings (file:line, code, message)
-- truncation marker if applicable
-- repro line (when provided by config/app)
-
-Annotations renderer emits GitHub workflow commands (`::warning` / `::error`) for top N findings with locations.
+- `lintdiff-diagnostics`, `lintdiff-diff`, `lintdiff-match`, `lintdiff-policy`, `lintdiff-fingerprint`
+  are retired from active workspace membership and have been internalized under `lintdiff-ingest-core`.
+- Historical references to these crates should be treated as migration history only.
 
 ## Failure semantics
 
 - Missing required inputs yields `skip` (not pass).
 - Parse errors are tool/runtime errors (exit 1).
-- When possible, lintdiff still writes a receipt on failures (verdict fail + `tool.runtime_error` finding).
+- When possible, lintdiff still writes a receipt on failure (`tool.runtime_error` findings).

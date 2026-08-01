@@ -4,12 +4,7 @@ members = [
   "crates/lintdiff-jsonl",
   "crates/lintdiff-hunk-header",
   "crates/lintdiff-types",
-  "crates/lintdiff-diff",
-  "crates/lintdiff-diagnostics",
-  "crates/lintdiff-match",
   "crates/lintdiff-ingest-core",
-  "crates/lintdiff-policy",
-  "crates/lintdiff-fingerprint",
   "crates/lintdiff-finding",
   "crates/lintdiff-finding-builder",
   "crates/lintdiff-stats",
@@ -105,7 +100,7 @@ cargo-semver-checks = "0.40"
 fluent = "0.17"
 fluent-bundle = "0.16"
 unic-langid = "0.9"
-lintdiff-types = { path = "crates/lintdiff-types" }
+lintdiff-types = { version = "=0.1.0", path = "crates/lintdiff-types" }
 lintdiff-stats = { path = "crates/lintdiff-stats" }
 
 [workspace.lints.rust]

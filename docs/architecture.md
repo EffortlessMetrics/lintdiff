@@ -73,10 +73,6 @@ lintdiff is strict about not producing false confidence:
 
 As of 2026-08-01 evidence snapshot:
 
-- Workspace members: **69**
-- Runtime non-dev/build reachability from `lintdiff`: **13 crates**
-- Non-runtime workspace crates: **55**
-
 The workspace is intentionally modeled with four classes:
 
 ### 1) Candidate supported consumer surfaces
@@ -87,35 +83,41 @@ Public-facing surfaces that the project currently documents as intended consumer
   - CLI surface and GitHub Action behavior.
 - `lintdiff-ingest-core`
   - Embedded ingestion core API.
+- `lintdiff-types`
+  - Shared DTOs, config model, and report schema helpers.
 
 ### 2) Registry support crates
 
-Crates that may be required to package/seal published products and must have a versioned package presence, but are not direct support promises:
+Crates retained as direct published registry roots:
 
-- `lintdiff-types` — pending explicit contract decision.
-- `lintdiff-report-schema` — pending explicit contract decision.
+- `lintdiff-types` (`publish = true`)
+- `lintdiff-ingest-core` (`publish = true`)
 
-These remain unresolved until Gate D0/D1 publication-closure work confirms concrete required packages.
+`lintdiff-report-schema` remains workspace-internal until a direct public contract requires publication.
 
 ### 3) Workspace-internal crates
 
 Runtime and utility crates used to satisfy internal implementation needs that are not currently documented as direct distribution contracts:
 
-- `lintdiff-app`, `lintdiff-app-git`, `lintdiff-app-io`
+`lintdiff-app`, `lintdiff-app-git`, `lintdiff-app-io`
 - parsing, matching, policy, rendering, and feature/utility helper crates not listed in class 1 or 2
 - other non-test workspace crates not in public surface classes
 
 ### 4) Test/tooling crates
 
-- `lintdiff-bdd`, `lintdiff-bdd-harness`, `lintdiff-bdd-grid`
-- `lintdiff-bench`
+- `lintdiff-bdd-harness`, `lintdiff-bdd-grid`, `lintdiff-bench`
 
 Important: zero workspace indegree is not treated as proof of external safety; this is a dependency-shape signal, not a direct API guarantee.
 
 ## Architecture evidence and change tracking
 
-- The 21-crate historical review is retained in [`plans/microcrate-review.md`](plans/microcrate-review.md) for archival reference only.
+- The migration record is retained in [`plans/microcrate-review.md`](plans/microcrate-review.md) for archival reference only.
 - Current working evidence and follow-up decisions are tracked in:
   - [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
   - [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)
-- Counts are dated evidence snapshots and are not permanent, standalone policy; Gate D publication testing determines final class finalization.
+- Counts are dated evidence snapshots and are not standalone policy; Gate D publication testing determines final class finalization.
+
+Distribution posture:
+
+- `lintdiff` is distributed from GitHub releases and GitHub Action only.
+- `cargo install lintdiff` is not a supported install path.

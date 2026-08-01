@@ -1,7 +1,7 @@
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
-use lintdiff_diagnostics::{parse_cargo_messages, Diagnostic};
+use lintdiff_ingest_core::{diagnostics, Diagnostic};
 use lintdiff_types::{LintdiffConfig, Report};
 use serde_json::to_vec_pretty;
 use thiserror::Error;
@@ -65,7 +65,8 @@ pub fn load_config(
 }
 
 pub fn parse_diagnostics<R: BufRead>(reader: R) -> Result<Vec<Diagnostic>, AppIoError> {
-    parse_cargo_messages(reader).map_err(|e| AppIoError::DiagnosticsParse { msg: e.to_string() })
+    diagnostics::parse_cargo_messages(reader)
+        .map_err(|e| AppIoError::DiagnosticsParse { msg: e.to_string() })
 }
 
 pub fn acquire_diagnostics(path: Option<&Path>) -> Result<Option<Vec<Diagnostic>>, AppIoError> {

@@ -1,9 +1,9 @@
 use cucumber::{given, then, when, World as _};
+use globset::{Glob, GlobSet, GlobSetBuilder};
 
 use lintdiff_bdd_harness::{
     apply_feature_flag_value, read_fixture as fixture, run_ingest_from_fixtures, verdict_status,
 };
-use lintdiff_match::{compile_filters, path_allowed};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
 use lintdiff_types::{LintdiffConfig, Report};
 
@@ -268,7 +268,7 @@ async fn then_annotations_count(world: &mut LintdiffWorld, expected: i32) {
 }
 
 // =============================================================================
-// Path matching step definitions (lintdiff-match)
+// Path matching step definitions (path matcher integration)
 // =============================================================================
 
 #[given(expr = "a test path {string}")]
@@ -288,6 +288,46 @@ async fn when_check_path_filters(world: &mut LintdiffWorld) {
         let filters = compile_filters(&effective);
         world.path_allowed = Some(path_allowed(&filters, path));
     }
+}
+
+#[derive(Debug, Clone)]
+struct Filters {
+    include: Option<GlobSet>,
+    exclude: Option<GlobSet>,
+}
+
+fn compile_filters(cfg: &lintdiff_types::EffectiveConfig) -> Filters {
+    Filters {
+        include: build_globset(&cfg.filter.include_paths),
+        exclude: build_globset(&cfg.filter.exclude_paths),
+    }
+}
+
+fn path_allowed(filters: &Filters, path: &str) -> bool {
+    if let Some(ex) = &filters.exclude {
+        if ex.is_match(path) {
+            return false;
+        }
+    }
+    if let Some(inc) = &filters.include {
+        return inc.is_match(path);
+    }
+    true
+}
+
+fn build_globset(patterns: &[String]) -> Option<GlobSet> {
+    if patterns.is_empty() {
+        return None;
+    }
+
+    let mut builder = GlobSetBuilder::new();
+    for p in patterns {
+        if let Ok(glob) = Glob::new(p) {
+            builder.add(glob);
+        }
+    }
+
+    builder.build().ok()
 }
 
 #[then("path is allowed")]

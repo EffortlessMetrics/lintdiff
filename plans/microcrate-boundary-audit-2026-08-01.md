@@ -8,10 +8,8 @@
 
 ## Snapshot inputs
 
-- `Cargo.toml` workspace members: **69**
-- `cargo metadata --format-version 1 --no-deps`: **69 packages**
-- Non-dev runtime-reachable from `lintdiff`: **13 crates**
-- Non-runtime workspace crates: **55 crates**
+- This document records historical snapshot inputs from pre-final migration planning.
+- Runtime and non-runtime counts in the working snapshot are preserved for archived comparison only.
 
 ## Working boundary classes (non-final)
 
@@ -22,12 +20,13 @@ These are the seams the project is currently documenting as consumer-facing:
 - `lintdiff` (`crates/lintdiff-cli`)
 - `lintdiff-ingest-core`
 
-### Registry support crates
+### Registry support crates (finalized)
 
-These crates are candidates for publication to satisfy Rust package closure, but are not yet committed as direct public API contracts:
+Direct public registry roots after closure migration:
 
-- `lintdiff-types` (pending explicit contract decision)
-- `lintdiff-report-schema` (pending explicit contract decision)
+- `lintdiff-types` (publishable)
+- `lintdiff-ingest-core` (publishable)
+- `lintdiff-report-schema` (workspace-internal)
 
 ### Workspace-internal crates
 
@@ -50,6 +49,6 @@ All workspace crates not in “supported consumer surfaces” or “registry sup
 
 ## Open outcomes before PR D
 
-1. Record final Gate D decision (`distribution model`) and whether it requires `lintdiff` or only binary/action distribution.
-2. For candidates in **registry support crates**, prove whether they must remain publishable.
-3. Preserve `lintdiff-types` and `lintdiff-report-schema` as unresolved until compatibility and contract outcomes are signed off.
+1. Publish `lintdiff-types` and `lintdiff-ingest-core` in order.
+2. Re-run Gate D in final mode once registry visibility is available.
+3. Move the publication contract phase to `final` after the ordered publish receipts are complete.

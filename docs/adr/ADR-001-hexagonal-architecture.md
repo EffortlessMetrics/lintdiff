@@ -42,17 +42,14 @@ The project is decomposed into focused crates:
 | `lintdiff-app-io` | I/O adapter implementations |
 | `lintdiff-app-git` | Git adapter implementations |
 | `lintdiff-cli` | Command-line interface entry point |
-| `lintdiff-diff` | Diff parsing and analysis |
-| `lintdiff-diagnostics` | Diagnostic parsing and handling |
-| `lintdiff-match` | Diff-to-diagnostic matching logic |
-| `lintdiff-policy` | Policy evaluation and verdicts |
 | `lintdiff-render` | Output rendering (JSON, Markdown) |
 | `lintdiff-types` | Shared type definitions |
-| `lintdiff-fingerprint` | Content fingerprinting |
 | `lintdiff-feature-flags` | Feature flag management |
 | `lintdiff-bdd-*` | BDD testing infrastructure |
 
-> **Note:** As of v1.0.0, the façade crates (`lintdiff-domain`, `lintdiff-core`, `lintdiff-ingest`) have been removed. All functionality is now in `lintdiff-ingest-core`.
+`lintdiff-types` now hosts protocol/config DTOs used across workspace and registry seams; domain parsing/matching/fingerprint/policy responsibilities are implemented in `lintdiff-ingest-core`.
+
+> **Note:** Legacy microcrate layout remained during early implementation, but `lintdiff-diff`, `lintdiff-diagnostics`, `lintdiff-match`, `lintdiff-policy`, and `lintdiff-fingerprint` are now merged into `lintdiff-ingest-core` and retained only as historical migration references.
 
 ## Consequences
 

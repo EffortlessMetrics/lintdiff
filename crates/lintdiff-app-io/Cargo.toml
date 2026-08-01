@@ -8,13 +8,14 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "IO + config helpers for lintdiff adapters."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 
 [dependencies]
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
 lintdiff-types = { path = "../lintdiff-types" }
 serde_json.workspace = true
 thiserror.workspace = true

@@ -1,8 +1,6 @@
 use std::io::Cursor;
 
-use lintdiff_diagnostics::parse_cargo_messages;
-use lintdiff_diff::parse_unified_diff;
-use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_ingest_core::{diagnostics, diff, ingest_on_diff, IngestOnDiffParams};
 use lintdiff_types::{LintdiffConfig, NormPath, RunInfo, ToolInfo, TOOL_NAME};
 
 #[test]
@@ -17,8 +15,9 @@ diff --git a/src/lib.rs b/src/lib.rs
     let diagnostics = r#"{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"column_start":1,"column_end":10,"is_primary":true}]}}
 {"reason":"compiler-message","message":{"level":"warning","message":"  unused   variable\t","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"column_start":1,"column_end":10,"is_primary":true}]}}"#;
 
-    let diff_map = parse_unified_diff(diff).expect("valid unified diff fixture");
-    let diags = parse_cargo_messages(Cursor::new(diagnostics)).expect("valid diagnostics fixture");
+    let diff_map = diff::parse_unified_diff(diff).expect("valid unified diff fixture");
+    let diags = diagnostics::parse_cargo_messages(Cursor::new(diagnostics))
+        .expect("valid diagnostics fixture");
     let cfg = LintdiffConfig::default().effective();
 
     let report = ingest_on_diff(IngestOnDiffParams {

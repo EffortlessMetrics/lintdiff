@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Verdict types for lintdiff check results"
+publish = false
 
 [dependencies]
 thiserror.workspace = true

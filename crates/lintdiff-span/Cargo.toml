@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Source code span representation for lintdiff"
+publish = false
 
 [dependencies]
 thiserror.workspace = true

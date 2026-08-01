@@ -7,6 +7,7 @@ rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Fluent builder for constructing Finding objects in lintdiff"
+publish = false
 
 [dependencies]
 lintdiff-types = { path = "../lintdiff-types" }

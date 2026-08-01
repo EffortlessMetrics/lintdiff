@@ -73,4 +73,4 @@ Observed: no matches for shim crate declaration/import were found; remaining `li
 ## Notes
 
 - This slice is intentionally scoped to proofable consumer movement only and does not change publication policy.
-- No assumptions are made about whether the façade crate can be deleted until a follow-up explicit ownership decision is made.
+- The façade crate was retired in this lane, and subsequent recovery/cleanup is documented in later boundary plans.

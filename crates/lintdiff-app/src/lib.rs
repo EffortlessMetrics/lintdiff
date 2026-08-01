@@ -7,8 +7,8 @@ use lintdiff_app_io::{
     acquire_diagnostics, load_config, now_rfc3339, parse_diagnostics, write_report_json,
     write_text, AppIoError,
 };
-use lintdiff_diff::parse_unified_diff;
 use lintdiff_feature_flags::set_feature_flags_from_assignments;
+use lintdiff_ingest_core::diff::parse_unified_diff;
 use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
 use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,

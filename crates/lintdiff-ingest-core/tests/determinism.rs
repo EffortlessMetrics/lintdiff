@@ -9,9 +9,7 @@
 
 use std::io::Cursor;
 
-use lintdiff_diagnostics::parse_cargo_messages;
-use lintdiff_diff::parse_unified_diff;
-use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_ingest_core::{diagnostics, diff, ingest_on_diff, IngestOnDiffParams};
 use lintdiff_types::{LintdiffConfig, NormPath, RunInfo, ToolInfo, TOOL_NAME};
 
 // ---------------------------------------------------------------------------
@@ -40,7 +38,7 @@ fn deterministic_run() -> RunInfo {
     }
 }
 
-/// Compare `actual` JSON against the golden file at `name`.
+/// Compare `actual` JSON against the golden file at tests/snapshots/{name}.json.
 ///
 /// If the golden file does not exist, write it and print a notice instead of
 /// failing, so the very first `cargo test` run bootstraps the snapshots.
@@ -103,11 +101,12 @@ diff --git a/src/lib.rs b/src/lib.rs
 @@ -1,0 +1,1 @@
 +fn a() { let x = 1; }
 ";
-    let diff_map = parse_unified_diff(diff).expect("valid diff");
+    let diff_map = diff::parse_unified_diff(diff).expect("valid diff");
 
     // Warning on line 999 — well outside the changed range (line 1).
     let diag_jsonl = r#"{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":999,"line_end":999,"column_start":10,"column_end":11,"is_primary":true}]}}"#;
-    let diagnostics = parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
+    let diagnostics =
+        diagnostics::parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
 
     let cfg = LintdiffConfig::default().effective();
 
@@ -140,11 +139,12 @@ diff --git a/src/lib.rs b/src/lib.rs
 @@ -1,0 +1,1 @@
 +fn a() { let x = 1; }
 ";
-    let diff_map = parse_unified_diff(diff).expect("valid diff");
+    let diff_map = diff::parse_unified_diff(diff).expect("valid diff");
 
     // Warning on line 1 — inside the changed range.
     let diag_jsonl = r#"{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"column_start":10,"column_end":11,"is_primary":true}]}}"#;
-    let diagnostics = parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
+    let diagnostics =
+        diagnostics::parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
 
     let cfg = LintdiffConfig::default().effective();
 
@@ -177,11 +177,12 @@ diff --git a/src/lib.rs b/src/lib.rs
 @@ -1,0 +1,1 @@
 +fn a() { let x = 1; }
 ";
-    let diff_map = parse_unified_diff(diff).expect("valid diff");
+    let diff_map = diff::parse_unified_diff(diff).expect("valid diff");
 
     // Warning on line 1 with code clippy::let_unit_value.
     let diag_jsonl = r#"{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"clippy::let_unit_value"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"column_start":10,"column_end":11,"is_primary":true}]}}"#;
-    let diagnostics = parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
+    let diagnostics =
+        diagnostics::parse_cargo_messages(Cursor::new(diag_jsonl)).expect("valid diagnostics");
 
     // Deny the normalized code so it upgrades severity to error → fail verdict.
     let mut user_cfg = LintdiffConfig::default();

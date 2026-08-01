@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Output format escaping utilities for lintdiff."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true

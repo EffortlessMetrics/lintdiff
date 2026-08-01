@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Shared DTOs, config, and normalization utilities for lintdiff."
+publish = true
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true

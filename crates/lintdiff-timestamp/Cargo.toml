@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 readme.workspace = true
 description = "Timestamp formatting utilities for lintdiff reports."
+publish = false
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
