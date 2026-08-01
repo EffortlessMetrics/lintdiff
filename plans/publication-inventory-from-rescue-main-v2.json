@@ -1,0 +1,1046 @@
+{
+  "schema": "lintdiff.publication-inventory.v1",
+  "source": "recovery/gate-d1-probe",
+  "generated_at": "2026-08-01T07:48:40.5103718Z",
+  "branch": "recovery/gate-d1-probe",
+  "head": "47d4703a753553d63342497249947004268ee8bd",
+  "package_count": 69,
+  "distribution_model": "Action + release binaries",
+  "packages": [
+    {
+      "package": "lintdiff",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": true,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": true,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "consumer_surface",
+      "rationale": "Required public root package.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-cli\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-annotation-format",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-annotation-format\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-app",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-app\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-app-git",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-app-git\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-app-io",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-app-io\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-bdd",
+      "publish_policy": {
+        "source": "package false",
+        "raw": "false"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "test_tooling",
+      "rationale": "Test/runtime tooling crate.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-bdd\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-bdd-grid",
+      "publish_policy": {
+        "source": "package false",
+        "raw": "false"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "test_tooling",
+      "rationale": "Test/runtime tooling crate.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-bdd-grid\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-bdd-harness",
+      "publish_policy": {
+        "source": "package false",
+        "raw": "false"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "test_tooling",
+      "rationale": "Test/runtime tooling crate.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-bdd-harness\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-bench",
+      "publish_policy": {
+        "source": "package false",
+        "raw": "false"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "test_tooling",
+      "rationale": "Test/runtime tooling crate.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-bench\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-budget",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-budget\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-ci-env",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-ci-env\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-code-norm",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-code-norm\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-code-policy",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-code-policy\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-code-url",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-code-url\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-config",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-config\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-config-types",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-config-types\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-counts",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-counts\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-diagnostic-level",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-diagnostic-level\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-diagnostics",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-diagnostics\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-diff",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-diff\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-diff-paths",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-diff-paths\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-diff-stats",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-diff-stats\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-disposition",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-disposition\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-escape",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-escape\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-exit",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-exit\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-explain",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-explain\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-explain-builder",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-explain-builder\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-explain-summary",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-explain-summary\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-feature-flags",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-feature-flags\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-finding",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-finding\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-finding-builder",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-finding-builder\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-fingerprint",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-fingerprint\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-git-info",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-git-info\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-glob",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-glob\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-host-info",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-host-info\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-hunk-header",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-hunk-header\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-i18n",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-i18n\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-ingest-core",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": true,
+      "in_public_union_reachability": true,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "consumer_surface",
+      "rationale": "Required public root package.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-ingest-core\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-jsonl",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-jsonl\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-line-merge",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-line-merge\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-line-range",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-line-range\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-locale-detect",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-locale-detect\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-location",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-location\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-match",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-match\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-message-norm",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-message-norm\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-message-truncate",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-message-truncate\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-path-norm",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-path-norm\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-policy",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-policy\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-range-merge",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-range-merge\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-render",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-render\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-render-annotations",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-render-annotations\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-render-markdown",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-render-markdown\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-render-utils",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-render-utils\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-report-builder",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-report-builder\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-report-schema",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "registry_support",
+      "rationale": "Required to satisfy selected public crate dependency graph.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-report-schema\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-run-info",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-run-info\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-schema-diff",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-schema-diff\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-severity",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-severity\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-severity-map",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-severity-map\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-slugify",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-slugify\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-sort",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-sort\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-span",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-span\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-span-intersect",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-span-intersect\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-stats",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-stats\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-timestamp",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-timestamp\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-truncate",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-truncate\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-types",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": false,
+      "can_package_without_publish_change": false,
+      "proposed_class": "registry_support",
+      "rationale": "Required to satisfy selected public crate dependency graph.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-types\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-verdict",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-verdict\\Cargo.toml"
+    },
+    {
+      "package": "lintdiff-verdict-reason",
+      "publish_policy": {
+        "source": "default true",
+        "raw": "default true"
+      },
+      "reachable_from_lintdiff": false,
+      "reachable_from_lintdiff_ingest_core": false,
+      "in_public_union_reachability": false,
+      "previously_published": null,
+      "can_package_without_publish_change": false,
+      "proposed_class": "workspace_internal",
+      "rationale": "Internal workspace crate not yet proven as public boundary or registry support.",
+      "manifest_path": "C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-verdict-reason\\Cargo.toml"
+    }
+  ]
+}

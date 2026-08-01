@@ -1,0 +1,132 @@
+{
+  "schema": "lintdiff.publication-closure.evidence.v1",
+  "generated_at": "2026-08-01T07:48:05.6140785Z",
+  "model": "Action+release-binary",
+  "distribution_decision": "Action and release-binary distribution only; no supported cargo install channel for lintdiff CLI.",
+  "gate_phase": "D1_baseline",
+  "status": "blocked",
+  "blockers": [
+    "Local dependency graph for both roots includes workspace crates that are not currently published on crates.io.",
+    "Adding versions resolves `cargo package` manifest requirement, but publish resolution still fails because dependent crates are absent from index."
+  ],
+  "git": {
+    "source_of_package_version": "workspace.version = 0.1.0",
+    "branch": "recovery/gate-d1-probe",
+    "head": "82b7d4a3fcdda088e63713081409ee2914686313"
+  },
+  "roots": [
+    {
+      "root": "lintdiff",
+      "publish_mode": "proposed_public_root",
+      "packageable_without_published_dependencies": false,
+      "workspace_normal_build_closure": [
+        "lintdiff-cli",
+        "lintdiff-app",
+        "lintdiff-app-git",
+        "lintdiff-app-io",
+        "lintdiff-render",
+        "lintdiff-types",
+        "lintdiff-bdd",
+        "lintdiff-match",
+        "lintdiff-diff",
+        "lintdiff-feature-flags",
+        "lintdiff-ingest-core",
+        "lintdiff-diagnostics",
+        "lintdiff-policy",
+        "lintdiff-fingerprint"
+      ],
+      "previously_published": {
+        "lintdiff-types": false,
+        "lintdiff-ingest-core": false,
+        "lintdiff-bdd": false,
+        "lintdiff-app": false,
+        "lintdiff-diff": false,
+        "lintdiff-diagnostics": false,
+        "lintdiff-render": false,
+        "lintdiff-feature-flags": false,
+        "lintdiff-app-io": false,
+        "lintdiff-match": false,
+        "lintdiff-app-git": false,
+        "lintdiff-fingerprint": false,
+        "lintdiff-cli": false,
+        "lintdiff-policy": false
+      },
+      "versioned_dependency_probe": [
+        "lintdiff-app",
+        "lintdiff-app-git",
+        "lintdiff-app-io",
+        "lintdiff-render",
+        "lintdiff-types",
+        "lintdiff-bdd",
+        "lintdiff-match"
+      ]
+    },
+    {
+      "root": "lintdiff-ingest-core",
+      "publish_mode": "registry_support_root",
+      "packageable_without_published_dependencies": false,
+      "workspace_normal_build_closure": [
+        "lintdiff-ingest-core",
+        "lintdiff-diagnostics",
+        "lintdiff-diff",
+        "lintdiff-match",
+        "lintdiff-policy",
+        "lintdiff-types"
+      ],
+      "previously_published": {
+        "lintdiff-diagnostics": false,
+        "lintdiff-ingest-core": false,
+        "lintdiff-match": false,
+        "lintdiff-diff": false,
+        "lintdiff-policy": false,
+        "lintdiff-types": false
+      },
+      "versioned_dependency_probe": [
+        "lintdiff-diagnostics",
+        "lintdiff-diff",
+        "lintdiff-match",
+        "lintdiff-policy",
+        "lintdiff-types"
+      ]
+    }
+  ],
+  "command_verification": [
+    {
+      "cmd": "cargo package -p lintdiff --allow-dirty",
+      "status": "failed",
+      "reason": "no matching package named `lintdiff-app` found (on crates.io)",
+      "log_file": "plans/publication-closure-gate-d1-probe-lintdiff.log"
+    },
+    {
+      "cmd": "cargo package -p lintdiff-ingest-core --allow-dirty",
+      "status": "failed",
+      "reason": "no matching package named `lintdiff-diagnostics` found (on crates.io)",
+      "log_file": "plans/publication-closure-gate-d1-probe-ingest.log"
+    }
+  ],
+  "command_output_samples": {
+    "ingest_core": [
+      "    Blocking waiting for file lock on package cache",
+      "   Packaging lintdiff-ingest-core v0.1.0 (C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-ingest-core)",
+      "    Updating crates.io index",
+      "error: failed to prepare local package for uploading",
+      "",
+      "Caused by:",
+      "  no matching package named `lintdiff-diagnostics` found",
+      "  location searched: crates.io index",
+      "  required by package `lintdiff-ingest-core v0.1.0 (C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-ingest-core)`",
+      ""
+    ],
+    "lintdiff": [
+      "   Packaging lintdiff v0.1.0 (C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-cli)",
+      "    Updating crates.io index",
+      "error: failed to prepare local package for uploading",
+      "",
+      "Caused by:",
+      "  no matching package named `lintdiff-app` found",
+      "  location searched: crates.io index",
+      "  required by package `lintdiff v0.1.0 (C:\\Code\\Rust\\lintdiff\\crates\\lintdiff-cli)`",
+      ""
+    ]
+  }
+}

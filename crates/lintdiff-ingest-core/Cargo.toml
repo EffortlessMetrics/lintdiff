@@ -14,10 +14,10 @@ homepage.workspace = true
 documentation.workspace = true
 
 [dependencies]
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
-lintdiff-diff = { path = "../lintdiff-diff" }
-lintdiff-match = { path = "../lintdiff-match" }
-lintdiff-policy = { path = "../lintdiff-policy" }
-lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-diagnostics = { path = "../lintdiff-diagnostics", version = "0.1.0" }
+lintdiff-diff = { path = "../lintdiff-diff", version = "0.1.0" }
+lintdiff-match = { path = "../lintdiff-match", version = "0.1.0" }
+lintdiff-policy = { path = "../lintdiff-policy", version = "0.1.0" }
+lintdiff-types = { path = "../lintdiff-types", version = "0.1.0" }
 
 serde_json.workspace = true

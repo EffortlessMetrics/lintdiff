@@ -14,18 +14,18 @@ homepage.workspace = true
 documentation.workspace = true
 
 [dependencies]
-lintdiff-app = { path = "../lintdiff-app" }
-lintdiff-app-git = { path = "../lintdiff-app-git" }
-lintdiff-app-io = { path = "../lintdiff-app-io" }
-lintdiff-render = { path = "../lintdiff-render" }
-lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-app = { path = "../lintdiff-app", version = "0.1.0" }
+lintdiff-app-git = { path = "../lintdiff-app-git", version = "0.1.0" }
+lintdiff-app-io = { path = "../lintdiff-app-io", version = "0.1.0" }
+lintdiff-render = { path = "../lintdiff-render", version = "0.1.0" }
+lintdiff-types = { path = "../lintdiff-types", version = "0.1.0" }
 
 clap.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
-lintdiff-bdd = { path = "../lintdiff-bdd" }
-lintdiff-match = { path = "../lintdiff-match" }
+lintdiff-bdd = { path = "../lintdiff-bdd", version = "0.1.0" }
+lintdiff-match = { path = "../lintdiff-match", version = "0.1.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 cucumber = "0.23"
 uselesskey.workspace = true

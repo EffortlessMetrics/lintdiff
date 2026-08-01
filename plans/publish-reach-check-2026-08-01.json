@@ -1,0 +1,67 @@
+[
+  {
+    "crate": "lintdiff-app",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-app-git",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-app-io",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-render",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-types",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-diagnostics",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-diff",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-match",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-policy",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-fingerprint",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-report-schema",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff-ingest-core",
+    "found": false,
+    "latest": null
+  },
+  {
+    "crate": "lintdiff",
+    "found": false,
+    "latest": null
+  }
+]
