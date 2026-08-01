@@ -50,7 +50,7 @@ runs:
         INPUT_VERSION: ${{ inputs.version }}
       run: |
         if [ "$INPUT_VERSION" = "latest" ]; then
-          VERSION=$(curl -fsSL https://api.github.com/repos/effortless-metrics/lintdiff/releases/latest | jq -r '.tag_name')
+          VERSION=$(curl -fsSL https://api.github.com/repos/EffortlessMetrics/lintdiff/releases/latest | jq -r '.tag_name')
           if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
             echo "::error::Failed to determine latest lintdiff version"
             exit 1
@@ -110,7 +110,7 @@ runs:
             ;;
         esac
 
-        URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/lintdiff-${ARTIFACT_VERSION}-${TARGET}.${EXT}"
+        URL="https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}/lintdiff-${ARTIFACT_VERSION}-${TARGET}.${EXT}"
         echo "Downloading lintdiff ${VERSION} for ${TARGET}..."
         curl -fsSL "$URL" -o "lintdiff-archive.${EXT}"
 
@@ -167,7 +167,7 @@ runs:
 
         # Extract verdict from report using jq for cross-platform compatibility
         if [ -f "$REPORT_PATH" ]; then
-          VERDICT=$(jq -r '.status' "$REPORT_PATH" 2>/dev/null || echo "unknown")
+          VERDICT=$(jq -r '.verdict.status' "$REPORT_PATH" 2>/dev/null || echo "unknown")
           echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
         fi
 

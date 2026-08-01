@@ -1,0 +1,24 @@
+name: release-action-contract
+
+on:
+  push:
+    paths:
+      - ".github/workflows/release.yml"
+      - "action.yml"
+      - "scripts/verify-release-action-contract.ps1"
+  pull_request:
+    paths:
+      - ".github/workflows/release.yml"
+      - "action.yml"
+      - "scripts/verify-release-action-contract.ps1"
+  workflow_dispatch:
+
+jobs:
+  contract-check:
+    name: Verify Action/release contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify release asset contract
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify-release-action-contract.ps1
