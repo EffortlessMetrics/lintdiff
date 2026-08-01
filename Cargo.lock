@@ -1804,7 +1804,7 @@ dependencies = [
  "lintdiff-app",
  "lintdiff-app-git",
  "lintdiff-app-io",
- "lintdiff-bdd",
+ "lintdiff-bdd-harness",
  "lintdiff-match",
  "lintdiff-render",
  "lintdiff-types",
@@ -1859,13 +1859,6 @@ dependencies = [
  "thiserror 2.0.19",
  "time",
  "toml",
-]
-
-[[package]]
-name = "lintdiff-bdd"
-version = "0.1.0"
-dependencies = [
- "lintdiff-bdd-harness",
 ]
 
 [[package]]

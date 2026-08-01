@@ -21,7 +21,6 @@ members = [
   "crates/lintdiff-app",
   "crates/lintdiff-cli",
   "crates/lintdiff-config",
-  "crates/lintdiff-bdd",
   "crates/lintdiff-bdd-harness",
   "crates/lintdiff-feature-flags",
   "crates/lintdiff-bdd-grid",
