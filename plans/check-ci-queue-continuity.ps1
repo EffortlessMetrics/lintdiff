@@ -2,10 +2,7 @@ param(
     [int]$PrLimit = 100,
     [int]$IssueLimit = 100,
     [string]$EvidencePath = "",
-    [string]$DependencyEvidencePath = "",
-    [switch]$ApplyRestack = $false,
-    [switch]$DryRunRestack = $false,
-    [switch]$ConfirmRestack = $false
+    [string]$DependencyEvidencePath = ""
 )
 
 Set-StrictMode -Version Latest
@@ -113,7 +110,7 @@ if ($dependencyRestackPlan.Count -gt 0) {
     Write-Output "[]"
 }
 
-$restackRequested = $ApplyRestack -or $DryRunRestack -or $ConfirmRestack
+$restackRequested = $false
 $restackDisabledReason = "remote restacking is intentionally disabled until branch semantics are specified"
 Write-Output "restack_apply_disabled"
 Write-Output ("restack_apply_disabled_reason=" + $restackDisabledReason)
@@ -170,13 +167,15 @@ $openPrHeadRefs = @(
         }
     }
 )
-$staleQueueBranchCandidates = @()
-foreach ($branch in $localBranches) {
-    if ($mergedLocalBranches -contains $branch -and ($openPrHeadRefs -notcontains $branch)) {
-        $staleQueueBranchCandidates += $branch
-    }
-}
+$currentBranch = git rev-parse --abbrev-ref HEAD
+
+$staleQueueBranchCandidates = Get-CiQueueStaleBranchCandidates `
+    -LocalBranches $localBranches `
+    -MergedLocalBranches $mergedLocalBranches `
+    -OpenPrHeadRefs $openPrHeadRefs `
+    -CurrentBranch $currentBranch
 Write-Host "stale_merged_local_branches="
+$staleQueueBranchCandidates = @($staleQueueBranchCandidates)
 if ($staleQueueBranchCandidates.Count -gt 0) {
     Write-Output $staleQueueBranchCandidates
 } else {
@@ -190,8 +189,6 @@ Write-Output $recentLog
 Write-Host "origin_main_head="
 $originMainHead = git show -s --oneline origin/main
 Write-Output $originMainHead
-
-$currentBranch = git rev-parse --abbrev-ref HEAD
 
 $dependencySnapshot = [ordered]@{
     Timestamp = $runTimestamp
