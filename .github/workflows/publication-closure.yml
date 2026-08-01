@@ -1,0 +1,25 @@
+name: publication-closure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gate-d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+      - name: Verify publication contract
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify-publication-contract.ps1
+      - name: Verify packaged publication closure
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify-packaged-publication-closure.ps1 -AllowUnpublishedRegistryRoots
+      - name: Store publication receipt
+        uses: actions/upload-artifact@v8
+        if: always()
+        with:
+          name: publication-closure-receipt
+          path: target/publication-closure-receipt.json

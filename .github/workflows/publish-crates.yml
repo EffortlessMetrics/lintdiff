@@ -1,0 +1,261 @@
+name: publish-crates
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example, v0.1.0)"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+      - name: Validate release version and tag alignment
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if ! git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Requested tag does not exist: $VERSION"
+            exit 1
+          fi
+          if [ "$(git rev-parse "$VERSION")" != "$(git rev-parse HEAD)" ]; then
+            echo "Requested tag is not at current HEAD"
+            exit 1
+          fi
+
+          if [[ "$VERSION" == v* ]]; then
+            VERSION_NUM="${VERSION#v}"
+          else
+            VERSION_NUM="$VERSION"
+          fi
+
+          METADATA_JSON=$(cargo metadata --no-deps --format-version 1)
+          WORKSPACE_VERSIONS=$(echo "$METADATA_JSON" | jq -r '.packages[].version' | sort -u)
+          if [ "$(echo "$WORKSPACE_VERSIONS" | wc -l | tr -d ' ')" -ne 1 ]; then
+            echo "Workspace versions are inconsistent:"
+            echo "$WORKSPACE_VERSIONS"
+            exit 1
+          fi
+
+          WORKSPACE_VERSION=$(echo "$WORKSPACE_VERSIONS" | head -n1)
+          for crate in lintdiff lintdiff-types lintdiff-ingest-core; do
+            CRATE_VERSION=$(echo "$METADATA_JSON" | jq -r --arg crate "$crate" '.packages[] | select(.name==$crate) | .version' | head -n1)
+            if [ -z "$CRATE_VERSION" ]; then
+              echo "Missing crate in workspace metadata: $crate"
+              exit 1
+            fi
+            if [ "$CRATE_VERSION" != "$WORKSPACE_VERSION" ]; then
+              echo "Workspace version drift for $crate: expected $WORKSPACE_VERSION, found $CRATE_VERSION"
+              exit 1
+            fi
+          done
+
+          if [ "$VERSION_NUM" != "$WORKSPACE_VERSION" ]; then
+            echo "Version mismatch: tag=$VERSION_NUM vs workspace=$WORKSPACE_VERSION"
+            exit 1
+          fi
+
+          if ! rg -q "^## \\[${VERSION_NUM}\\]" CHANGELOG.md; then
+            echo "Changelog missing release section: ${VERSION_NUM}"
+            exit 1
+          fi
+      - name: Reject already published versions
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ "$VERSION" == v* ]]; then
+            VERSION_NUM="${VERSION#v}"
+          else
+            VERSION_NUM="$VERSION"
+          fi
+
+          for crate in lintdiff-types lintdiff-ingest-core; do
+            response=$(curl -s "https://crates.io/api/v1/crates/$crate" || true)
+            if [ -z "$response" ]; then
+              continue
+            fi
+            if echo "$response" | jq -e --arg version "$VERSION_NUM" '.versions[]? | select(.num == $version)' > /dev/null; then
+              echo "Version ${VERSION_NUM} for ${crate} already exists on crates.io"
+              exit 1
+            fi
+          done
+      - name: Verify publication contract and packaged closure
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify-publication-contract.ps1
+          pwsh -NoProfile -File scripts/verify-packaged-publication-closure.ps1 -AllowUnpublishedRegistryRoots
+      - name: Smoke test all relevant tests
+        run: |
+          cargo test --workspace --all-features
+      - name: Publish lintdiff-types (dry-run then publish)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --dry-run -p lintdiff-types --locked
+          cargo publish -p lintdiff-types --locked
+
+      - name: Poll crates.io visibility for lintdiff-types
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ "$VERSION" == v* ]]; then
+            VERSION_NUM="${VERSION#v}"
+          else
+            VERSION_NUM="$VERSION"
+          fi
+          visible=false
+          for i in $(seq 1 20); do
+            if curl -sSf "https://crates.io/api/v1/crates/lintdiff-types" | jq -e --arg version "$VERSION_NUM" '.versions[]? | select(.num == $version)' >/dev/null; then
+              visible=true
+              break
+            fi
+            echo "Waiting for lintdiff-types visibility (attempt $i/20)..."
+            sleep 15
+          done
+          if [ "$visible" != "true" ]; then
+            echo "Timed out waiting for lintdiff-types ${VERSION_NUM} to become visible on crates.io"
+            exit 1
+          fi
+
+      - name: Verify packaged closure after types publish
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify-packaged-publication-closure.ps1 -AllowUnpublishedRegistryRoots
+      - name: Publish lintdiff-ingest-core (dry-run then publish)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --dry-run -p lintdiff-ingest-core --locked
+          cargo publish -p lintdiff-ingest-core --locked
+      - name: Poll crates.io visibility for ingest core
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ "$VERSION" == v* ]]; then
+            VERSION_NUM="${VERSION#v}"
+          else
+            VERSION_NUM="$VERSION"
+          fi
+          visible=false
+          for i in $(seq 1 20); do
+            if curl -sSf "https://crates.io/api/v1/crates/lintdiff-ingest-core" | jq -e --arg version "$VERSION_NUM" '.versions[]? | select(.num == $version)' >/dev/null; then
+              visible=true
+              break
+            fi
+            echo "Waiting for crates.io index visibility (attempt $i/20)..."
+            sleep 15
+          done
+          if [ "$visible" != "true" ]; then
+            echo "Timed out waiting for lintdiff-ingest-core ${VERSION_NUM} to become visible on crates.io"
+            exit 1
+          fi
+      - name: Verify final publication consumer
+        shell: pwsh
+        run: |
+          $rawVersion = "${{ github.event.inputs.version }}"
+          if ($rawVersion.StartsWith("v")) {
+            $version = $rawVersion.Substring(1)
+          } else {
+            $version = $rawVersion
+          }
+          New-Item -ItemType Directory -Path "target/publish-consumer" -Force | Out-Null
+          New-Item -ItemType Directory -Path "target/publish-consumer/src" -Force | Out-Null
+          @"
+          [package]
+          name = "lintdiff-publication-proof"
+          edition = "2021"
+          version = "0.1.0"
+
+          [dependencies]
+          lintdiff-ingest-core = { version = "=${version}" }
+          "@ | Set-Content -Path "target/publish-consumer/Cargo.toml" -NoNewline
+
+          @"
+          use lintdiff_ingest_core::{
+              diagnostics::{Diagnostic, DiagnosticLevel, Span},
+              diff::DiffMap,
+              ingest_on_diff,
+              IngestOnDiffParams,
+          };
+          use lintdiff_types::{LintdiffConfig, LineRange, NormPath, RunInfo, ToolInfo};
+
+          fn publication_main() -> Result<(), String> {
+              let diagnostics = vec![Diagnostic {
+                  level: DiagnosticLevel::Warning,
+                  code_raw: Some("clippy::let_unit_value".to_string()),
+                  message: "unused variable".to_string(),
+                  spans: vec![Span {
+                      file: NormPath::new("/repo/src/main.rs"),
+                      line_start: 1,
+                      line_end: 1,
+                      col_start: Some(1),
+                      col_end: Some(10),
+                      is_primary: true,
+                  }],
+                  rendered: None,
+              }];
+
+              let mut diff_map = DiffMap::default();
+              diff_map
+                  .changed
+                  .insert(NormPath::new("src/main.rs"), vec![LineRange::new(1, 1)]);
+              diff_map.stats.files = 1;
+              diff_map.stats.hunks = 1;
+              diff_map.stats.added_lines = 1;
+
+              let config = LintdiffConfig::default().effective();
+              let report = ingest_on_diff(IngestOnDiffParams {
+                  tool: ToolInfo {
+                      name: "publication-prove".to_string(),
+                      version: "0.1.0".to_string(),
+                      commit: None,
+                  },
+                  run: RunInfo {
+                      started_at: "2024-01-01T00:00:00Z".to_string(),
+                      ended_at: "2024-01-01T00:00:01Z".to_string(),
+                      duration_ms: None,
+                      host: None,
+                      git: None,
+                  },
+                  host: None,
+                  git: None,
+                  diff_map: Some(diff_map),
+                  diagnostics: Some(diagnostics),
+                  repo_root: Some(NormPath::new("/repo")),
+                  config,
+                  repro: None,
+              });
+              if report.findings.is_empty() {
+                  return Err("expected publication findings".to_string());
+              }
+              Ok(())
+          }
+
+          fn main() {
+              if let Err(error) = publication_main() {
+                  eprintln!("publication proof failed: {error}");
+                  std::process::exit(1);
+              }
+              println!("publication_consumer_ok");
+          }
+          "@ | Set-Content -Path "target/publish-consumer/src/main.rs" -NoNewline
+          cargo run --manifest-path "target/publish-consumer/Cargo.toml" --quiet
+
+      - name: Verify full packaged closure after ingest publish
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify-publication-contract.ps1
+          pwsh -NoProfile -File scripts/verify-packaged-publication-closure.ps1
+      - name: Save publication receipt
+        uses: actions/upload-artifact@v8
+        if: always()
+        with:
+          name: publication-crate-receipt
+          path: target/publication-closure-receipt.json

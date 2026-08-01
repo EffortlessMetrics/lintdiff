@@ -1,0 +1,27 @@
+schema = 1
+phase = "consolidating"
+
+[[packages]]
+name = "lintdiff"
+class = "binary_product"
+publish = false
+
+[[packages]]
+name = "lintdiff-types"
+class = "registry_support"
+publish = true
+
+[[packages]]
+name = "lintdiff-ingest-core"
+class = "supported_library"
+publish = true
+
+[[packages]]
+name = "lintdiff-report-schema"
+class = "workspace_internal"
+publish = false
+
+[[package_rules]]
+name_regex = ".*"
+class = "workspace_internal"
+publish = false
