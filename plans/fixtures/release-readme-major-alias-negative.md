@@ -1,0 +1,1 @@
+- uses: EffortlessMetrics/lintdiff@v0
