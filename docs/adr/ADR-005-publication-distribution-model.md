@@ -2,7 +2,12 @@
 
 ## Status
 
-Proposed
+Superseded by the completed collapse decision in [ADR-006](ADR-006-canonical-package-topology.md).
+
+> The package names and Gate D wording below are historical recovery context. The
+> current publication intent is enforced in `contracts/package-topology.toml`:
+> only `lintdiff-types` is publishable, and no package has been published by the
+> collapse campaign.
 
 ## Context
 

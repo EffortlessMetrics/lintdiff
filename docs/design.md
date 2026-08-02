@@ -1,68 +1,48 @@
 # lintdiff design
 
-lintdiff is implemented as a hexagonal (ports/adapters) tool with a microcrate workspace. The goal is to keep the core deterministic and testable, and push I/O variance to the edges.
+> Historical design note: the microcrate layout described below was superseded by
+> [ADR-006](adr/ADR-006-canonical-package-topology.md). Current package ownership
+> and dependency rules live in [architecture.md](architecture.md) and
+> `contracts/package-topology.toml`.
+
+lintdiff is implemented as a layered tool with a pure engine and a concrete
+application shell. The goal is to keep analysis deterministic and testable, and
+push Git, filesystem, process, environment, and terminal concerns to the edges.
 
 ## Architectural principles
 
 - **Domain first**: matching and verdict logic are pure functions over inputs.
-- **Adapters are thin**: git, filesystem, and clocks live outside the domain.
+- **Application edges are thin**: git, filesystem, and clocks live outside the
+  pure engine.
 - **Schemas are contracts**: DTOs are versioned and validated in CI.
 - **Determinism is enforced**: stable ordering and stable truncation.
 - **Small extension points**: `report.data` and `finding.data` only.
 
-## Microcrate layout
+## Current package layout
 
-- `lintdiff-types`
-  - Receipt DTOs and config model (serde)
-  - Schema id constants
-  - Path normalization helpers
-  - Stable finding ordering key
-- `lintdiff-diff`
-  - Unified diff parsing into `DiffMap` (new-side changed lines)
-  - Rename handling (best effort)
-  - Property tests for range merging and intersection correctness
-- `lintdiff-diagnostics`
-  - Cargo JSON parsing into `Diagnostic` + spans
-  - Tolerant parsing (ignores non-diagnostic messages)
-  - Clear failure on invalid JSON (tool error)
-- `lintdiff-match`
-  - Path/span matching primitives (filter compilation, span selection, path relativization)
-- `lintdiff-policy`
-  - Code normalization, allow/suppress/deny, verdict computation, fingerprinting
-- `lintdiff-ingest-core`
-  - Core ingest pipeline (diagnostics + diff → report)
-  - Domain engine for matching diagnostics to changed lines
-  - Policy mapping (`fail_on`, allow/suppress/deny)
-  - Receipt generation (verdict + findings + tool-specific data)
-- `lintdiff-bdd-grid`
-  - BDD matrix representation and feature-flag cell parsing
-  - Deterministic assignment serialization for fixture-driven scenario combinatorics
-- `lintdiff-render`
-  - Markdown renderer (budgeted)
-  - GitHub annotations renderer (budgeted)
-- `lintdiff-bdd`
-  - Fixture loading and deterministic BDD ingest harness
-  - Stable feature flag assignment helpers used by scenario grids
-- `lintdiff-bdd-harness`
-  - Fixture loading, ingest helpers, feature-flag matrix runners
-- `lintdiff-app`
-  - Orchestration layer, delegates to `lintdiff-app-git` and `lintdiff-app-io`
-  - Converts I/O failures into tool-error receipts when possible
-- `lintdiff-app-git`
-  - Git adapter (diff acquisition, repo root, git info)
-- `lintdiff-app-io`
-  - I/O adapter (config loading, diagnostics reading, artifact writing)
-- `lintdiff-feature-flags`
-  - Typed feature-flag registry and parsing
-- `lintdiff-cli`
-  - Clap CLI, subcommands, exit code mapping
+The workspace has four runtime packages and one repository-tooling package:
 
-## Ports and adapters (hexagonal boundary)
+- `lintdiff-types`: public versioned protocol DTOs, wire primitives, and schema
+  identifiers.
+- `lintdiff-engine`: pure Cargo-diagnostic parsing, source mapping, matching,
+  identity, policy, comparison, and receipt construction.
+- `lintdiff-render`: pure Markdown, GitHub annotation, and RDJSONL projections.
+- `lintdiff`: concrete application library and binary, including CLI dispatch,
+  Git, filesystem, process, configuration, artifact, and exit handling.
+- `xtask`: schema, fixture, topology, documentation, and release-contract
+  checks for the repository.
 
-The current API still favors pure-function domain usage. Adapter boundaries
-now have dedicated microcrates (`lintdiff-app-git`, `lintdiff-app-io`).
+The `fuzz/` workspace remains auxiliary and excluded from the product topology.
+There is no shared test-support package unless a later consumer inventory
+justifies one.
 
-Concrete adapters are orchestrated by `lintdiff-app`.
+## Application boundary
+
+The engine and render packages are pure over typed inputs. The `lintdiff`
+application shell owns concrete adapters and orchestration; it passes acquired
+data into the engine and sends typed receipts to the renderer. This preserves
+the useful isolation without manufacturing adapter crates for concrete
+functions that have no independent implementation or consumer.
 
 The goal is: **you can run domain logic in tests with strings**, no git subprocess, no filesystem.
 

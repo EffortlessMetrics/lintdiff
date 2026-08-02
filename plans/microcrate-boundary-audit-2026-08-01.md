@@ -1,5 +1,8 @@
 # Microcrate Boundary Audit (2026-08-01)
 
+> Historical audit snapshot. Current topology and package disposition are enforced
+> by ADR-006, `contracts/package-topology.toml`, and the collapse ledger.
+
 ## Status
 
 - **Owner context:** architecture seam recovery lane

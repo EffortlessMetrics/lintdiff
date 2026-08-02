@@ -46,7 +46,7 @@ All outputs produced by lintdiff must be **byte-stable** for identical inputs. T
 
 ### Verification
 
-The project includes determinism tests (see `crates/lintdiff-ingest-core/tests/determinism.rs`) that verify byte-identical output across multiple runs with the same input.
+The project includes determinism tests (see `crates/lintdiff-engine/tests/determinism.rs`) that verify byte-identical output across multiple runs with the same input.
 
 ## Consequences
 

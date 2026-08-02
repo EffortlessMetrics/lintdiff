@@ -1,5 +1,8 @@
 # Phase 6 Microcrate Expansion Plan
 
+> Historical proposal. The collapse campaign superseded this expansion direction;
+> use ADR-006 and the collapse ledger for current topology.
+
 ## Summary
 
 This document analyzes the lintdiff codebase to identify additional SRP (Single Responsibility Principle) microcrate extraction opportunities for Phase 6, building on the ~62 crates already established in Phases 1-5.

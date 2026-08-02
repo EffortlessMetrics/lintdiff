@@ -93,15 +93,15 @@ The dated disposition ledger in
 [plans/microcrate-collapse-ledger.toml](plans/microcrate-collapse-ledger.toml)
 is the migration record.
 
-- Consumer boundary classes (evidence date: 2026-08-01):
-  - **Candidate supported consumer surfaces** (current intended API promises): `lintdiff`, `lintdiff-ingest-core`.
-  - **Registry support crates** (publish support only until Gate D0/D1 outcome): `lintdiff-types`, `lintdiff-report-schema` (pending).
-  - **Workspace-internal crates** (internal modules and optional adapters): all other non-tooling workspace crates.
-  - **Test/tooling crates** (`lintdiff-bdd`, `lintdiff-bdd-harness`, `lintdiff-bdd-grid`, `lintdiff-bench`) and support tooling.
-- The current workspace has 69 crates, with 13 runtime-reachable from `lintdiff` by manifest edges and 55 non-runtime crates in this snapshot (not final).
-- Canonical evidence and follow-up lanes are tracked in:
-  - [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
-  - [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)
+The enforced workspace currently contains five members: four runtime packages and
+the repository-only `xtask` control plane. `fuzz/` remains excluded. The normal
+runtime graph is `lintdiff → {lintdiff-engine, lintdiff-render, lintdiff-types}`;
+the engine and renderer depend on `lintdiff-types` only among lintdiff packages.
+
+`lintdiff-types` is the only package with publication intent. The engine, renderer,
+application, and xtask remain `publish = false`; no public engine crate is implied
+by the internal package boundary. The dated disposition ledger is the migration
+record and `cargo run -p xtask -- architecture-check` is the enforcement surface.
 
 ## License
 
