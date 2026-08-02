@@ -1,0 +1,5 @@
+# MC-0 line-ending guard for new campaign artifacts only.
+# Do not run git add --renormalize or rewrite existing files in this campaign slice.
+/contracts/package-topology.toml text eol=lf
+/plans/microcrate-collapse-ledger.toml text eol=lf
+/scripts/check-package-topology.ps1 text eol=lf

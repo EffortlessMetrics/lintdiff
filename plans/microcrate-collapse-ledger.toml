@@ -1,0 +1,1305 @@
+# MC-0 disposition ledger.
+# Baseline: origin/main at ea68d869, 68 workspace packages.
+# `published` is observed crates.io presence, not a deletion approval.
+# Every fold/mine_delete/rename remains blocked until the registry and
+# external-consumer gate is refreshed for that package.
+
+schema_version = 1
+baseline_commit = "ea68d869d3cd224698d4c55f6659ceb4ae5eefdb"
+baseline_package_count = 68
+pr_94_reference = "publish-gate-finalization@9d5b2adfddfa49bd25b5ae0d0b74ea4718cd4dfa"
+pr_94_disposition = "preserve as source-move reference; close only after collapse epic exists"
+external_consumer_gate = "crates.io version and reverse-dependency state plus GitHub package/import search"
+deletion_policy = "no package deletion or rename from this ledger alone"
+
+[[packages]]
+name = "lintdiff-jsonl"
+action = "mine_delete"
+destination = "lintdiff-engine::cargo"
+canonical_owner = "lintdiff-engine::cargo"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-jsonl/Cargo.toml", "crates/lintdiff-jsonl/src/**"]
+tests = ["crates/lintdiff-jsonl/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "candidate for engine cargo parsing; preserve tests before deletion"
+
+[[packages]]
+name = "lintdiff-hunk-header"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-hunk-header/Cargo.toml", "crates/lintdiff-hunk-header/src/**"]
+tests = ["crates/lintdiff-hunk-header/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "candidate for engine source parsing; preserve tests before deletion"
+
+[[packages]]
+name = "lintdiff-types"
+action = "keep"
+destination = "lintdiff-types"
+canonical_owner = "lintdiff-types"
+class = "public_protocol"
+runtime_reachable = true
+published = true
+external_consumers = ["crates.io: lintdiff-types 0.1.0 exists"]
+registry_history = "crates.io API 2026-08-02: max_version=0.1.0"
+external_consumer_evidence = "registry presence confirmed; reverse-dependency and GitHub import search required before API narrowing"
+source_files = ["crates/lintdiff-types/Cargo.toml", "crates/lintdiff-types/src/**"]
+tests = ["crates/lintdiff-types/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-1/MC-2A"
+final_disposition = "retained public protocol package; defer configuration narrowing to compatibility PR"
+
+[[packages]]
+name = "lintdiff-diff"
+action = "fold"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-diff/Cargo.toml", "crates/lintdiff-diff/src/**"]
+tests = ["crates/lintdiff-diff/tests/**"]
+properties = ["crates/lintdiff-diff/tests/property_tests.rs", "crates/lintdiff-diff/tests/property_tests.proptest-regressions"]
+fuzz_targets = ["fuzz/fuzz_targets/diff_parser.rs"]
+benchmarks = ["crates/lintdiff-bench/benches/diff_parsing.rs"]
+migration_pr = "MC-7/MC-8"
+final_disposition = "fold after MC-6 behavior freeze and coherent engine cutover"
+
+[[packages]]
+name = "lintdiff-diagnostics"
+action = "fold"
+destination = "lintdiff-engine::diagnostics"
+canonical_owner = "lintdiff-engine::diagnostics"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-diagnostics/Cargo.toml", "crates/lintdiff-diagnostics/src/**"]
+tests = ["crates/lintdiff-diagnostics/tests/**"]
+properties = []
+fuzz_targets = ["fuzz/fuzz_targets/diagnostics_parser.rs"]
+benchmarks = ["crates/lintdiff-bench/benches/diagnostics_parsing.rs"]
+migration_pr = "MC-7/MC-8"
+final_disposition = "fold after MC-6 behavior freeze and canonical production-path check"
+
+[[packages]]
+name = "lintdiff-match"
+action = "fold"
+destination = "lintdiff-engine::matching"
+canonical_owner = "lintdiff-engine::matching"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-match/Cargo.toml", "crates/lintdiff-match/src/**"]
+tests = ["crates/lintdiff-match/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-7/MC-8"
+final_disposition = "fold with diagnostics and source correspondence; do not add wrapper cycle"
+
+[[packages]]
+name = "lintdiff-ingest-core"
+action = "fold"
+destination = "lintdiff-engine"
+canonical_owner = "lintdiff-engine"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "PR-94 publication claim is not external-consumer proof; refresh before rename"
+source_files = ["crates/lintdiff-ingest-core/Cargo.toml", "crates/lintdiff-ingest-core/src/**"]
+tests = ["crates/lintdiff-ingest-core/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-6/MC-7/MC-8"
+final_disposition = "rename to lintdiff-engine only after coherent cutover and registry gate"
+
+[[packages]]
+name = "lintdiff-policy"
+action = "fold"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-policy/Cargo.toml", "crates/lintdiff-policy/src/**"]
+tests = ["crates/lintdiff-policy/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = ["crates/lintdiff-bench/benches/fingerprint.rs"]
+migration_pr = "MC-7/MC-8"
+final_disposition = "fold into engine policy; preserve verdict and fingerprint fixtures"
+
+[[packages]]
+name = "lintdiff-fingerprint"
+action = "fold"
+destination = "lintdiff-engine::identity"
+canonical_owner = "lintdiff-engine::identity"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-fingerprint/Cargo.toml", "crates/lintdiff-fingerprint/src/**"]
+tests = ["crates/lintdiff-fingerprint/tests/**"]
+properties = ["crates/lintdiff-fingerprint/tests/property_tests.rs"]
+fuzz_targets = ["fuzz/fuzz_targets/finding_fingerprint.rs"]
+benchmarks = ["crates/lintdiff-bench/benches/fingerprint.rs"]
+migration_pr = "MC-7/MC-8"
+final_disposition = "fold into engine identity; fuzz and benchmark canonical production code"
+
+[[packages]]
+name = "lintdiff-finding"
+action = "mine_delete"
+destination = "lintdiff-types::report"
+canonical_owner = "lintdiff-types::report"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-finding/Cargo.toml", "crates/lintdiff-finding/src/**"]
+tests = ["crates/lintdiff-finding/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine tests and resolve semantic conflicts before deletion"
+
+[[packages]]
+name = "lintdiff-finding-builder"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-finding-builder/Cargo.toml", "crates/lintdiff-finding-builder/src/**"]
+tests = ["crates/lintdiff-finding-builder/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine construction cases into engine receipt; no automatic semantic merge"
+
+[[packages]]
+name = "lintdiff-stats"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-stats/Cargo.toml", "crates/lintdiff-stats/src/**"]
+tests = ["crates/lintdiff-stats/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B/MC-12"
+final_disposition = "mine receipt/count cases and fold into canonical engine or renderer owner"
+
+[[packages]]
+name = "lintdiff-render"
+action = "keep"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "internal_projection"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; retain through RDJSONL and diagnostic-delta experiment"
+source_files = ["crates/lintdiff-render/Cargo.toml", "crates/lintdiff-render/src/**"]
+tests = ["crates/lintdiff-render/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-12"
+final_disposition = "retain through #106, then reassess if CLI remains the only consumer"
+
+[[packages]]
+name = "lintdiff-render-markdown"
+action = "fold"
+destination = "lintdiff-render::markdown"
+canonical_owner = "lintdiff-render::markdown"
+class = "projection"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-render-markdown/Cargo.toml", "crates/lintdiff-render-markdown/src/**"]
+tests = ["crates/lintdiff-render-markdown/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-12"
+final_disposition = "fold projection helpers into retained renderer"
+
+[[packages]]
+name = "lintdiff-render-annotations"
+action = "fold"
+destination = "lintdiff-render::github_annotations"
+canonical_owner = "lintdiff-render::github_annotations"
+class = "projection"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-render-annotations/Cargo.toml", "crates/lintdiff-render-annotations/src/**"]
+tests = ["crates/lintdiff-render-annotations/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-12"
+final_disposition = "fold annotation projection into retained renderer"
+
+[[packages]]
+name = "lintdiff-app-git"
+action = "fold"
+destination = "lintdiff::git"
+canonical_owner = "lintdiff::git"
+class = "application_adapter"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-app-git/Cargo.toml", "crates/lintdiff-app-git/src/**"]
+tests = ["crates/lintdiff-app-git/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-10"
+final_disposition = "fold concrete Git adapter into application shell"
+
+[[packages]]
+name = "lintdiff-app-io"
+action = "fold"
+destination = "lintdiff::io"
+canonical_owner = "lintdiff::io"
+class = "application_adapter"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-app-io/Cargo.toml", "crates/lintdiff-app-io/src/**"]
+tests = ["crates/lintdiff-app-io/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-10"
+final_disposition = "fold concrete IO adapter and integration suite into application shell"
+
+[[packages]]
+name = "lintdiff-app"
+action = "fold"
+destination = "lintdiff::commands"
+canonical_owner = "lintdiff::commands"
+class = "application_orchestration"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-app/Cargo.toml", "crates/lintdiff-app/src/**"]
+tests = []
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-10"
+final_disposition = "fold imperative orchestration into lintdiff library shell"
+
+[[packages]]
+name = "lintdiff"
+action = "fold"
+destination = "lintdiff"
+canonical_owner = "lintdiff"
+class = "application"
+runtime_reachable = true
+published = false
+external_consumers = ["GitHub Action and release archive product surface"]
+registry_history = "crates.io API 2026-08-02: not found as lintdiff package"
+external_consumer_evidence = "product consumer is GitHub release/Action; do not infer Rust API from package name"
+source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/**", "crates/lintdiff-cli/build.rs"]
+tests = ["crates/lintdiff-cli/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-9/MC-11"
+final_disposition = "add library shell, then rename directory from crates/lintdiff-cli to crates/lintdiff"
+
+[[packages]]
+name = "lintdiff-config"
+action = "mine_delete"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-config/Cargo.toml", "crates/lintdiff-config/src/**"]
+tests = ["crates/lintdiff-config/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "remove disconnected configuration authority; preserve active types config until 0.2 PR"
+
+[[packages]]
+name = "lintdiff-bdd-harness"
+action = "defer"
+destination = "lintdiff-test-support or lintdiff/tests/support"
+canonical_owner = "lintdiff-test-support"
+class = "test_support"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "dev-only consumer count must be reevaluated after package collapse"
+source_files = ["crates/lintdiff-bdd-harness/Cargo.toml", "crates/lintdiff-bdd-harness/src/**"]
+tests = []
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-13"
+final_disposition = "conditional dev-support package only if two retained packages share helpers"
+
+[[packages]]
+name = "lintdiff-feature-flags"
+action = "fold"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "application_configuration"
+runtime_reachable = true
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-feature-flags/Cargo.toml", "crates/lintdiff-feature-flags/src/**"]
+tests = ["crates/lintdiff-feature-flags/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-11"
+final_disposition = "fold runtime feature configuration into application package"
+
+[[packages]]
+name = "lintdiff-bdd-grid"
+action = "defer"
+destination = "lintdiff-test-support or lintdiff/tests/support"
+canonical_owner = "lintdiff-test-support"
+class = "test_support"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "dev-only consumer count must be reevaluated after package collapse"
+source_files = ["crates/lintdiff-bdd-grid/Cargo.toml", "crates/lintdiff-bdd-grid/src/**"]
+tests = []
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-13"
+final_disposition = "merge into harness or package-local support after retained-consumer count"
+
+[[packages]]
+name = "lintdiff-bench"
+action = "fold"
+destination = "lintdiff-engine::benches and lintdiff::benches"
+canonical_owner = "lintdiff-engine::benches"
+class = "benchmark_support"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-bench/Cargo.toml", "crates/lintdiff-bench/benches/**"]
+tests = []
+properties = []
+fuzz_targets = []
+benchmarks = ["crates/lintdiff-bench/benches/**"]
+migration_pr = "MC-13"
+final_disposition = "colocate benches and remove package after canonical production-path audit"
+
+[[packages]]
+name = "lintdiff-i18n"
+action = "defer"
+destination = "deferred"
+canonical_owner = "deferred"
+class = "deferred_scope"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-i18n/Cargo.toml", "crates/lintdiff-i18n/src/**"]
+tests = ["crates/lintdiff-i18n/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "defer; preserve through history and do not make i18n an active topology package"
+
+[[packages]]
+name = "lintdiff-locale-detect"
+action = "mine_delete"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-locale-detect/Cargo.toml", "crates/lintdiff-locale-detect/src/**"]
+tests = ["crates/lintdiff-locale-detect/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "mine disconnected locale implementation; no active package replacement"
+
+[[packages]]
+name = "lintdiff-exit"
+action = "mine_delete"
+destination = "lintdiff::exit"
+canonical_owner = "lintdiff::exit"
+class = "application_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-exit/Cargo.toml", "crates/lintdiff-exit/src/**"]
+tests = ["crates/lintdiff-exit/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "fold only if active exit behavior is confirmed; otherwise delete after mining"
+
+[[packages]]
+name = "lintdiff-explain"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-explain/Cargo.toml", "crates/lintdiff-explain/src/**"]
+tests = ["crates/lintdiff-explain/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine explanation dispositions into canonical receipt construction"
+
+[[packages]]
+name = "lintdiff-truncate"
+action = "mine_delete"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "projection_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-truncate/Cargo.toml", "crates/lintdiff-truncate/src/**"]
+tests = ["crates/lintdiff-truncate/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5/MC-12"
+final_disposition = "fold rendering helper after projection behavior is covered"
+
+[[packages]]
+name = "lintdiff-escape"
+action = "mine_delete"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "projection_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-escape/Cargo.toml", "crates/lintdiff-escape/src/**"]
+tests = ["crates/lintdiff-escape/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5/MC-12"
+final_disposition = "fold rendering helper after projection behavior is covered"
+
+[[packages]]
+name = "lintdiff-line-range"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-line-range/Cargo.toml", "crates/lintdiff-line-range/src/**"]
+tests = ["crates/lintdiff-line-range/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine line-range model into engine source correspondence"
+
+[[packages]]
+name = "lintdiff-line-merge"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-line-merge/Cargo.toml", "crates/lintdiff-line-merge/src/**"]
+tests = ["crates/lintdiff-line-merge/tests/**"]
+properties = ["crates/lintdiff-line-merge/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine line-merge properties into engine source correspondence"
+
+[[packages]]
+name = "lintdiff-glob"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-glob/Cargo.toml", "crates/lintdiff-glob/src/**"]
+tests = ["crates/lintdiff-glob/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4/MC-5"
+final_disposition = "mine policy path matching into engine policy"
+
+[[packages]]
+name = "lintdiff-severity"
+action = "mine_delete"
+destination = "lintdiff-types::Severity"
+canonical_owner = "lintdiff-types::Severity"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-severity/Cargo.toml", "crates/lintdiff-severity/src/**"]
+tests = ["crates/lintdiff-severity/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine severity semantics into canonical protocol model"
+
+[[packages]]
+name = "lintdiff-severity-map"
+action = "mine_delete"
+destination = "lintdiff-engine::diagnostics"
+canonical_owner = "lintdiff-engine::diagnostics"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-severity-map/Cargo.toml", "crates/lintdiff-severity-map/src/**"]
+tests = ["crates/lintdiff-severity-map/tests/**"]
+properties = ["crates/lintdiff-severity-map/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine diagnostic normalization into engine"
+
+[[packages]]
+name = "lintdiff-code-url"
+action = "mine_delete"
+destination = "lintdiff-engine::diagnostics"
+canonical_owner = "lintdiff-engine::diagnostics"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-code-url/Cargo.toml", "crates/lintdiff-code-url/src/**"]
+tests = ["crates/lintdiff-code-url/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine diagnostic metadata rules into engine"
+
+[[packages]]
+name = "lintdiff-verdict"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-verdict/Cargo.toml", "crates/lintdiff-verdict/src/**"]
+tests = ["crates/lintdiff-verdict/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A/MC-2B"
+final_disposition = "resolve verdict semantics into one canonical policy model"
+
+[[packages]]
+name = "lintdiff-ci-env"
+action = "mine_delete"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "application_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-ci-env/Cargo.toml", "crates/lintdiff-ci-env/src/**"]
+tests = ["crates/lintdiff-ci-env/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "fold active environment discovery into application config or delete if disconnected"
+
+[[packages]]
+name = "lintdiff-path-norm"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-path-norm/Cargo.toml", "crates/lintdiff-path-norm/src/**"]
+tests = ["crates/lintdiff-path-norm/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine path normalization into canonical source model"
+
+[[packages]]
+name = "lintdiff-sort"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-sort/Cargo.toml", "crates/lintdiff-sort/src/**"]
+tests = ["crates/lintdiff-sort/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine deterministic ordering into engine receipt"
+
+[[packages]]
+name = "lintdiff-span"
+action = "mine_delete"
+destination = "lintdiff-engine::matching"
+canonical_owner = "lintdiff-engine::matching"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-span/Cargo.toml", "crates/lintdiff-span/src/**"]
+tests = ["crates/lintdiff-span/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine span model into canonical matching"
+
+[[packages]]
+name = "lintdiff-location"
+action = "mine_delete"
+destination = "lintdiff-types::SourceLocation"
+canonical_owner = "lintdiff-types::SourceLocation"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-location/Cargo.toml", "crates/lintdiff-location/src/**"]
+tests = ["crates/lintdiff-location/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A/MC-4"
+final_disposition = "mine location semantics into protocol/source model"
+
+[[packages]]
+name = "lintdiff-counts"
+action = "mine_delete"
+destination = "lintdiff-types::report"
+canonical_owner = "lintdiff-types::report"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-counts/Cargo.toml", "crates/lintdiff-counts/src/**"]
+tests = ["crates/lintdiff-counts/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A/MC-2B"
+final_disposition = "mine count DTO semantics into canonical report or delta DTOs"
+
+[[packages]]
+name = "lintdiff-disposition"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-disposition/Cargo.toml", "crates/lintdiff-disposition/src/**"]
+tests = ["crates/lintdiff-disposition/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A/MC-2B"
+final_disposition = "mine policy evidence into canonical engine verdict"
+
+[[packages]]
+name = "lintdiff-report-schema"
+action = "mine_delete"
+destination = "lintdiff-types::tests/schema_contract.rs"
+canonical_owner = "lintdiff-types::report::v1"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-report-schema/Cargo.toml", "crates/lintdiff-report-schema/src/**"]
+tests = ["crates/lintdiff-report-schema/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-1"
+final_disposition = "remove alternate report shape after live report.v1 fixtures validate"
+
+[[packages]]
+name = "lintdiff-message-norm"
+action = "mine_delete"
+destination = "lintdiff-engine::diagnostics"
+canonical_owner = "lintdiff-engine::diagnostics"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-message-norm/Cargo.toml", "crates/lintdiff-message-norm/src/**"]
+tests = ["crates/lintdiff-message-norm/tests/**"]
+properties = ["crates/lintdiff-message-norm/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine message normalization into engine diagnostics"
+
+[[packages]]
+name = "lintdiff-render-utils"
+action = "fold"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "projection_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-render-utils/Cargo.toml", "crates/lintdiff-render-utils/src/**"]
+tests = ["crates/lintdiff-render-utils/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-12"
+final_disposition = "fold shared renderer helpers into retained projection package"
+
+[[packages]]
+name = "lintdiff-config-types"
+action = "mine_delete"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-config-types/Cargo.toml", "crates/lintdiff-config-types/src/**"]
+tests = ["crates/lintdiff-config-types/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3/MC-2B"
+final_disposition = "mine policy/config semantics; do not move public types in collapse campaign"
+
+[[packages]]
+name = "lintdiff-code-norm"
+action = "mine_delete"
+destination = "lintdiff-engine::diagnostics"
+canonical_owner = "lintdiff-engine::diagnostics"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-code-norm/Cargo.toml", "crates/lintdiff-code-norm/src/**"]
+tests = ["crates/lintdiff-code-norm/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine code normalization into engine diagnostics"
+
+[[packages]]
+name = "lintdiff-diff-paths"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-diff-paths/Cargo.toml", "crates/lintdiff-diff-paths/src/**"]
+tests = ["crates/lintdiff-diff-paths/tests/**"]
+properties = ["crates/lintdiff-diff-paths/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine normalized diff path semantics into engine source"
+
+[[packages]]
+name = "lintdiff-timestamp"
+action = "mine_delete"
+destination = "lintdiff::clock"
+canonical_owner = "lintdiff::clock"
+class = "application_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-timestamp/Cargo.toml", "crates/lintdiff-timestamp/src/**"]
+tests = ["crates/lintdiff-timestamp/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "fold active clock behavior into application or delete if disconnected"
+
+[[packages]]
+name = "lintdiff-explain-builder"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-explain-builder/Cargo.toml", "crates/lintdiff-explain-builder/src/**"]
+tests = ["crates/lintdiff-explain-builder/tests/**"]
+properties = ["crates/lintdiff-explain-builder/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine explanation construction cases into canonical receipt"
+
+[[packages]]
+name = "lintdiff-explain-summary"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-explain-summary/Cargo.toml", "crates/lintdiff-explain-summary/src/**"]
+tests = []
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine summary semantics into canonical receipt"
+
+[[packages]]
+name = "lintdiff-git-info"
+action = "mine_delete"
+destination = "lintdiff-types::RunInfo"
+canonical_owner = "lintdiff-types::RunInfo"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-git-info/Cargo.toml", "crates/lintdiff-git-info/src/**"]
+tests = ["crates/lintdiff-git-info/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine metadata semantics into protocol types or app adapters"
+
+[[packages]]
+name = "lintdiff-report-builder"
+action = "mine_delete"
+destination = "lintdiff-engine::receipt"
+canonical_owner = "lintdiff-engine::receipt"
+class = "receipt_builder"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-report-builder/Cargo.toml", "crates/lintdiff-report-builder/src/**"]
+tests = ["crates/lintdiff-report-builder/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine report construction into canonical engine receipt"
+
+[[packages]]
+name = "lintdiff-verdict-reason"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-verdict-reason/Cargo.toml", "crates/lintdiff-verdict-reason/src/**"]
+tests = ["crates/lintdiff-verdict-reason/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine reason semantics into canonical engine policy"
+
+[[packages]]
+name = "lintdiff-diagnostic-level"
+action = "mine_delete"
+destination = "lintdiff-types::Severity"
+canonical_owner = "lintdiff-types::Severity"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-diagnostic-level/Cargo.toml", "crates/lintdiff-diagnostic-level/src/**"]
+tests = ["crates/lintdiff-diagnostic-level/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine diagnostic-level semantics into canonical protocol severity"
+
+[[packages]]
+name = "lintdiff-diff-stats"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-diff-stats/Cargo.toml", "crates/lintdiff-diff-stats/src/**"]
+tests = ["crates/lintdiff-diff-stats/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine diff statistics into engine receipt/source model"
+
+[[packages]]
+name = "lintdiff-annotation-format"
+action = "mine_delete"
+destination = "lintdiff::config"
+canonical_owner = "lintdiff::config"
+class = "application_configuration"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-annotation-format/Cargo.toml", "crates/lintdiff-annotation-format/src/**"]
+tests = ["crates/lintdiff-annotation-format/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-3"
+final_disposition = "fold active output selection into application config"
+
+[[packages]]
+name = "lintdiff-host-info"
+action = "mine_delete"
+destination = "lintdiff-types::AnalysisProvenance"
+canonical_owner = "lintdiff-types::AnalysisProvenance"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-host-info/Cargo.toml", "crates/lintdiff-host-info/src/**"]
+tests = ["crates/lintdiff-host-info/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine metadata semantics into canonical protocol provenance"
+
+[[packages]]
+name = "lintdiff-run-info"
+action = "mine_delete"
+destination = "lintdiff-types::RunInfo"
+canonical_owner = "lintdiff-types::RunInfo"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-run-info/Cargo.toml", "crates/lintdiff-run-info/src/**"]
+tests = ["crates/lintdiff-run-info/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2A"
+final_disposition = "mine run metadata semantics into canonical protocol model"
+
+[[packages]]
+name = "lintdiff-slugify"
+action = "mine_delete"
+destination = "lintdiff-engine::identity"
+canonical_owner = "lintdiff-engine::identity"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-slugify/Cargo.toml", "crates/lintdiff-slugify/src/**"]
+tests = ["crates/lintdiff-slugify/tests/**"]
+properties = ["crates/lintdiff-slugify/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine identity normalization into engine"
+
+[[packages]]
+name = "lintdiff-range-merge"
+action = "mine_delete"
+destination = "lintdiff-engine::source"
+canonical_owner = "lintdiff-engine::source"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-range-merge/Cargo.toml", "crates/lintdiff-range-merge/src/**"]
+tests = ["crates/lintdiff-range-merge/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine range merge semantics into engine source"
+
+[[packages]]
+name = "lintdiff-message-truncate"
+action = "mine_delete"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "projection_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-message-truncate/Cargo.toml", "crates/lintdiff-message-truncate/src/**"]
+tests = ["crates/lintdiff-message-truncate/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5/MC-12"
+final_disposition = "fold lossy message projection helper into renderer"
+
+[[packages]]
+name = "lintdiff-code-policy"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "policy_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-code-policy/Cargo.toml", "crates/lintdiff-code-policy/src/**"]
+tests = ["crates/lintdiff-code-policy/tests/**"]
+properties = ["crates/lintdiff-code-policy/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-5"
+final_disposition = "mine code policy semantics into engine policy"
+
+[[packages]]
+name = "lintdiff-span-intersect"
+action = "mine_delete"
+destination = "lintdiff-engine::matching"
+canonical_owner = "lintdiff-engine::matching"
+class = "utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-span-intersect/Cargo.toml", "crates/lintdiff-span-intersect/src/**"]
+tests = ["crates/lintdiff-span-intersect/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-4"
+final_disposition = "mine span intersection semantics into engine matching"
+
+[[packages]]
+name = "lintdiff-budget"
+action = "mine_delete"
+destination = "lintdiff-engine::policy"
+canonical_owner = "lintdiff-engine::policy"
+class = "policy_utility"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-budget/Cargo.toml", "crates/lintdiff-budget/src/**"]
+tests = ["crates/lintdiff-budget/tests/**"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-2B"
+final_disposition = "mine budget semantics into canonical engine policy"
+
+[[packages]]
+name = "lintdiff-schema-diff"
+action = "mine_delete"
+destination = "lintdiff-types::tests/schema_contract.rs"
+canonical_owner = "lintdiff-types::report::v1"
+class = "competing_authority"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "crates.io API 2026-08-02: not found"
+external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+source_files = ["crates/lintdiff-schema-diff/Cargo.toml", "crates/lintdiff-schema-diff/src/**"]
+tests = ["crates/lintdiff-schema-diff/tests/**"]
+properties = ["crates/lintdiff-schema-diff/tests/property_tests.rs"]
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-1"
+final_disposition = "remove alternate schema comparison authority after contract fixtures validate"
