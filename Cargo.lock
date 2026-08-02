@@ -1819,33 +1819,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-code-norm"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-code-policy"
-version = "0.1.0"
-dependencies = [
- "lintdiff-glob",
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-code-url"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-diagnostic-level"
 version = "0.1.0"
 dependencies = [
@@ -1872,10 +1845,6 @@ dependencies = [
  "proptest",
  "thiserror 2.0.19",
 ]
-
-[[package]]
-name = "lintdiff-escape"
-version = "0.1.0"
 
 [[package]]
 name = "lintdiff-feature-flags"
@@ -1942,23 +1911,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-message-norm"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-message-truncate"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
 name = "lintdiff-policy"
 version = "0.1.0"
 dependencies = [
@@ -2012,32 +1964,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-severity-map"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-slugify"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lintdiff-sort"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-stats"
 version = "0.1.0"
 dependencies = [
@@ -2045,10 +1971,6 @@ dependencies = [
  "serde",
  "serde_json",
 ]
-
-[[package]]
-name = "lintdiff-truncate"
-version = "0.1.0"
 
 [[package]]
 name = "lintdiff-types"

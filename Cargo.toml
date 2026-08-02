@@ -20,22 +20,12 @@ members = [
   "crates/lintdiff-feature-flags",
   "crates/lintdiff-bdd-grid",
   "crates/lintdiff-bench",
-  "crates/lintdiff-truncate",
-  "crates/lintdiff-escape",
   "crates/lintdiff-glob",
-  "crates/lintdiff-severity-map",
-  "crates/lintdiff-code-url",
-  "crates/lintdiff-sort",
-  "crates/lintdiff-message-norm",
   "crates/lintdiff-render-utils",
-  "crates/lintdiff-code-norm",
   "crates/lintdiff-git-info",
   "crates/lintdiff-diagnostic-level",
   "crates/lintdiff-host-info",
   "crates/lintdiff-run-info",
-  "crates/lintdiff-slugify",
-  "crates/lintdiff-message-truncate",
-  "crates/lintdiff-code-policy",
 ]
 exclude = ["fuzz"]
 

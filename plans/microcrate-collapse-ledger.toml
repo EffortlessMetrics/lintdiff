@@ -554,14 +554,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-truncate/Cargo.toml", "crates/lintdiff-truncate/src/**"]
 tests = ["crates/lintdiff-truncate/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5/MC-12"
-final_disposition = "fold rendering helper after projection behavior is covered"
+final_disposition = "deleted in MC-5; rendering helper cases remain ledger evidence for future renderer consolidation"
 
 [[packages]]
 name = "lintdiff-escape"
@@ -573,14 +573,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-escape/Cargo.toml", "crates/lintdiff-escape/src/**"]
 tests = ["crates/lintdiff-escape/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5/MC-12"
-final_disposition = "fold rendering helper after projection behavior is covered"
+final_disposition = "deleted in MC-5; rendering helper cases remain ledger evidence for future renderer consolidation"
 
 [[packages]]
 name = "lintdiff-line-range"
@@ -668,14 +668,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-severity-map/Cargo.toml", "crates/lintdiff-severity-map/src/**"]
 tests = ["crates/lintdiff-severity-map/tests/**"]
 properties = ["crates/lintdiff-severity-map/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine diagnostic normalization into engine"
+final_disposition = "deleted in MC-5; severity mapping cases remain ledger evidence for future engine diagnostics"
 
 [[packages]]
 name = "lintdiff-code-url"
@@ -687,14 +687,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-code-url/Cargo.toml", "crates/lintdiff-code-url/src/**"]
 tests = ["crates/lintdiff-code-url/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine diagnostic metadata rules into engine"
+final_disposition = "deleted in MC-5; code URL/metadata cases remain ledger evidence for future engine diagnostics"
 
 [[packages]]
 name = "lintdiff-verdict"
@@ -763,14 +763,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-sort/Cargo.toml", "crates/lintdiff-sort/src/**"]
 tests = ["crates/lintdiff-sort/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine deterministic ordering into engine receipt"
+final_disposition = "deleted in MC-5; ordering cases remain ledger evidence for future engine receipt"
 
 [[packages]]
 name = "lintdiff-span"
@@ -877,14 +877,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "crates.io missing; GitHub code search returned only EffortlessMetrics/lintdiff self references"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-message-norm/Cargo.toml", "crates/lintdiff-message-norm/src/**"]
 tests = ["crates/lintdiff-message-norm/tests/**"]
 properties = ["crates/lintdiff-message-norm/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine message normalization into engine diagnostics"
+final_disposition = "deleted in MC-5; message normalization cases remain ledger evidence for future engine diagnostics"
 
 [[packages]]
 name = "lintdiff-render-utils"
@@ -934,14 +934,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-code-norm/Cargo.toml", "crates/lintdiff-code-norm/src/**"]
 tests = ["crates/lintdiff-code-norm/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine code normalization into engine diagnostics"
+final_disposition = "deleted in MC-5; code normalization cases remain ledger evidence for future engine diagnostics"
 
 [[packages]]
 name = "lintdiff-diff-paths"
@@ -1181,14 +1181,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-slugify/Cargo.toml", "crates/lintdiff-slugify/src/**"]
 tests = ["crates/lintdiff-slugify/tests/**"]
 properties = ["crates/lintdiff-slugify/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine identity normalization into engine"
+final_disposition = "deleted in MC-5; slug/identity cases remain ledger evidence for future engine identity"
 
 [[packages]]
 name = "lintdiff-range-merge"
@@ -1219,14 +1219,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-message-truncate/Cargo.toml", "crates/lintdiff-message-truncate/src/**"]
 tests = ["crates/lintdiff-message-truncate/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5/MC-12"
-final_disposition = "fold lossy message projection helper into renderer"
+final_disposition = "deleted in MC-5; lossy message projection cases remain ledger evidence for future renderer consolidation"
 
 [[packages]]
 name = "lintdiff-code-policy"
@@ -1238,14 +1238,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-code-policy/Cargo.toml", "crates/lintdiff-code-policy/src/**"]
 tests = ["crates/lintdiff-code-policy/tests/**"]
 properties = ["crates/lintdiff-code-policy/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-5"
-final_disposition = "mine code policy semantics into engine policy"
+final_disposition = "deleted in MC-5; code policy cases remain ledger evidence for future engine policy"
 
 [[packages]]
 name = "lintdiff-span-intersect"
