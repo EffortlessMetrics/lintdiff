@@ -34,9 +34,19 @@ pub fn read_fixture(name: &str) -> String {
         return content;
     }
 
+    let package_relative = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../lintdiff/tests/fixtures")
+        .join(name);
+    if let Ok(content) = std::fs::read_to_string(&package_relative) {
+        return content;
+    }
+
     panic!(
-        "failed to read fixture '{}': tried paths '{}' and '{}': not found",
-        name, crate_relative, workspace_relative
+        "failed to read fixture '{}': tried paths '{}', '{}', and '{}': not found",
+        name,
+        crate_relative,
+        workspace_relative,
+        package_relative.display()
     )
 }
 
@@ -166,5 +176,23 @@ pub fn verdict_status(report: &Report) -> &'static str {
         lintdiff_types::VerdictStatus::Warn => "warn",
         lintdiff_types::VerdictStatus::Fail => "fail",
         lintdiff_types::VerdictStatus::Skip => "skip",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn relocated_fixture_and_flag_helpers_are_wired() {
+        assert!(!read_fixture("diagnostics.jsonl").is_empty());
+
+        let mut config = LintdiffConfig::default();
+        apply_feature_flag_value(&mut config, "path_filters", "off").unwrap();
+        assert!(!config.feature_flags.path_filters);
+
+        apply_feature_flag_assignments(&mut config, &["primary_span_matching=false".to_string()])
+            .unwrap();
+        assert!(!config.feature_flags.prefer_primary_spans);
     }
 }

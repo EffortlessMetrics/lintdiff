@@ -249,4 +249,29 @@ mod tests {
             .unwrap_err();
         assert!(err.contains("unknown feature flag"));
     }
+
+    #[test]
+    fn applies_alias_values_and_rejects_invalid_assignments() {
+        let mut flags = FeatureFlags::default();
+        set_feature_flag_by_name_and_value(&mut flags, "PATH_FILTERS", "off").unwrap();
+        assert!(!flags.path_filters);
+        assert!(set_feature_flag_by_name_and_value(&mut flags, "unknown", "true").is_err());
+
+        let assignments = ["primary_span_matching=enabled".to_string()];
+        set_feature_flags_from_assignments(&mut flags, assignments.iter()).unwrap();
+        assert!(flags.prefer_primary_spans);
+        assert!(set_feature_flags_from_assignments(
+            &mut flags,
+            ["path_filters=maybe".to_string()].iter()
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn rejects_malformed_and_unknown_grid_values() {
+        assert!(parse_feature_flag_assignment("path_filters").is_err());
+        assert!(parse_feature_flag_assignment("unknown=true").is_err());
+        let mut grid = FeatureFlagGrid::new(["path_filters"]);
+        assert!(grid.add_row(["maybe"]).is_err());
+    }
 }
