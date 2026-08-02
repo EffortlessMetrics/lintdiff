@@ -1,7 +1,7 @@
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
-use lintdiff_diagnostics::{parse_cargo_messages, Diagnostic};
+use lintdiff_ingest_core::{parse_cargo_messages, Diagnostic};
 use lintdiff_types::{LintdiffConfig, Report};
 use serde_json::to_vec_pretty;
 use thiserror::Error;
