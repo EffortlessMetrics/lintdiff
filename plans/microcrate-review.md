@@ -4,5 +4,5 @@
 
 Current boundary ownership and publication decisions are now tracked in:
 
-- [`plans/microcrate-boundary-audit-2026-08-01.md`](plans/microcrate-boundary-audit-2026-08-01.md)
-- [`plans/microcrate-simplification-follow-up-2026-08-01.md`](plans/microcrate-simplification-follow-up-2026-08-01.md)
+- [`docs/adr/ADR-006-canonical-package-topology.md`](../docs/adr/ADR-006-canonical-package-topology.md)
+- [`plans/microcrate-collapse-ledger.toml`](microcrate-collapse-ledger.toml)

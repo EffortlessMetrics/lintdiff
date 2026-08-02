@@ -2,7 +2,11 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-006](ADR-006-canonical-package-topology.md) for current package
+topology. The architectural separation remains useful historical context.
+
+> This ADR describes the pre-collapse microcrate layout. Do not use its package
+> table or `lintdiff-ingest-core` name as current source truth.
 
 ## Context
 

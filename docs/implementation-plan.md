@@ -55,7 +55,7 @@ Exit criteria:
 
 Deliverables:
 
-- `lintdiff-diff` parses unified diff into `DiffMap`:
+- `lintdiff-engine::source` parses unified diff into `DiffMap`:
   - per-file new-side changed line ranges
   - best-effort rename awareness
   - canonical path normalization
@@ -84,7 +84,7 @@ Exit criteria:
 
 Deliverables:
 
-- `lintdiff-diagnostics` consumes cargo JSON stream:
+- `lintdiff-engine::diagnostics` consumes cargo JSON stream:
   - extracts compiler messages
   - captures code, level, message, spans
   - ignores non-diagnostic cargo messages
@@ -106,7 +106,7 @@ Exit criteria:
 
 Deliverables:
 
-- `lintdiff-ingest-core` matches diagnostics to diff ranges
+- `lintdiff-engine::matching` matches diagnostics to diff ranges
 - `fail_on` implemented (error|warn|never)
 - allow/suppress/deny code lists
 - receipts include:

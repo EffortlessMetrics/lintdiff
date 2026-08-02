@@ -1,5 +1,11 @@
 # lintdiff Test Strategy
 
+> Current topology note: this document contains historical per-microcrate tables
+> from before the collapse. Current proof runs against `lintdiff-types`,
+> `lintdiff-engine`, `lintdiff-render`, `lintdiff`, and `xtask`; old package names
+> below are archival references. Use `cargo test --workspace --all-features`,
+> `cargo test --workspace --doc`, and the `xtask` checks for current proof.
+
 lintdiff is a gatekeeper-style tool. The "architecture" is mostly the test discipline.
 
 ## Test Coverage Summary

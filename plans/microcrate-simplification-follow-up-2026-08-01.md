@@ -1,5 +1,8 @@
 # Microcrate Simplification Follow-up Plan (2026-08-01)
 
+> Superseded by the completed collapse campaign. Retained for provenance; current
+> topology and follow-up work are tracked by ADR-006 and the collapse ledger.
+
 ## Scope
 
 This plan is post-PR-C cleanup. It is intentionally deferred until publication-closure evidence from Gate D0/D1 determines final package obligations.

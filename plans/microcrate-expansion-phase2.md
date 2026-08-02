@@ -1,5 +1,8 @@
 # Microcrate Expansion - Phase 2
 
+> Historical proposal. The collapse campaign superseded this expansion direction;
+> use ADR-006 and the collapse ledger for current topology.
+
 ## Executive Summary
 
 This document analyzes the existing lintdiff crates and identifies 8 new microcrate extraction opportunities following the Single Responsibility Principle (SRP). These extractions will improve modularity, enable parallel development, and create reusable components.

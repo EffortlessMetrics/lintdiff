@@ -1,5 +1,8 @@
 # Microcrate Expansion Plan for lintdiff
 
+> Historical proposal. The collapse campaign superseded this expansion direction;
+> use ADR-006 and the collapse ledger for current topology.
+
 ## Executive Summary
 
 This document analyzes the current lintdiff crate architecture and proposes new microcrates following the Single Responsibility Principle (SRP). The goal is to **expand** the number of microcrates to enable parallel development, stable APIs, and future buildout.
