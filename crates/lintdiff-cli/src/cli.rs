@@ -488,8 +488,11 @@ impl From<AnnotationsArg> for AnnotationFormat {
 
 pub fn run() -> ExitCode {
     let cli = Cli::parse();
+    dispatch(cli.cmd)
+}
 
-    match cli.cmd {
+fn dispatch(cmd: Commands) -> ExitCode {
+    match cmd {
         Commands::Ingest {
             diagnostics,
             diff_file,
@@ -1102,3 +1105,95 @@ static ALL_LINTS: &[LintExplanation] = &[
         url: Some("https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#unused-assignments"),
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::{dispatch, Cli};
+    use clap::Parser;
+    use std::path::PathBuf;
+    use std::process::ExitCode;
+
+    fn parse(args: &[String]) -> super::Commands {
+        Cli::try_parse_from(args)
+            .expect("library command should parse")
+            .cmd
+    }
+
+    fn fixture(name: &str) -> String {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join(name)
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    #[test]
+    fn library_dispatch_covers_application_commands() {
+        let diagnostics = fixture("warning_on_changed_line.jsonl");
+        let diff = fixture("simple_addition.diff");
+        let report = std::env::temp_dir().join(format!(
+            "lintdiff-library-shell-{}.json",
+            std::process::id()
+        ));
+        let report_text = report.to_string_lossy().into_owned();
+
+        let ingest_args = vec![
+            "lintdiff".to_string(),
+            "ingest".to_string(),
+            "--diagnostics".to_string(),
+            diagnostics.clone(),
+            "--diff-file".to_string(),
+            diff.clone(),
+            "--out".to_string(),
+            report_text.clone(),
+        ];
+        assert_eq!(dispatch(parse(&ingest_args)), ExitCode::from(0));
+
+        let md_args = vec![
+            "lintdiff".to_string(),
+            "md".to_string(),
+            "--report".to_string(),
+            report_text.clone(),
+        ];
+        assert_eq!(dispatch(parse(&md_args)), ExitCode::from(0));
+
+        let annotations_args = vec![
+            "lintdiff".to_string(),
+            "annotations".to_string(),
+            "--report".to_string(),
+            report_text.clone(),
+        ];
+        assert_eq!(dispatch(parse(&annotations_args)), ExitCode::from(0));
+
+        let explain_args = vec![
+            "lintdiff".to_string(),
+            "explain".to_string(),
+            "diagnostics.on_diff".to_string(),
+        ];
+        assert_eq!(dispatch(parse(&explain_args)), ExitCode::from(0));
+
+        let run_args = vec![
+            "lintdiff".to_string(),
+            "run".to_string(),
+            "--diff-file".to_string(),
+            diff,
+            "--".to_string(),
+            "lintdiff-command-that-does-not-exist".to_string(),
+        ];
+        assert_eq!(dispatch(parse(&run_args)), ExitCode::from(1));
+
+        let missing_report_args = vec![
+            "lintdiff".to_string(),
+            "md".to_string(),
+            "--report".to_string(),
+            report
+                .with_extension("missing.json")
+                .to_string_lossy()
+                .into_owned(),
+        ];
+        assert_eq!(dispatch(parse(&missing_report_args)), ExitCode::from(1));
+
+        let _ = std::fs::remove_file(report);
+    }
+}

@@ -1,4 +1,10 @@
 coverage:
+  # The CLI is exercised through the subprocess-based BDD harness. cargo-llvm-cov
+  # cannot collect coverage from that child process, so keep the binary/library
+  # entrypoint outside patch accounting while retaining the BDD contract gate.
+  ignore:
+    - crates/lintdiff-cli/src/cli.rs
+    - crates/lintdiff-cli/src/main.rs
   status:
     project:
       default:
