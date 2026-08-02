@@ -1,6 +1,6 @@
 //! Comprehensive tests for feature flag parsing functionality.
 
-use lintdiff_feature_flags::{
+use lintdiff::config::feature_flags::{
     parse_feature_flag_assignment, parse_feature_flag_value, parse_flag, FeatureFlag, FALSE_VALUES,
     TRUE_VALUES,
 };

@@ -384,13 +384,13 @@ published = false
 external_consumers = ["GitHub Action and release archive product surface"]
 registry_history = "crates.io API 2026-08-02: not found as lintdiff package"
 external_consumer_evidence = "product consumer is GitHub release/Action; do not infer Rust API from package name"
-source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/lib.rs", "crates/lintdiff-cli/src/app.rs", "crates/lintdiff-cli/src/git.rs", "crates/lintdiff-cli/src/io.rs", "crates/lintdiff-cli/src/cli.rs", "crates/lintdiff-cli/src/main.rs", "crates/lintdiff-cli/build.rs"]
-tests = ["crates/lintdiff-cli/tests/**"]
+source_files = ["crates/lintdiff/Cargo.toml", "crates/lintdiff/src/lib.rs", "crates/lintdiff/src/app.rs", "crates/lintdiff/src/config/**", "crates/lintdiff/src/git.rs", "crates/lintdiff/src/io.rs", "crates/lintdiff/src/cli.rs", "crates/lintdiff/src/main.rs", "crates/lintdiff/build.rs"]
+tests = ["crates/lintdiff/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-9/MC-10/MC-11"
-final_disposition = "library shell added in MC-9; orchestration, Git, IO, and their integration proof absorbed in MC-10; rename directory from crates/lintdiff-cli to crates/lintdiff remains MC-11"
+final_disposition = "library shell added in MC-9; orchestration, Git, IO, and feature configuration absorbed in MC-10/MC-11; directory renamed from crates/lintdiff-cli to crates/lintdiff in MC-11"
 
 [[packages]]
 name = "lintdiff-config"
@@ -436,18 +436,18 @@ action = "fold"
 destination = "lintdiff::config"
 canonical_owner = "lintdiff::config"
 class = "application_configuration"
-runtime_reachable = true
+runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-11 moved the runtime registry and parser into lintdiff::config::feature_flags; BDD support retains only fixture-side flag application"
 source_files = ["crates/lintdiff-feature-flags/Cargo.toml", "crates/lintdiff-feature-flags/src/**"]
 tests = ["crates/lintdiff-feature-flags/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-11"
-final_disposition = "fold runtime feature configuration into application package"
+final_disposition = "retired as a package; runtime feature configuration and its proof moved into lintdiff::config::feature_flags in MC-11"
 
 [[packages]]
 name = "lintdiff-bdd-grid"

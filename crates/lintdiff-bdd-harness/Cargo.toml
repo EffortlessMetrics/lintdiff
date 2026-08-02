@@ -17,5 +17,4 @@ publish = false
 [dependencies]
 lintdiff-bdd-grid = { path = "../lintdiff-bdd-grid" }
 lintdiff-engine = { path = "../lintdiff-engine" }
-lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }

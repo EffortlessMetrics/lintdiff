@@ -1,6 +1,6 @@
 //! Comprehensive tests for feature flag registry functionality.
 
-use lintdiff_feature_flags::{
+use lintdiff::config::feature_flags::{
     feature_flags, parse_flag, set_feature_flag, set_feature_flag_by_name,
     set_feature_flag_by_name_and_value, set_feature_flag_from_assignment,
     set_feature_flags_from_assignments, FeatureFlag,

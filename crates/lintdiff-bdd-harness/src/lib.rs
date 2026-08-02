@@ -1,9 +1,9 @@
 use std::io::Cursor;
 
+use lintdiff_bdd_grid::{set_feature_flag_by_name_and_value, set_feature_flags_from_assignments};
 pub use lintdiff_bdd_grid::{FeatureFlagGrid, FeatureFlagGridRow};
 use lintdiff_engine::{ingest_on_diff, IngestOnDiffParams};
 use lintdiff_engine::{parse_cargo_messages, parse_unified_diff};
-use lintdiff_feature_flags::set_feature_flag_by_name_and_value;
 use lintdiff_types::{LintdiffConfig, NormPath, Report, RunInfo, ToolInfo, TOOL_NAME};
 
 const TEST_TOOL_VERSION: &str = "test";
@@ -29,14 +29,24 @@ pub fn read_fixture(name: &str) -> String {
     }
 
     // Try workspace-relative path (works when running from workspace root)
-    let workspace_relative = format!("crates/lintdiff-cli/tests/fixtures/{name}");
+    let workspace_relative = format!("crates/lintdiff/tests/fixtures/{name}");
     if let Ok(content) = std::fs::read_to_string(&workspace_relative) {
         return content;
     }
 
+    let package_relative = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../lintdiff/tests/fixtures")
+        .join(name);
+    if let Ok(content) = std::fs::read_to_string(&package_relative) {
+        return content;
+    }
+
     panic!(
-        "failed to read fixture '{}': tried paths '{}' and '{}': not found",
-        name, crate_relative, workspace_relative
+        "failed to read fixture '{}': tried paths '{}', '{}', and '{}': not found",
+        name,
+        crate_relative,
+        workspace_relative,
+        package_relative.display()
     )
 }
 
@@ -54,10 +64,7 @@ pub fn apply_feature_flag_assignments(
     config: &mut LintdiffConfig,
     assignments: &[String],
 ) -> Result<(), String> {
-    lintdiff_feature_flags::set_feature_flags_from_assignments(
-        &mut config.feature_flags,
-        assignments.iter(),
-    )
+    set_feature_flags_from_assignments(&mut config.feature_flags, assignments.iter())
 }
 
 /// Apply one grid row to `config` and run a deterministic fixture ingestion.
@@ -169,5 +176,23 @@ pub fn verdict_status(report: &Report) -> &'static str {
         lintdiff_types::VerdictStatus::Warn => "warn",
         lintdiff_types::VerdictStatus::Fail => "fail",
         lintdiff_types::VerdictStatus::Skip => "skip",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn relocated_fixture_and_flag_helpers_are_wired() {
+        assert!(!read_fixture("diagnostics.jsonl").is_empty());
+
+        let mut config = LintdiffConfig::default();
+        apply_feature_flag_value(&mut config, "path_filters", "off").unwrap();
+        assert!(!config.feature_flags.path_filters);
+
+        apply_feature_flag_assignments(&mut config, &["primary_span_matching=false".to_string()])
+            .unwrap();
+        assert!(!config.feature_flags.prefer_primary_spans);
     }
 }

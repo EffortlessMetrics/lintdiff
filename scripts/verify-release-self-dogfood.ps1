@@ -4,8 +4,8 @@ param(
     [string]$ReleaseContractScript = 'scripts/verify-release-action-contract.ps1',
     [string]$ExpectedReleaseTag = '',
     [string]$ArtifactsDir = 'artifacts/release-truth-audit',
-    [string]$SmokeDiff = 'crates/lintdiff-cli/tests/fixtures/simple_addition.diff',
-    [string]$SmokeDiagnostics = 'crates/lintdiff-cli/tests/fixtures/warning_on_changed_line.jsonl',
+    [string]$SmokeDiff = 'crates/lintdiff/tests/fixtures/simple_addition.diff',
+    [string]$SmokeDiagnostics = 'crates/lintdiff/tests/fixtures/warning_on_changed_line.jsonl',
     [string]$SmokeReport = 'quickstart-report.json'
 )
 

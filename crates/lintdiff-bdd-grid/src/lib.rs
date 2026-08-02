@@ -1,9 +1,60 @@
 //! Scenario-grid helpers for applying feature flags in BDD-style matrix tests.
 
-use lintdiff_feature_flags::{
-    feature_flags, parse_feature_flag_assignment, set_feature_flags_from_assignments,
-};
 use lintdiff_types::{FeatureFlags, LintdiffConfig};
+
+const FEATURE_FLAG_KEYS: [&str; 2] = ["primary_span_matching", "path_filters"];
+
+fn parse_feature_flag_value(raw: &str) -> Result<bool, String> {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "true" | "1" | "on" | "enabled" | "yes" => Ok(true),
+        "false" | "0" | "off" | "disabled" | "no" => Ok(false),
+        _ => Err(format!(
+            "unknown feature flag value '{raw}'. expected one of true/false/on/off/1/0/enabled/disabled/yes/no"
+        )),
+    }
+}
+
+fn parse_feature_flag_assignment(raw: &str) -> Result<(String, bool), String> {
+    let (name, value) = raw
+        .split_once('=')
+        .ok_or_else(|| format!("invalid feature flag assignment '{raw}'. expected name=value"))?;
+    let name = name.trim();
+    if !FEATURE_FLAG_KEYS
+        .iter()
+        .any(|key| key.eq_ignore_ascii_case(name))
+    {
+        return Err(format!("unknown feature flag: {name}"));
+    }
+    Ok((name.to_ascii_lowercase(), parse_feature_flag_value(value)?))
+}
+
+pub fn set_feature_flag_by_name_and_value(
+    flags: &mut FeatureFlags,
+    name: &str,
+    value: &str,
+) -> Result<(), String> {
+    let enabled = parse_feature_flag_value(value)?;
+    match name.trim().to_ascii_lowercase().as_str() {
+        "primary_span_matching" => flags.prefer_primary_spans = enabled,
+        "path_filters" => flags.path_filters = enabled,
+        _ => return Err(format!("unknown feature flag: {name}")),
+    }
+    Ok(())
+}
+
+pub fn set_feature_flags_from_assignments<'a, I>(
+    flags: &mut FeatureFlags,
+    assignments: I,
+) -> Result<(), String>
+where
+    I: IntoIterator<Item = &'a String>,
+{
+    for raw in assignments {
+        let (name, enabled) = parse_feature_flag_assignment(raw)?;
+        set_feature_flag_by_name_and_value(flags, &name, if enabled { "true" } else { "false" })?;
+    }
+    Ok(())
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeatureFlagGridRow {
@@ -23,7 +74,7 @@ impl FeatureFlagGridRow {
             let raw = value.as_ref();
             let (spec, enabled) = parse_feature_flag_assignment(&format!("{key}={raw}"))
                 .map_err(|err| format!("invalid feature flag assignment '{key}={raw}': {err}"))?;
-            assignments.push((spec.as_str().to_string(), enabled));
+            assignments.push((spec, enabled));
         }
 
         Ok(Self { assignments })
@@ -53,7 +104,7 @@ pub struct FeatureFlagGrid {
 
 impl FeatureFlagGrid {
     pub fn with_feature_flags() -> Self {
-        Self::new(feature_flags().iter().map(|spec| spec.key))
+        Self::new(FEATURE_FLAG_KEYS)
     }
 
     pub fn new<I, S>(columns: I) -> Self
@@ -197,5 +248,30 @@ mod tests {
             .add_row_pairs([("does_not_exist", "true")])
             .unwrap_err();
         assert!(err.contains("unknown feature flag"));
+    }
+
+    #[test]
+    fn applies_alias_values_and_rejects_invalid_assignments() {
+        let mut flags = FeatureFlags::default();
+        set_feature_flag_by_name_and_value(&mut flags, "PATH_FILTERS", "off").unwrap();
+        assert!(!flags.path_filters);
+        assert!(set_feature_flag_by_name_and_value(&mut flags, "unknown", "true").is_err());
+
+        let assignments = ["primary_span_matching=enabled".to_string()];
+        set_feature_flags_from_assignments(&mut flags, assignments.iter()).unwrap();
+        assert!(flags.prefer_primary_spans);
+        assert!(set_feature_flags_from_assignments(
+            &mut flags,
+            ["path_filters=maybe".to_string()].iter()
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn rejects_malformed_and_unknown_grid_values() {
+        assert!(parse_feature_flag_assignment("path_filters").is_err());
+        assert!(parse_feature_flag_assignment("unknown=true").is_err());
+        let mut grid = FeatureFlagGrid::new(["path_filters"]);
+        assert!(grid.add_row(["maybe"]).is_err());
     }
 }

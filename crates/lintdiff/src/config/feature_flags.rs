@@ -22,7 +22,7 @@
 //! # Quick Start
 //!
 //! ```
-//! use lintdiff_feature_flags::{FeatureFlag, feature_flags, set_feature_flag};
+//! use lintdiff::config::feature_flags::{FeatureFlag, feature_flags, set_feature_flag};
 //! use lintdiff_types::FeatureFlags;
 //!
 //! // Create default flags
@@ -38,7 +38,7 @@
 //! The crate accepts various boolean representations:
 //!
 //! ```
-//! use lintdiff_feature_flags::parse_feature_flag_value;
+//! use lintdiff::config::feature_flags::parse_feature_flag_value;
 //!
 //! // All of these return Ok(true)
 //! assert_eq!(parse_feature_flag_value("true"), Ok(true));
@@ -61,7 +61,7 @@
 //! Parse `name=value` style assignments:
 //!
 //! ```
-//! use lintdiff_feature_flags::{parse_feature_flag_assignment, FeatureFlag};
+//! use lintdiff::config::feature_flags::{parse_feature_flag_assignment, FeatureFlag};
 //!
 //! let (flag, enabled) = parse_feature_flag_assignment("path_filters=false").unwrap();
 //! assert_eq!(flag, FeatureFlag::PathFilters);
@@ -73,7 +73,7 @@
 //! Apply multiple flags at once:
 //!
 //! ```
-//! use lintdiff_feature_flags::set_feature_flags_from_assignments;
+//! use lintdiff::config::feature_flags::set_feature_flags_from_assignments;
 //! use lintdiff_types::FeatureFlags;
 //!
 //! let mut flags = FeatureFlags::default();
@@ -91,7 +91,7 @@
 //! Flag names and values are case-insensitive:
 //!
 //! ```
-//! use lintdiff_feature_flags::{parse_flag, parse_feature_flag_value, FeatureFlag};
+//! use lintdiff::config::feature_flags::{parse_flag, parse_feature_flag_value, FeatureFlag};
 //!
 //! assert_eq!(parse_flag("PRIMARY_SPAN_MATCHING"), Some(FeatureFlag::PrimarySpanMatching));
 //! assert_eq!(parse_flag("Path_Filters"), Some(FeatureFlag::PathFilters));
