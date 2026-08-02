@@ -21,9 +21,12 @@ inputs:
     description: "Path to diagnostics JSONL file (cargo clippy --message-format=json output)"
     required: false
   version:
-    description: "lintdiff version to use (default: latest)"
+    description: "Exact lintdiff release version; defaults to the invoked exact Action tag"
     required: false
-    default: "latest"
+  artifact_name:
+    description: "Name for the uploaded report artifact"
+    required: false
+    default: "lintdiff-report"
   working_directory:
     description: "Working directory for lintdiff"
     required: false
@@ -39,6 +42,9 @@ outputs:
   exit_code:
     description: "Exit code from lintdiff"
     value: ${{ steps.run.outputs.exit_code }}
+  resolved_version:
+    description: "Verified lintdiff release version"
+    value: ${{ steps.version.outputs.version }}
 
 runs:
   using: "composite"
@@ -48,28 +54,21 @@ runs:
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
+        ACTION_REF: ${{ github.action_ref }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
-        if [ "$INPUT_VERSION" = "latest" ]; then
-          VERSION=$(curl -fsSL https://api.github.com/repos/EffortlessMetrics/lintdiff/releases/latest | jq -r '.tag_name')
-          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            echo "::error::Failed to determine latest lintdiff version"
-            exit 1
-          fi
-        else
-          VERSION="$INPUT_VERSION"
-        fi
+        VERSION=$("$ACTION_PATH/scripts/action/resolve-version.sh" "$ACTION_REF" "$INPUT_VERSION")
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Download lintdiff
       shell: bash
       env:
         VERSION: ${{ steps.version.outputs.version }}
+        ACTION_PATH: ${{ github.action_path }}
+        RUNNER_TEMP: ${{ runner.temp }}
       run: |
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
         ARCH=$(uname -m)
-
-        # Match release assets from the workflow naming convention.
-        ARTIFACT_VERSION=${VERSION#v}
 
         case "$OS" in
           linux)
@@ -110,21 +109,9 @@ runs:
             ;;
         esac
 
-        URL="https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}/lintdiff-${ARTIFACT_VERSION}-${TARGET}.${EXT}"
-        echo "Downloading lintdiff ${VERSION} for ${TARGET}..."
-        curl -fsSL "$URL" -o "lintdiff-archive.${EXT}"
-
-        if [ "$EXT" = "tar.gz" ]; then
-          tar xzf "lintdiff-archive.${EXT}" --strip-components=1
-        elif [ "$EXT" = "zip" ]; then
-          unzip -q "lintdiff-archive.${EXT}"
-          if [ -f lintdiff.exe ]; then
-            mv lintdiff.exe lintdiff
-          fi
-        fi
-
-        chmod +x lintdiff
-        echo "$(pwd)" >> "$GITHUB_PATH"
+        BINARY_PATH=$(LINTDIFF_TARGET="$TARGET" LINTDIFF_EXTENSION="$EXT" \
+          "$ACTION_PATH/scripts/action/install.sh" --version "$VERSION")
+        echo "$(dirname "$BINARY_PATH")" >> "$GITHUB_PATH"
 
     - name: Run lintdiff
       id: run
@@ -136,30 +123,33 @@ runs:
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_FAIL_ON: ${{ inputs.fail_on }}
         INPUT_DIAGNOSTICS: ${{ inputs.diagnostics }}
+        ACTION_PATH: ${{ github.action_path }}
+        LINTDIFF_BIN: lintdiff
       run: |
-        ARGS="ci github"
+        ARGS=(ci github)
 
         if [ -n "$INPUT_BASE" ]; then
-          ARGS="$ARGS --base \"$INPUT_BASE\""
+          ARGS+=(--base "$INPUT_BASE")
         fi
         if [ -n "$INPUT_HEAD" ]; then
-          ARGS="$ARGS --head \"$INPUT_HEAD\""
+          ARGS+=(--head "$INPUT_HEAD")
         fi
         if [ -n "$INPUT_CONFIG" ]; then
-          ARGS="$ARGS --config \"$INPUT_CONFIG\""
+          ARGS+=(--config "$INPUT_CONFIG")
         fi
         if [ -n "$INPUT_FAIL_ON" ]; then
-          ARGS="$ARGS --fail-on \"$INPUT_FAIL_ON\""
+          ARGS+=(--fail-on "$INPUT_FAIL_ON")
         fi
         if [ -n "$INPUT_DIAGNOSTICS" ]; then
-          ARGS="$ARGS --diagnostics \"$INPUT_DIAGNOSTICS\""
+          ARGS+=(--diagnostics "$INPUT_DIAGNOSTICS")
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"
         echo "report_path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
 
         set +e
-        eval "lintdiff $ARGS --out \"$REPORT_PATH\" --annotations github"
+        ARGS+=(--out "$REPORT_PATH" --annotations github)
+        "$ACTION_PATH/scripts/action/run.sh" "${ARGS[@]}"
         EXIT_CODE=$?
         set -e
 
@@ -177,6 +167,6 @@ runs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: lintdiff-report
+        name: ${{ inputs.artifact_name }}
         path: ${{ inputs.working_directory }}/artifacts/lintdiff/
         if-no-files-found: ignore

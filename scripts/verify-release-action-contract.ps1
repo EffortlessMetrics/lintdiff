@@ -5,6 +5,9 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $repoRoot
 $releasePath = ".github/workflows/release.yml"
 $actionPath = "action.yml"
+$resolvePath = "scripts/action/resolve-version.sh"
+$installPath = "scripts/action/install.sh"
+$runPath = "scripts/action/run.sh"
 
 function Assert-ContainsPattern {
     param(
@@ -44,27 +47,39 @@ function Assert-NotContainsLiteral {
 
 $actionText = Get-Content $actionPath -Raw
 $releaseText = Get-Content $releasePath -Raw
+$resolveText = Get-Content $resolvePath -Raw
+$installText = Get-Content $installPath -Raw
+$runText = Get-Content $runPath -Raw
 
-Assert-ContainsLiteral -Text $actionText -Literal "https://api.github.com/repos/EffortlessMetrics/lintdiff/releases/latest" -Name "latest release API URL"
-Assert-ContainsLiteral -Text $actionText -Literal 'https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}/lintdiff-${ARTIFACT_VERSION}-${TARGET}.${EXT}' -Name "release download URL template"
+Assert-ContainsLiteral -Text $installText -Literal 'https://github.com/EffortlessMetrics/lintdiff/releases/download/${version}' -Name "release download URL template"
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+verdict:\s*$" -Name "output.verdict"
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+report_path:\s*$" -Name "output.report_path"
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+exit_code:\s*$" -Name "output.exit_code"
+Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+resolved_version:\s*$" -Name "output.resolved_version"
 Assert-ContainsLiteral -Text $actionText -Literal "jq -r '.verdict.status'" -Name "verdict.status extraction"
-Assert-ContainsLiteral -Text $actionText -Literal 'if [ "$INPUT_VERSION" = "latest" ]; then' -Name "latest version branch"
-Assert-ContainsPattern -Text $actionText -Pattern '(?m)^\s*else\s*$' -Name "explicit version branch"
-Assert-ContainsLiteral -Text $actionText -Literal 'VERSION="$INPUT_VERSION"' -Name "explicit version assignment"
+Assert-ContainsLiteral -Text $actionText -Literal 'ACTION_REF: ${{ github.action_ref }}' -Name "Action ref input"
+Assert-ContainsLiteral -Text $actionText -Literal 'scripts/action/resolve-version.sh' -Name "version resolver script"
+Assert-ContainsLiteral -Text $actionText -Literal 'scripts/action/install.sh' -Name "installer script"
+Assert-ContainsLiteral -Text $actionText -Literal 'scripts/action/run.sh' -Name "runner script"
+Assert-ContainsLiteral -Text $actionText -Literal 'name: ${{ inputs.artifact_name }}' -Name "caller artifact name"
 Assert-ContainsLiteral -Text $actionText -Literal 'case "$OS" in' -Name "OS case selection"
 Assert-ContainsPattern -Text $actionText -Pattern '(?ms)linux\)[\s\S]*x86_64-unknown-linux-gnu' -Name "linux target mapping"
 Assert-ContainsPattern -Text $actionText -Pattern '(?ms)darwin\)[\s\S]*tar.gz' -Name "darwin target mapping"
 Assert-ContainsLiteral -Text $actionText -Literal 'TARGET="x86_64-pc-windows-msvc"' -Name "windows target mapping"
-Assert-ContainsLiteral -Text $actionText -Literal 'tar xzf "lintdiff-archive.${EXT}" --strip-components=1' -Name "tar extraction command"
-Assert-ContainsLiteral -Text $actionText -Literal 'unzip -q "lintdiff-archive.${EXT}"' -Name "zip extraction command"
-Assert-ContainsLiteral -Text $actionText -Literal "mv lintdiff.exe lintdiff" -Name "windows exe normalization"
 Assert-ContainsLiteral -Text $actionText -Literal 'exit $EXIT_CODE' -Name "exit code passthrough"
+Assert-ContainsLiteral -Text $installText -Literal 'RUNNER_TEMP' -Name "runner temp download directory"
+Assert-ContainsLiteral -Text $installText -Literal 'checksum_url=' -Name "archive checksum download"
+Assert-ContainsLiteral -Text $installText -Literal 'sha256sum' -Name "checksum verification"
+Assert-ContainsLiteral -Text $installText -Literal 'tar -xzf' -Name "root-level tar extraction"
+Assert-ContainsLiteral -Text $resolveText -Literal 'exact vX.Y.Z Action tag' -Name "fail-closed ref guidance"
+Assert-ContainsLiteral -Text $resolveText -Literal 'does not match exact Action tag' -Name "mismatched version rejection"
+Assert-ContainsLiteral -Text $runText -Literal 'exec "$lintdiff_command" "$@"' -Name "argument-array execution"
 
 Assert-NotContainsLiteral -Text $actionText -Literal "effortless-metrics/lintdiff/releases/latest" -Name "legacy lowercase API org"
 Assert-NotContainsLiteral -Text $actionText -Literal "github.com/effortless-metrics/lintdiff/releases/download" -Name "legacy lowercase release download org"
+Assert-NotContainsLiteral -Text $actionText -Literal "releases/latest" -Name "moving latest release resolution"
+Assert-NotContainsLiteral -Text $actionText -Literal "eval " -Name "shell eval execution"
+Assert-NotContainsLiteral -Text $installText -Literal "--strip-components=1" -Name "stripping root archive component"
 
 function Get-ReleaseMatrixArtifacts {
     if (-not (Test-Path $releasePath)) {
