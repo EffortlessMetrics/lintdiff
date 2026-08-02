@@ -98,7 +98,7 @@ pub fn run_from_environment() -> Result<(), String> {
 pub fn run(root: &Path, args: &[String]) -> Result<(), String> {
     let command = args.first().map(String::as_str).unwrap_or("help");
     match command {
-        "architecture-check" => architecture_check(root),
+        "architecture-check" => architecture_check(root).map(|_| ()),
         "schema-check" => schema_check(root),
         "fixture-check" => fixture_check(root),
         "docs-check" => docs_check(root),
@@ -292,7 +292,7 @@ fn ledger_records(value: &toml::Value) -> Result<Vec<LedgerPackage>, String> {
     Ok(ledger.packages)
 }
 
-fn architecture_check(root: &Path) -> Result<(), String> {
+fn architecture_check(root: &Path) -> Result<usize, String> {
     let contract = read_toml(root, "contracts/package-topology.toml")?;
     let ledger = ledger_records(&read_toml(root, "plans/microcrate-collapse-ledger.toml")?)?;
     let metadata = cargo_metadata(root)?;
@@ -359,6 +359,31 @@ fn architecture_check(root: &Path) -> Result<(), String> {
                 record.name
             ));
         }
+        let evidence_paths = record
+            .tests
+            .iter()
+            .chain(&record.properties)
+            .chain(&record.fuzz_targets)
+            .chain(&record.benchmarks);
+        if evidence_paths
+            .chain(&record.external_consumers)
+            .any(|path| path.trim().is_empty())
+        {
+            return Err(format!(
+                "ledger record {} contains an empty evidence path",
+                record.name
+            ));
+        }
+        if record.published
+            && record.registry_history.as_str().is_some_and(|history| {
+                history.contains("not found") || history.contains("not published")
+            })
+        {
+            return Err(format!(
+                "published ledger record {} has a missing registry history",
+                record.name
+            ));
+        }
         if !packages.contains_key(&record.name)
             && !record
                 .final_disposition
@@ -383,16 +408,6 @@ fn architecture_check(root: &Path) -> Result<(), String> {
                 ));
             }
         }
-        let _ = (
-            &record.action,
-            record.runtime_reachable,
-            record.published,
-            &record.external_consumers,
-            &record.tests,
-            &record.properties,
-            &record.fuzz_targets,
-            &record.benchmarks,
-        );
     }
 
     let topology_names = topology.keys().collect::<BTreeSet<_>>();
@@ -446,7 +461,7 @@ fn architecture_check(root: &Path) -> Result<(), String> {
         runtime.len(),
         deferred.len()
     );
-    Ok(())
+    Ok(packages.len())
 }
 
 fn schema_check(root: &Path) -> Result<(), String> {
@@ -583,7 +598,7 @@ fn release_contract_check(root: &Path) -> Result<(), String> {
 }
 
 fn architecture_receipt(root: &Path, output: Option<&String>) -> Result<(), String> {
-    architecture_check(root)?;
+    let workspace_members = architecture_check(root)?;
     let date = current_date();
     let path = output
         .map(PathBuf::from)
@@ -595,14 +610,18 @@ fn architecture_receipt(root: &Path, output: Option<&String>) -> Result<(), Stri
     let receipt = serde_json::json!({
         "schema": "lintdiff.architecture-receipt.v1",
         "date": date,
-        "workspace_members": cargo_metadata(root)?.workspace_members.len(),
+        "workspace_members": workspace_members,
         "commands": ["architecture-check"],
     });
     let text = serde_json::to_string_pretty(&receipt)
         .map_err(|error| format!("serialize architecture receipt: {error}"))?;
     fs::write(&path, format!("{text}\n"))
         .map_err(|error| format!("write {}: {error}", path.display()))?;
-    println!("architecture_receipt={}", path.display());
+    let relative_display = path
+        .strip_prefix(root)
+        .map(|relative| relative.to_string_lossy().replace('\\', "/"))
+        .unwrap_or_else(|_| path.to_string_lossy().replace('\\', "/"));
+    println!("architecture_receipt={relative_display}");
     Ok(())
 }
 
@@ -620,8 +639,9 @@ fn current_date() -> String {
 mod tests {
     use super::{
         architecture_check, architecture_receipt, docs_check, fixture_check, ledger_records,
-        package_publish, release_contract_check, run, schema_check, string_array, topology_entries,
-        MetadataPackage,
+        package_publish, release_contract_check, run, runtime_packages, schema_check, string_array,
+        topology_entries, workspace_edges, DependencyKind, Metadata, MetadataPackage, Resolve,
+        ResolveDependency, ResolveNode,
     };
     use std::fs;
     use std::path::Path;
@@ -641,7 +661,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .ok_or_else(|| "missing repository root".to_string())?;
-        architecture_check(root)
+        architecture_check(root).map(|_| ())
     }
 
     #[test]
@@ -666,11 +686,45 @@ mod tests {
     }
 
     #[test]
+    fn default_architecture_receipt_uses_repo_relative_path() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        let directory = root.join("plans/architecture-receipts");
+        let path = directory.join(format!("{}.json", super::current_date()));
+        architecture_receipt(root, None)?;
+        if !path.is_file() {
+            return Err(format!(
+                "default receipt was not written: {}",
+                path.display()
+            ));
+        }
+        fs::remove_file(&path).map_err(|error| error.to_string())?;
+        fs::remove_dir(&directory).map_err(|error| error.to_string())?;
+        Ok(())
+    }
+
+    #[test]
     fn command_dispatch_reports_help_and_unknown_commands() -> Result<(), String> {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .ok_or_else(|| "missing repository root".to_string())?;
         run(root, &[String::from("help")])?;
+        let path = root.join("target/xtask-dispatch-architecture-receipt.json");
+        run(
+            root,
+            &[
+                String::from("architecture-receipt"),
+                path.to_string_lossy().into_owned(),
+            ],
+        )?;
+        if !path.is_file() {
+            return Err(format!(
+                "dispatched receipt was not written: {}",
+                path.display()
+            ));
+        }
+        fs::remove_file(&path).map_err(|error| error.to_string())?;
         if run(root, &[String::from("unknown-command")]).is_ok() {
             return Err("unknown command unexpectedly succeeded".to_string());
         }
@@ -746,6 +800,97 @@ mod tests {
         }
         if !package_publish(&package(Some(serde_json::json!("registry")))) {
             return Err("non-boolean publication metadata was rejected".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn graph_and_topology_validation_paths_are_covered() -> Result<(), String> {
+        let metadata = Metadata {
+            packages: vec![
+                MetadataPackage {
+                    id: "root".to_string(),
+                    name: "lintdiff".to_string(),
+                    publish: None,
+                },
+                MetadataPackage {
+                    id: "types".to_string(),
+                    name: "lintdiff-types".to_string(),
+                    publish: Some(serde_json::json!(false)),
+                },
+                MetadataPackage {
+                    id: "external".to_string(),
+                    name: "external".to_string(),
+                    publish: None,
+                },
+            ],
+            workspace_members: vec!["root".to_string(), "types".to_string()],
+            resolve: Some(Resolve {
+                nodes: vec![
+                    ResolveNode {
+                        id: "unknown".to_string(),
+                        deps: Vec::new(),
+                    },
+                    ResolveNode {
+                        id: "external".to_string(),
+                        deps: Vec::new(),
+                    },
+                    ResolveNode {
+                        id: "root".to_string(),
+                        deps: vec![ResolveDependency {
+                            pkg: "types".to_string(),
+                            dep_kinds: vec![DependencyKind { kind: None }],
+                        }],
+                    },
+                ],
+            }),
+        };
+        let edges = workspace_edges(&metadata);
+        if !edges
+            .get("lintdiff")
+            .is_some_and(|dependencies| dependencies.contains("lintdiff-types"))
+        {
+            return Err("synthetic workspace edge was not retained".to_string());
+        }
+        let metadata_without_resolve = Metadata {
+            resolve: None,
+            ..metadata
+        };
+        if !workspace_edges(&metadata_without_resolve).is_empty() {
+            return Err("metadata without resolve unexpectedly had edges".to_string());
+        }
+        let _ = runtime_packages(&edges);
+
+        let duplicate = toml::from_str::<toml::Value>(
+            r#"topology = [
+                { name = "same", class = "runtime", publish = false, allowed_lintdiff_dependencies = [] },
+                { name = "same", class = "runtime", publish = false, allowed_lintdiff_dependencies = [] },
+            ]"#,
+        )
+        .map_err(|error| error.to_string())?;
+        if topology_entries(&duplicate).is_ok() {
+            return Err("duplicate topology entry unexpectedly accepted".to_string());
+        }
+        if !package_publish(&MetadataPackage {
+            id: String::new(),
+            name: String::new(),
+            publish: None,
+        }) {
+            return Err("missing publication metadata was rejected".to_string());
+        }
+        if !package_publish(&MetadataPackage {
+            id: String::new(),
+            name: String::new(),
+            publish: Some(serde_json::json!(["registry"])),
+        }) {
+            return Err("non-empty registry publication metadata was rejected".to_string());
+        }
+        if package_publish(&MetadataPackage {
+            id: String::new(),
+            name: String::new(),
+            publish: Some(serde_json::json!([])),
+        }) {
+            return Err("empty registry publication metadata was accepted".to_string());
         }
         Ok(())
     }
