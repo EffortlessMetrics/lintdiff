@@ -383,14 +383,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-config/Cargo.toml", "crates/lintdiff-config/src/**"]
 tests = ["crates/lintdiff-config/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "remove disconnected configuration authority; preserve active types config until 0.2 PR"
+final_disposition = "deleted in MC-3; disconnected configuration authority removed without moving active lintdiff-types configuration"
 
 [[packages]]
 name = "lintdiff-bdd-harness"
@@ -478,14 +478,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-i18n/Cargo.toml", "crates/lintdiff-i18n/src/**"]
 tests = ["crates/lintdiff-i18n/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "defer; preserve through history and do not make i18n an active topology package"
+final_disposition = "deleted in MC-3 as deferred scope; no active replacement package introduced and history remains preservation"
 
 [[packages]]
 name = "lintdiff-locale-detect"
@@ -497,14 +497,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-locale-detect/Cargo.toml", "crates/lintdiff-locale-detect/src/**"]
 tests = ["crates/lintdiff-locale-detect/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "mine disconnected locale implementation; no active package replacement"
+final_disposition = "deleted in MC-3 as deferred scope; no active replacement package introduced and history remains preservation"
 
 [[packages]]
 name = "lintdiff-exit"
@@ -516,14 +516,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-exit/Cargo.toml", "crates/lintdiff-exit/src/**"]
 tests = ["crates/lintdiff-exit/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "fold only if active exit behavior is confirmed; otherwise delete after mining"
+final_disposition = "deleted in MC-3; legacy exit helpers reviewed, while live application exit behavior remains in the CLI shell"
 
 [[packages]]
 name = "lintdiff-explain"
@@ -725,14 +725,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-ci-env/Cargo.toml", "crates/lintdiff-ci-env/src/**"]
 tests = ["crates/lintdiff-ci-env/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "fold active environment discovery into application config or delete if disconnected"
+final_disposition = "deleted in MC-3; no active consumer and no replacement package introduced"
 
 [[packages]]
 name = "lintdiff-path-norm"
@@ -972,14 +972,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-timestamp/Cargo.toml", "crates/lintdiff-timestamp/src/**"]
 tests = ["crates/lintdiff-timestamp/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "fold active clock behavior into application or delete if disconnected"
+final_disposition = "deleted in MC-3; legacy timestamp helpers reviewed, while live run metadata remains in canonical protocol/application code"
 
 [[packages]]
 name = "lintdiff-explain-builder"
@@ -1124,14 +1124,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-annotation-format/Cargo.toml", "crates/lintdiff-annotation-format/src/**"]
 tests = ["crates/lintdiff-annotation-format/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-3"
-final_disposition = "fold active output selection into application config"
+final_disposition = "deleted in MC-3; disconnected annotation configuration authority removed and renderer behavior remains deferred to MC-12"
 
 [[packages]]
 name = "lintdiff-host-info"
