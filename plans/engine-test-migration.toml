@@ -1,0 +1,95 @@
+version = 1
+purpose = "Freeze the current ingest-engine proof surface before the MC-7 coherent package cutover."
+baseline = "origin/main@89a4efdaf923c76264b5f8a6071895f44068d5cb"
+production_movement = false
+behavior_changes = false
+
+[proof_commands]
+workspace_tests = "cargo test --workspace --all-features"
+workspace_docs = "cargo test --workspace --doc"
+test_inventory = "cargo test --workspace --all-features -- --list"
+bench_compile = "cargo bench --workspace --no-run"
+
+[inventory]
+requested_command = "cargo test --workspace --all-features -- --list"
+requested_status = "blocked_by_custom_bdd_harness"
+requested_failure = "The lintdiff Cucumber integration test is a custom harness and rejects Cargo's injected --list argument."
+fallback_command = "cargo test --workspace --all-features --exclude lintdiff -- --list"
+fallback_status = "pass"
+follow_up = "Retain an explicit inventory path for the custom lintdiff BDD harness during MC-9 application-shell work."
+
+[[proofs]]
+name = "receipt_verdict_snapshots"
+source = "crates/lintdiff-ingest-core/tests/determinism.rs"
+fixtures = [
+  "crates/lintdiff-ingest-core/tests/snapshots/pass_verdict.json",
+  "crates/lintdiff-ingest-core/tests/snapshots/warn_verdict.json",
+  "crates/lintdiff-ingest-core/tests/snapshots/fail_verdict.json",
+]
+claim = "Canonical report.v1 receipt JSON, verdict counts, explain data, and stable finding payloads remain byte-identical."
+destination = "crates/lintdiff-engine/tests/golden/"
+
+[[proofs]]
+name = "finding_order_and_fingerprint"
+source = "crates/lintdiff-ingest-core/tests/{determinism.rs,fingerprint_integration.rs}"
+claim = "Finding ordering and fingerprint values remain stable across the engine move."
+destination = "crates/lintdiff-engine/tests/"
+
+[[proofs]]
+name = "diagnostic_acquisition"
+source = "crates/lintdiff-diagnostics/tests/{json_parsing.rs,span_extraction.rs,stream_handling.rs}"
+claim = "Cargo diagnostic parsing, spans, stream completion, and failure evidence remain covered by canonical production code."
+destination = "crates/lintdiff-engine/tests/diagnostics/"
+
+[[proofs]]
+name = "source_correspondence"
+source = "crates/lintdiff-diff/tests/{diff_parsing.rs,hunk_handling.rs,path_normalization.rs,property_tests.rs,property_tests.proptest-regressions}"
+claim = "Unified diff parsing, hunk handling, path normalization, and property regressions remain covered."
+destination = "crates/lintdiff-engine/tests/source/"
+
+[[proofs]]
+name = "matching"
+source = "crates/lintdiff-match/tests/{filter_tests.rs,path_tests.rs,span_tests.rs}"
+claim = "Path and span matching behavior remains covered without copied matching algorithms."
+destination = "crates/lintdiff-engine/tests/matching/"
+
+[[proofs]]
+name = "policy_and_identity"
+source = "crates/lintdiff-policy/tests/{code_tests.rs,fingerprint_tests.rs,verdict_tests.rs}"
+claim = "Code policy, fingerprint, verdict, failure, and skip behavior remain covered."
+destination = "crates/lintdiff-engine/tests/policy/"
+
+[[proofs]]
+name = "fingerprint_properties"
+source = "crates/lintdiff-fingerprint/tests/{fingerprint_tests.rs,property_tests.rs,stability_tests.rs}"
+claim = "Occurrence, semantic, and context fingerprint invariants remain covered by production calls."
+destination = "crates/lintdiff-engine/tests/identity/"
+
+[[proofs]]
+name = "render_projections"
+source = "crates/lintdiff-render/tests/{markdown_tests.rs,annotations_tests.rs,budget_tests.rs}"
+claim = "Markdown, annotation, and budgeted projection bytes remain unchanged while renderer stays outside the engine."
+destination = "crates/lintdiff-render/tests/"
+
+[[proofs]]
+name = "fuzz_and_bench_consumers"
+source = "fuzz/ and crates/lintdiff-bench/"
+claim = "Every retained fuzz target and benchmark must call the canonical production implementation after MC-7."
+destination = "crates/lintdiff-engine/ and crates/lintdiff/"
+
+[freeze]
+report_json = true
+markdown = true
+github_annotations = true
+explain_dispositions = true
+finding_order = true
+fingerprint_values = true
+path_and_rename_behavior = true
+failure_and_skip_behavior = true
+
+[non_goals]
+package_rename = "MC-8"
+production_source_move = "MC-7"
+publication_change = true
+behavior_fix = true
+manifest_sweep = true
