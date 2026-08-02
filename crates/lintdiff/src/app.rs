@@ -11,11 +11,12 @@ use crate::io::{
 };
 use lintdiff_engine::parse_unified_diff;
 use lintdiff_engine::{ingest_on_diff, IngestOnDiffParams};
-use lintdiff_feature_flags::set_feature_flags_from_assignments;
 use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,
 };
 use lintdiff_types::{FailOn, HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo};
+
+use crate::config::feature_flags::set_feature_flags_from_assignments;
 use serde_json::json;
 use thiserror::Error;
 

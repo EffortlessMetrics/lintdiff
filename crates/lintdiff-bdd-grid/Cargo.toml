@@ -15,5 +15,4 @@ documentation.workspace = true
 publish = false
 
 [dependencies]
-lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }

@@ -1739,7 +1739,6 @@ dependencies = [
  "cucumber",
  "lintdiff-bdd-harness",
  "lintdiff-engine",
- "lintdiff-feature-flags",
  "lintdiff-render",
  "lintdiff-types",
  "regex",
@@ -1756,7 +1755,6 @@ dependencies = [
 name = "lintdiff-bdd-grid"
 version = "0.1.0"
 dependencies = [
- "lintdiff-feature-flags",
  "lintdiff-types",
 ]
 
@@ -1766,7 +1764,6 @@ version = "0.1.0"
 dependencies = [
  "lintdiff-bdd-grid",
  "lintdiff-engine",
- "lintdiff-feature-flags",
  "lintdiff-types",
 ]
 
@@ -1799,13 +1796,6 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-feature-flags"
-version = "0.1.0"
-dependencies = [
- "lintdiff-types",
 ]
 
 [[package]]

@@ -15,7 +15,6 @@ documentation.workspace = true
 
 [dependencies]
 lintdiff-engine = { path = "../lintdiff-engine" }
-lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-render = { path = "../lintdiff-render" }
 lintdiff-types = { path = "../lintdiff-types" }
 
