@@ -22,14 +22,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "crates.io missing; GitHub code search returned only EffortlessMetrics/lintdiff self references"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-jsonl/Cargo.toml", "crates/lintdiff-jsonl/src/**"]
 tests = ["crates/lintdiff-jsonl/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "candidate for engine cargo parsing; preserve tests before deletion"
+final_disposition = "deleted in MC-4; cargo parsing cases remain ledger evidence for the future engine module and no duplicate package is retained"
 
 [[packages]]
 name = "lintdiff-hunk-header"
@@ -41,14 +41,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-hunk-header/Cargo.toml", "crates/lintdiff-hunk-header/src/**"]
 tests = ["crates/lintdiff-hunk-header/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "candidate for engine source parsing; preserve tests before deletion"
+final_disposition = "deleted in MC-4; source parsing cases remain ledger evidence for the future engine module and no duplicate package is retained"
 
 [[packages]]
 name = "lintdiff-types"
@@ -592,14 +592,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-line-range/Cargo.toml", "crates/lintdiff-line-range/src/**"]
 tests = ["crates/lintdiff-line-range/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine line-range model into engine source correspondence"
+final_disposition = "deleted in MC-4 with its selected consumers; line-range semantics remain a future engine source-correspondence proof"
 
 [[packages]]
 name = "lintdiff-line-merge"
@@ -611,14 +611,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-line-merge/Cargo.toml", "crates/lintdiff-line-merge/src/**"]
 tests = ["crates/lintdiff-line-merge/tests/**"]
 properties = ["crates/lintdiff-line-merge/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine line-merge properties into engine source correspondence"
+final_disposition = "deleted in MC-4; line-merge properties remain ledger evidence for future engine source correspondence"
 
 [[packages]]
 name = "lintdiff-glob"
@@ -744,14 +744,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-path-norm/Cargo.toml", "crates/lintdiff-path-norm/src/**"]
 tests = ["crates/lintdiff-path-norm/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine path normalization into canonical source model"
+final_disposition = "deleted in MC-4; path-normalization semantics remain ledger evidence for future engine source work"
 
 [[packages]]
 name = "lintdiff-sort"
@@ -782,14 +782,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-span/Cargo.toml", "crates/lintdiff-span/src/**"]
 tests = ["crates/lintdiff-span/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine span model into canonical matching"
+final_disposition = "deleted in MC-4; span semantics remain ledger evidence for future engine matching work"
 
 [[packages]]
 name = "lintdiff-location"
@@ -953,14 +953,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-diff-paths/Cargo.toml", "crates/lintdiff-diff-paths/src/**"]
 tests = ["crates/lintdiff-diff-paths/tests/**"]
 properties = ["crates/lintdiff-diff-paths/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine normalized diff path semantics into engine source"
+final_disposition = "deleted in MC-4; normalized diff-path semantics remain ledger evidence for future engine source correspondence"
 
 [[packages]]
 name = "lintdiff-timestamp"
@@ -1105,14 +1105,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-diff-stats/Cargo.toml", "crates/lintdiff-diff-stats/src/**"]
 tests = ["crates/lintdiff-diff-stats/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine diff statistics into engine receipt/source model"
+final_disposition = "deleted in MC-4; diff-statistics semantics remain ledger evidence for future engine receipt/source work"
 
 [[packages]]
 name = "lintdiff-annotation-format"
@@ -1200,14 +1200,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-range-merge/Cargo.toml", "crates/lintdiff-range-merge/src/**"]
 tests = ["crates/lintdiff-range-merge/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine range merge semantics into engine source"
+final_disposition = "deleted in MC-4; range-merge semantics remain ledger evidence for future engine source correspondence"
 
 [[packages]]
 name = "lintdiff-message-truncate"
@@ -1257,14 +1257,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata records the selected MC-4 dependency closure and no inbound consumer outside it; GitHub code search found only self references"
 source_files = ["crates/lintdiff-span-intersect/Cargo.toml", "crates/lintdiff-span-intersect/src/**"]
 tests = ["crates/lintdiff-span-intersect/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-4"
-final_disposition = "mine span intersection semantics into engine matching"
+final_disposition = "deleted in MC-4 with its selected line-range dependency; intersection semantics remain ledger evidence for future engine matching work"
 
 [[packages]]
 name = "lintdiff-budget"
