@@ -1,11 +1,11 @@
 //! Benchmarks for diff parsing performance.
 //!
-//! Measures the performance of `lintdiff_ingest_core::parse_unified_diff` across
+//! Measures the performance of `lintdiff_engine::parse_unified_diff` across
 //! various diff sizes and complexities.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
-use lintdiff_ingest_core::parse_unified_diff;
+use lintdiff_engine::parse_unified_diff;
 
 /// Generate a simple diff with a single file and specified number of hunks/lines.
 fn generate_simple_diff(num_hunks: usize, lines_per_hunk: usize) -> String {

@@ -9,7 +9,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-lintdiff-ingest-core = { path = "../crates/lintdiff-ingest-core" }
+lintdiff-engine = { path = "../crates/lintdiff-engine" }
 lintdiff-types = { path = "../crates/lintdiff-types" }
 
 [[bin]]

@@ -15,7 +15,7 @@ documentation.workspace = true
 publish = false
 
 [dependencies]
-lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
+lintdiff-engine = { path = "../lintdiff-engine" }
 lintdiff-types = { path = "../lintdiff-types" }
 
 [dev-dependencies]

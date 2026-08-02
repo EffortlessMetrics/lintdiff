@@ -5,7 +5,7 @@ use std::io::{BufReader, Write};
 use std::path::PathBuf;
 
 use lintdiff_app_io::{acquire_diagnostics, parse_diagnostics, AppIoError};
-use lintdiff_ingest_core::DiagnosticLevel;
+use lintdiff_engine::DiagnosticLevel;
 use tempfile::TempDir;
 
 fn create_diagnostics_file(dir: &TempDir, filename: &str, content: &str) -> PathBuf {
