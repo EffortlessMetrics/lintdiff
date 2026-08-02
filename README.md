@@ -2,28 +2,27 @@
 
 [![Coverage](https://codecov.io/gh/effortless-metrics/lintdiff/branch/main/graph/badge.svg)](https://codecov.io/gh/effortless-metrics/lintdiff)
 
-`lintdiff` filters Rust compiler / Clippy diagnostics down to **only the lines touched by a PR** and emits a **stable, schema-validated receipt** suitable for cockpit-style ingestion.
+`lintdiff` maps structured Rust compiler / Clippy diagnostics to **lines touched by a PR** and emits a **stable, schema-validated receipt** suitable for CI ingestion.
 
-**Question answered:** _"Did this change introduce actionable diagnostics on changed lines?"_
+**Question answered:** _"Which diagnostics from the head analysis are located on PR-touched lines, and why?"_
 
-## Project Status
+See [PRODUCT.md](PRODUCT.md) for the supported product boundary, limitations, and
+comparison with adjacent tools.
 
-| Metric | Value |
-|--------|-------|
-| **Development Status** | ✅ Production Ready |
-| **All Phases Complete** | 10/10 (100%) |
-| **Total Tests** | 1,207+ |
-| **BDD Scenarios** | 200 |
-| **CI/CD Workflows** | 8 |
-| **Clippy Lint Level** | pedantic (zero warnings) |
+## Product Status
+
+The supported product is the release-binary CLI and the GitHub Action. The
+current published example uses the exact `v0.1.0` Action tag; `v0.1.1` is a
+separate trustworthy-release workstream.
 
 ### Infrastructure Highlights
 
-- **Performance Benchmarks**: Criterion-based benchmarking suite for large repos
-- **API Stability**: Automated semver checking with cargo-semver-checks
-- **Code Coverage**: Codecov integration with comprehensive reporting
-- **Fuzzing**: Advanced fuzzing infrastructure with structured corpus
-- **i18n Ready**: Fluent-based internationalization infrastructure
+- **Deterministic receipt**: `lintdiff.report.v1` is the canonical output
+  protocol.
+- **Repository proof**: tests, benchmarks, fuzzing, coverage, and `xtask` checks
+  support maintenance; their counts are not product readiness claims.
+- **Narrow scope**: the current mode locates diagnostics on changed lines. It
+  does not establish diagnostic newness relative to a base analysis.
 
 ## Design constraints (non-negotiable)
 
@@ -80,18 +79,11 @@ See [action.yml](action.yml) for all available inputs and outputs.
 
 - `docs/architecture.md` – role, boundaries, IO contracts, failure modes
 - `docs/requirements.md` – requirements and invariants
-- `docs/design.md` – internal design (hexagonal boundaries + microcrates)
+- `PRODUCT.md` – supported product contract and limitations
+- `docs/design.md` – internal layered engine/application design
 - `docs/implementation-plan.md` – phased plan + test strategy
 
 ## Workspace layout
-
-The current collapse target is enforced by xtask and consists of four runtime
-packages: lintdiff-types (public protocol), lintdiff-engine (pure analysis),
-lintdiff-render (receipt projections), and lintdiff (application and binary).
-xtask is repository tooling; fuzz/ remains an excluded auxiliary workspace.
-The dated disposition ledger in
-[plans/microcrate-collapse-ledger.toml](plans/microcrate-collapse-ledger.toml)
-is the migration record.
 
 The enforced workspace currently contains five members: four runtime packages and
 the repository-only `xtask` control plane. `fuzz/` remains excluded. The normal
@@ -100,8 +92,10 @@ the engine and renderer depend on `lintdiff-types` only among lintdiff packages.
 
 `lintdiff-types` is the only package with publication intent. The engine, renderer,
 application, and xtask remain `publish = false`; no public engine crate is implied
-by the internal package boundary. The dated disposition ledger is the migration
-record and `cargo run -p xtask -- architecture-check` is the enforcement surface.
+by the internal package boundary. The dated disposition ledger at
+[plans/microcrate-collapse-ledger.toml](plans/microcrate-collapse-ledger.toml) is
+the migration record, and `cargo run -p xtask -- architecture-check` is the
+enforcement surface.
 
 ## License
 
