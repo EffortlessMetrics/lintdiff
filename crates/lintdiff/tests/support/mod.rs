@@ -1,7 +1,14 @@
+#![allow(
+    dead_code,
+    unused_imports,
+    reason = "shared BDD support is compiled by multiple test targets with different helper subsets"
+)]
+
 use std::io::Cursor;
 
-use lintdiff_bdd_grid::{set_feature_flag_by_name_and_value, set_feature_flags_from_assignments};
-pub use lintdiff_bdd_grid::{FeatureFlagGrid, FeatureFlagGridRow};
+pub mod grid;
+use grid::{set_feature_flag_by_name_and_value, set_feature_flags_from_assignments};
+pub use grid::{FeatureFlagGrid, FeatureFlagGridRow};
 use lintdiff_engine::{ingest_on_diff, IngestOnDiffParams};
 use lintdiff_engine::{parse_cargo_messages, parse_unified_diff};
 use lintdiff_types::{LintdiffConfig, NormPath, Report, RunInfo, ToolInfo, TOOL_NAME};

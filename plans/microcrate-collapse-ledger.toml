@@ -414,21 +414,21 @@ final_disposition = "deleted in MC-3; disconnected configuration authority remov
 [[packages]]
 name = "lintdiff-bdd-harness"
 action = "defer"
-destination = "lintdiff-test-support or lintdiff/tests/support"
-canonical_owner = "lintdiff-test-support"
+destination = "lintdiff/tests/support"
+canonical_owner = "lintdiff/tests/support"
 class = "test_support"
 runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "dev-only consumer count must be reevaluated after package collapse"
+external_consumer_evidence = "MC-13 found one retained consumer, lintdiff; helpers moved to lintdiff/tests/support and no shared package contract remains"
 source_files = ["crates/lintdiff-bdd-harness/Cargo.toml", "crates/lintdiff-bdd-harness/src/**"]
 tests = []
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-13"
-final_disposition = "conditional dev-support package only if two retained packages share helpers"
+final_disposition = "retired as a package in MC-13; BDD harness helpers moved to lintdiff/tests/support"
 
 [[packages]]
 name = "lintdiff-feature-flags"
@@ -452,21 +452,21 @@ final_disposition = "retired as a package; runtime feature configuration and its
 [[packages]]
 name = "lintdiff-bdd-grid"
 action = "defer"
-destination = "lintdiff-test-support or lintdiff/tests/support"
-canonical_owner = "lintdiff-test-support"
+destination = "lintdiff/tests/support/grid"
+canonical_owner = "lintdiff/tests/support/grid"
 class = "test_support"
 runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "dev-only consumer count must be reevaluated after package collapse"
+external_consumer_evidence = "MC-13 found one retained consumer through lintdiff-bdd-harness; grid helpers moved with the harness into lintdiff/tests/support"
 source_files = ["crates/lintdiff-bdd-grid/Cargo.toml", "crates/lintdiff-bdd-grid/src/**"]
 tests = []
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-13"
-final_disposition = "merge into harness or package-local support after retained-consumer count"
+final_disposition = "retired as a package in MC-13; grid helpers moved to lintdiff/tests/support/grid"
 
 [[packages]]
 name = "lintdiff-bench"
@@ -478,14 +478,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "MC-12 found no workspace or external consumer; retained renderer modules own the active projection path"
+external_consumer_evidence = "MC-13 found no external consumer; all three targets invoke canonical lintdiff-engine production functions"
 source_files = ["crates/lintdiff-bench/Cargo.toml", "crates/lintdiff-bench/benches/**"]
 tests = []
 properties = []
 fuzz_targets = []
 benchmarks = ["crates/lintdiff-bench/benches/**"]
 migration_pr = "MC-13"
-final_disposition = "colocate benches and remove package after canonical production-path audit"
+final_disposition = "retired as a package in MC-13; diagnostics, diff, and fingerprint benches moved to lintdiff-engine/benches"
 
 [[packages]]
 name = "lintdiff-i18n"

@@ -25,7 +25,6 @@ time.workspace = true
 toml.workspace = true
 
 [dev-dependencies]
-lintdiff-bdd-harness = { path = "../lintdiff-bdd-harness" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 cucumber = "0.23"
 uselesskey.workspace = true
