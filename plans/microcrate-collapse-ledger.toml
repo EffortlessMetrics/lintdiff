@@ -212,14 +212,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-finding-builder/Cargo.toml", "crates/lintdiff-finding-builder/src/**"]
 tests = ["crates/lintdiff-finding-builder/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine construction cases into engine receipt; no automatic semantic merge"
+final_disposition = "deleted in MC-2B; builder construction cases were reviewed but no legacy builder API was merged; canonical receipt construction remains an engine follow-up"
 
 [[packages]]
 name = "lintdiff-stats"
@@ -535,14 +535,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-explain/Cargo.toml", "crates/lintdiff-explain/src/**"]
 tests = ["crates/lintdiff-explain/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine explanation dispositions into canonical receipt construction"
+final_disposition = "deleted in MC-2B; legacy explanation semantics were reviewed but not merged with live report disposition DTOs"
 
 [[packages]]
 name = "lintdiff-truncate"
@@ -706,14 +706,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-verdict/Cargo.toml", "crates/lintdiff-verdict/src/**"]
 tests = ["crates/lintdiff-verdict/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A/MC-2B"
-final_disposition = "resolve verdict semantics into one canonical policy model"
+migration_pr = "MC-2B"
+final_disposition = "deleted in MC-2B; legacy Pass/Warn/Fail policy semantics were reviewed but not merged with live report VerdictStatus"
 
 [[packages]]
 name = "lintdiff-ci-env"
@@ -991,14 +991,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-explain-builder/Cargo.toml", "crates/lintdiff-explain-builder/src/**"]
 tests = ["crates/lintdiff-explain-builder/tests/**"]
 properties = ["crates/lintdiff-explain-builder/tests/property_tests.rs"]
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine explanation construction cases into canonical receipt"
+final_disposition = "deleted in MC-2B; explanation-builder tests and property cases were reviewed but no duplicate construction API was merged"
 
 [[packages]]
 name = "lintdiff-explain-summary"
@@ -1010,14 +1010,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-explain-summary/Cargo.toml", "crates/lintdiff-explain-summary/src/**"]
 tests = []
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine summary semantics into canonical receipt"
+final_disposition = "deleted in MC-2B; summary DTO semantics remain represented by the canonical lintdiff-types ExplainSummary"
 
 [[packages]]
 name = "lintdiff-git-info"
@@ -1048,14 +1048,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-report-builder/Cargo.toml", "crates/lintdiff-report-builder/src/**"]
 tests = ["crates/lintdiff-report-builder/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine report construction into canonical engine receipt"
+final_disposition = "deleted in MC-2B; report-builder tests were reviewed but no duplicate construction API was merged; canonical receipt construction remains an engine follow-up"
 
 [[packages]]
 name = "lintdiff-verdict-reason"
@@ -1067,14 +1067,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-verdict-reason/Cargo.toml", "crates/lintdiff-verdict-reason/src/**"]
 tests = ["crates/lintdiff-verdict-reason/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2B"
-final_disposition = "mine reason semantics into canonical engine policy"
+final_disposition = "deleted in MC-2B; legacy reason formatting was reviewed but not merged into engine policy"
 
 [[packages]]
 name = "lintdiff-diagnostic-level"
