@@ -193,14 +193,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-finding/Cargo.toml", "crates/lintdiff-finding/src/**"]
 tests = ["crates/lintdiff-finding/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2A"
-final_disposition = "mine tests and resolve semantic conflicts before deletion"
+final_disposition = "deleted in MC-2A; legacy finding builder/accessor semantics were reviewed but not merged; canonical lintdiff-types report tests remain authoritative"
 
 [[packages]]
 name = "lintdiff-finding-builder"
@@ -649,14 +649,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-severity/Cargo.toml", "crates/lintdiff-severity/src/**"]
 tests = ["crates/lintdiff-severity/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2A"
-final_disposition = "mine severity semantics into canonical protocol model"
+final_disposition = "deleted in MC-2A; legacy Hint/Note/Warning/Error/Fatal semantics conflict with the live Info/Warn/Error wire enum and were not merged"
 
 [[packages]]
 name = "lintdiff-severity-map"
@@ -801,14 +801,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-location/Cargo.toml", "crates/lintdiff-location/src/**"]
 tests = ["crates/lintdiff-location/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2A/MC-4"
-final_disposition = "mine location semantics into protocol/source model"
+final_disposition = "deleted in MC-2A; legacy PathBuf and range APIs were reviewed but not merged; live report Location and engine source mapping remain authoritative"
 
 [[packages]]
 name = "lintdiff-counts"
@@ -839,14 +839,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no workspace inbound consumer; GitHub code search found only self references"
 source_files = ["crates/lintdiff-disposition/Cargo.toml", "crates/lintdiff-disposition/src/**"]
 tests = ["crates/lintdiff-disposition/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-2A/MC-2B"
-final_disposition = "mine policy evidence into canonical engine verdict"
+final_disposition = "deleted in MC-2A; legacy New/Fixed/PreExisting lifecycle semantics were reviewed but not merged with the live report disposition enum"
 
 [[packages]]
 name = "lintdiff-report-schema"

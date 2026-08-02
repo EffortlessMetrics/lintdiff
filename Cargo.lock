@@ -2015,15 +2015,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-disposition"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-escape"
 version = "0.1.0"
 
@@ -2066,15 +2057,6 @@ name = "lintdiff-feature-flags"
 version = "0.1.0"
 dependencies = [
  "lintdiff-types",
-]
-
-[[package]]
-name = "lintdiff-finding"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
 ]
 
 [[package]]
@@ -2182,15 +2164,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-location"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-match"
 version = "0.1.0"
 dependencies = [
@@ -2294,14 +2267,6 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.19",
  "time",
-]
-
-[[package]]
-name = "lintdiff-severity"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "thiserror 2.0.19",
 ]
 
 [[package]]
