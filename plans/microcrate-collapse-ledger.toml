@@ -384,13 +384,13 @@ published = false
 external_consumers = ["GitHub Action and release archive product surface"]
 registry_history = "crates.io API 2026-08-02: not found as lintdiff package"
 external_consumer_evidence = "product consumer is GitHub release/Action; do not infer Rust API from package name"
-source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/**", "crates/lintdiff-cli/build.rs"]
+source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/lib.rs", "crates/lintdiff-cli/src/cli.rs", "crates/lintdiff-cli/src/main.rs", "crates/lintdiff-cli/build.rs"]
 tests = ["crates/lintdiff-cli/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-9/MC-11"
-final_disposition = "add library shell, then rename directory from crates/lintdiff-cli to crates/lintdiff"
+final_disposition = "library shell added in MC-9; rename directory from crates/lintdiff-cli to crates/lintdiff remains MC-11"
 
 [[packages]]
 name = "lintdiff-config"
