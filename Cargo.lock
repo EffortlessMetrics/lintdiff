@@ -2286,16 +2286,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-report-schema"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-run-info"
 version = "0.1.0"
 dependencies = [
@@ -2304,15 +2294,6 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.19",
  "time",
-]
-
-[[package]]
-name = "lintdiff-schema-diff"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
 ]
 
 [[package]]

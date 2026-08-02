@@ -103,7 +103,13 @@ if ($missing.Count -gt 0) {
     throw "ledger is missing workspace packages: $($missing -join ', ')"
 }
 if ($unknown.Count -gt 0) {
-    throw "ledger contains non-workspace packages: $($unknown -join ', ')"
+    foreach ($name in $unknown) {
+        $record = $records | Where-Object Name -eq $name
+        $disposition = Get-TomlField -Block $record.Block -Name 'final_disposition'
+        if ($disposition -notmatch '(?i)\b(deleted|retired)\b') {
+            throw "ledger contains non-workspace package without historical deletion disposition: $name"
+        }
+    }
 }
 
 $allowedActions = @('keep', 'fold', 'mine_delete', 'temporary_wrapper', 'defer')

@@ -45,7 +45,6 @@ members = [
   "crates/lintdiff-location",
   "crates/lintdiff-counts",
   "crates/lintdiff-disposition",
-  "crates/lintdiff-report-schema",
   "crates/lintdiff-message-norm",
   "crates/lintdiff-render-utils",
   "crates/lintdiff-config-types",
@@ -68,7 +67,6 @@ members = [
   "crates/lintdiff-code-policy",
   "crates/lintdiff-span-intersect",
   "crates/lintdiff-budget",
-  "crates/lintdiff-schema-diff",
 ]
 exclude = ["fuzz"]
 
