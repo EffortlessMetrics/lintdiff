@@ -3,16 +3,12 @@ resolver = "2"
 members = [
   "crates/lintdiff-types",
   "crates/lintdiff-engine",
-  "crates/lintdiff-stats",
   "crates/lintdiff-render",
-  "crates/lintdiff-render-markdown",
-  "crates/lintdiff-render-annotations",
   "crates/lintdiff",
   "crates/lintdiff-bdd-harness",
   "crates/lintdiff-bdd-grid",
   "crates/lintdiff-bench",
   "crates/lintdiff-glob",
-  "crates/lintdiff-render-utils",
   "crates/lintdiff-git-info",
   "crates/lintdiff-diagnostic-level",
   "crates/lintdiff-host-info",
@@ -54,7 +50,6 @@ fluent = "0.17"
 fluent-bundle = "0.16"
 unic-langid = "0.9"
 lintdiff-types = { path = "crates/lintdiff-types" }
-lintdiff-stats = { path = "crates/lintdiff-stats" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

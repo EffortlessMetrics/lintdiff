@@ -243,21 +243,21 @@ final_disposition = "deleted in MC-2B; builder construction cases were reviewed 
 [[packages]]
 name = "lintdiff-stats"
 action = "mine_delete"
-destination = "lintdiff-engine::receipt"
-canonical_owner = "lintdiff-engine::receipt"
-class = "receipt_builder"
+destination = "lintdiff-render"
+canonical_owner = "lintdiff-render"
+class = "projection_utility"
 runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-12 found no workspace or external consumer; the retained renderer already renders typed receipts without this alternate statistics model"
 source_files = ["crates/lintdiff-stats/Cargo.toml", "crates/lintdiff-stats/src/**"]
 tests = ["crates/lintdiff-stats/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2B/MC-12"
-final_disposition = "mine receipt/count cases and fold into canonical engine or renderer owner"
+migration_pr = "MC-12"
+final_disposition = "retired as a disconnected package in MC-12; statistics cases were mined against the retained renderer proof without preserving a second model"
 
 [[packages]]
 name = "lintdiff-render"
@@ -288,14 +288,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-12 found no workspace or external consumer; the retained renderer is the canonical projection implementation"
 source_files = ["crates/lintdiff-render-markdown/Cargo.toml", "crates/lintdiff-render-markdown/src/**"]
 tests = ["crates/lintdiff-render-markdown/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-12"
-final_disposition = "fold projection helpers into retained renderer"
+final_disposition = "retired as a disconnected package in MC-12; canonical markdown behavior remains in lintdiff-render"
 
 [[packages]]
 name = "lintdiff-render-annotations"
@@ -307,14 +307,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-12 found no workspace or external consumer; the retained renderer is the canonical projection implementation"
 source_files = ["crates/lintdiff-render-annotations/Cargo.toml", "crates/lintdiff-render-annotations/src/**"]
 tests = ["crates/lintdiff-render-annotations/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-12"
-final_disposition = "fold annotation projection into retained renderer"
+final_disposition = "retired as a disconnected package in MC-12; canonical GitHub annotation behavior remains in lintdiff-render"
 
 [[packages]]
 name = "lintdiff-app-git"
@@ -478,7 +478,7 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-12 found no workspace or external consumer; retained renderer modules own the active projection path"
 source_files = ["crates/lintdiff-bench/Cargo.toml", "crates/lintdiff-bench/benches/**"]
 tests = []
 properties = []
@@ -915,14 +915,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-12 found no workspace or external consumer; retained renderer modules own the active projection path"
 source_files = ["crates/lintdiff-render-utils/Cargo.toml", "crates/lintdiff-render-utils/src/**"]
 tests = ["crates/lintdiff-render-utils/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-12"
-final_disposition = "fold shared renderer helpers into retained projection package"
+final_disposition = "retired as a disconnected package in MC-12; shared utility cases were not an independent consumer contract"
 
 [[packages]]
 name = "lintdiff-config-types"
