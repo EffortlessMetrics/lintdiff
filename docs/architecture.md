@@ -71,6 +71,20 @@ lintdiff is strict about not producing false confidence:
 
 ## Crate Architecture
 
+### Current canonical collapse target
+
+The active target topology is:
+
+- lintdiff-types — public protocol DTOs and schema identifiers.
+- lintdiff-engine — pure diagnostic analysis, comparison, policy, and receipt construction.
+- lintdiff-render — typed receipt projections.
+- lintdiff — application library, CLI, and binary.
+- xtask — repository control plane for architecture, schema, fixture, documentation, and release-contract checks.
+
+fuzz/ is excluded from the primary workspace. The package disposition ledger and
+cargo run -p xtask -- architecture-check are the current enforcement surfaces;
+the older package counts below remain dated historical evidence.
+
 As of 2026-08-01 evidence snapshot:
 
 - Workspace members: **69**

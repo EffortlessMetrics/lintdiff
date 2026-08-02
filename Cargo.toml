@@ -10,6 +10,7 @@ members = [
   "crates/lintdiff-diagnostic-level",
   "crates/lintdiff-host-info",
   "crates/lintdiff-run-info",
+  "xtask",
 ]
 exclude = ["fuzz"]
 
@@ -43,6 +44,7 @@ tempfile = "3"
 temp-env = "0.3"
 proptest = "1"
 cargo-semver-checks = "0.40"
+jsonschema = "0.46"
 fluent = "0.17"
 fluent-bundle = "0.16"
 unic-langid = "0.9"

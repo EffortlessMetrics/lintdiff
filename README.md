@@ -85,6 +85,14 @@ See [action.yml](action.yml) for all available inputs and outputs.
 
 ## Workspace layout
 
+The current collapse target is enforced by xtask and consists of four runtime
+packages: lintdiff-types (public protocol), lintdiff-engine (pure analysis),
+lintdiff-render (receipt projections), and lintdiff (application and binary).
+xtask is repository tooling; fuzz/ remains an excluded auxiliary workspace.
+The dated disposition ledger in
+[plans/microcrate-collapse-ledger.toml](plans/microcrate-collapse-ledger.toml)
+is the migration record.
+
 - Consumer boundary classes (evidence date: 2026-08-01):
   - **Candidate supported consumer surfaces** (current intended API promises): `lintdiff`, `lintdiff-ingest-core`.
   - **Registry support crates** (publish support only until Gate D0/D1 outcome): `lintdiff-types`, `lintdiff-report-schema` (pending).

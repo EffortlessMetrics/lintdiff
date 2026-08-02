@@ -1322,3 +1322,22 @@ fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-1"
 final_disposition = "deleted in MC-1; schema comparison tests mined only where they protect live report.v1"
+
+[[packages]]
+name = "xtask"
+action = "keep"
+destination = "xtask"
+canonical_owner = "xtask"
+class = "repository_tooling"
+runtime_reachable = false
+published = false
+external_consumers = []
+registry_history = "not published; repository-only package"
+external_consumer_evidence = "repository control plane with no product or external consumer"
+source_files = ["xtask/Cargo.toml", "xtask/src/**"]
+tests = ["xtask/src/lib.rs"]
+properties = []
+fuzz_targets = []
+benchmarks = []
+migration_pr = "MC-14"
+final_disposition = "retained as the sole repository control-plane package; publish=false"

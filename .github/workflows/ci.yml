@@ -22,6 +22,14 @@ jobs:
         run: cargo test --all-features
       - name: Run clippy
         run: cargo clippy --all-features -- -D warnings
+      - name: Architecture check
+        run: cargo run -p xtask -- architecture-check
+      - name: Schema check
+        run: cargo run -p xtask -- schema-check
+      - name: Fixture check
+        run: cargo run -p xtask -- fixture-check
+      - name: Documentation check
+        run: cargo run -p xtask -- docs-check
 
   lint:
     runs-on: ubuntu-latest

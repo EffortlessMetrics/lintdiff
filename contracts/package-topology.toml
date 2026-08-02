@@ -4,7 +4,7 @@
 
 schema_version = 1
 campaign = "microcrate-collapse"
-phase = "declared"
+phase = "enforced"
 baseline = "origin/main@ea68d869d3cd224698d4c55f6659ceb4ae5eefdb"
 historical_snapshot_packages = 69
 live_baseline_packages = 68
@@ -21,6 +21,13 @@ canonical_runtime = [
 
 repository_tooling = ["xtask"]
 conditional_dev_support = ["lintdiff-test-support"]
+deferred_workspace = [
+  "lintdiff-glob",
+  "lintdiff-git-info",
+  "lintdiff-diagnostic-level",
+  "lintdiff-host-info",
+  "lintdiff-run-info",
+]
 excluded_auxiliary_workspaces = ["fuzz"]
 allowed_actions = ["keep", "fold", "mine_delete", "temporary_wrapper", "defer"]
 
