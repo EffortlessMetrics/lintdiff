@@ -37,10 +37,8 @@ members = [
   "crates/lintdiff-path-norm",
   "crates/lintdiff-sort",
   "crates/lintdiff-span",
-  "crates/lintdiff-counts",
   "crates/lintdiff-message-norm",
   "crates/lintdiff-render-utils",
-  "crates/lintdiff-config-types",
   "crates/lintdiff-code-norm",
   "crates/lintdiff-diff-paths",
   "crates/lintdiff-timestamp",
@@ -55,7 +53,6 @@ members = [
   "crates/lintdiff-message-truncate",
   "crates/lintdiff-code-policy",
   "crates/lintdiff-span-intersect",
-  "crates/lintdiff-budget",
 ]
 exclude = ["fuzz"]
 

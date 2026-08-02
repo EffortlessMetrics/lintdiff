@@ -820,14 +820,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has only lintdiff-budget as inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-counts/Cargo.toml", "crates/lintdiff-counts/src/**"]
 tests = ["crates/lintdiff-counts/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A/MC-2B"
-final_disposition = "mine count DTO semantics into canonical report or delta DTOs"
+migration_pr = "MC-2C"
+final_disposition = "deleted in MC-2C with its only workspace consumer; legacy SeverityCounts semantics were reviewed but not merged with live report Counts"
 
 [[packages]]
 name = "lintdiff-disposition"
@@ -915,14 +915,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has only lintdiff-budget as inbound consumer and no runtime inbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-config-types/Cargo.toml", "crates/lintdiff-config-types/src/**"]
 tests = ["crates/lintdiff-config-types/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-3/MC-2B"
-final_disposition = "mine policy/config semantics; do not move public types in collapse campaign"
+migration_pr = "MC-2C/MC-3"
+final_disposition = "deleted in MC-2C with its only workspace consumer; active configuration remains in lintdiff-types pending the separate 0.2 compatibility decision"
 
 [[packages]]
 name = "lintdiff-code-norm"
@@ -1276,14 +1276,14 @@ runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "crates.io missing; current metadata has no inbound consumer, and only the disconnected counts/config-types chain outbound; GitHub code search found only self references"
 source_files = ["crates/lintdiff-budget/Cargo.toml", "crates/lintdiff-budget/src/**"]
 tests = ["crates/lintdiff-budget/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2B"
-final_disposition = "mine budget semantics into canonical engine policy"
+migration_pr = "MC-2C"
+final_disposition = "deleted in MC-2C; legacy budget policy tests were reviewed but not merged into engine policy"
 
 [[packages]]
 name = "lintdiff-schema-diff"
