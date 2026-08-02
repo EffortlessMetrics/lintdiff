@@ -2026,45 +2026,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-explain"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lintdiff-explain-builder"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lintdiff-explain-summary"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-feature-flags"
 version = "0.1.0"
 dependencies = [
  "lintdiff-types",
-]
-
-[[package]]
-name = "lintdiff-finding-builder"
-version = "0.1.0"
-dependencies = [
- "lintdiff-types",
- "serde_json",
 ]
 
 [[package]]
@@ -2249,16 +2214,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-report-builder"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "lintdiff-run-info"
 version = "0.1.0"
 dependencies = [
@@ -2345,25 +2300,6 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.19",
  "time",
-]
-
-[[package]]
-name = "lintdiff-verdict"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-verdict-reason"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
 ]
 
 [[package]]
