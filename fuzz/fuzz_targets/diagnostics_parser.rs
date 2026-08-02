@@ -12,7 +12,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use lintdiff_diagnostics::parse_cargo_messages;
+use lintdiff_ingest_core::parse_cargo_messages;
 use std::io::{BufReader, Cursor};
 
 fuzz_target!(|data: &[u8]| {

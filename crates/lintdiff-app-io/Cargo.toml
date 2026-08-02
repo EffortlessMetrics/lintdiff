@@ -14,7 +14,7 @@ homepage.workspace = true
 documentation.workspace = true
 
 [dependencies]
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
+lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
 lintdiff-types = { path = "../lintdiff-types" }
 serde_json.workspace = true
 thiserror.workspace = true

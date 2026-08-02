@@ -1,8 +1,7 @@
 use std::io::Cursor;
 
-use lintdiff_diagnostics::parse_cargo_messages;
-use lintdiff_diff::parse_unified_diff;
 use lintdiff_ingest_core::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_ingest_core::{parse_cargo_messages, parse_unified_diff};
 use lintdiff_types::{LintdiffConfig, NormPath, RunInfo, ToolInfo, TOOL_NAME};
 
 #[test]

@@ -2,12 +2,7 @@
 resolver = "2"
 members = [
   "crates/lintdiff-types",
-  "crates/lintdiff-diff",
-  "crates/lintdiff-diagnostics",
-  "crates/lintdiff-match",
   "crates/lintdiff-ingest-core",
-  "crates/lintdiff-policy",
-  "crates/lintdiff-fingerprint",
   "crates/lintdiff-stats",
   "crates/lintdiff-render",
   "crates/lintdiff-render-markdown",

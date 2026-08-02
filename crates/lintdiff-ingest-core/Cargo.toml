@@ -14,10 +14,13 @@ homepage.workspace = true
 documentation.workspace = true
 
 [dependencies]
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
-lintdiff-diff = { path = "../lintdiff-diff" }
-lintdiff-match = { path = "../lintdiff-match" }
-lintdiff-policy = { path = "../lintdiff-policy" }
 lintdiff-types = { path = "../lintdiff-types" }
 
+globset.workspace = true
+hex.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

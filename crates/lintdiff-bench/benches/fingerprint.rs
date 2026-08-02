@@ -1,11 +1,11 @@
 //! Benchmarks for fingerprint generation performance.
 //!
-//! Measures the performance of `lintdiff_fingerprint::fingerprint` across
+//! Measures the performance of `lintdiff_ingest_core::fingerprint` across
 //! various input sizes and configurations.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
-use lintdiff_fingerprint::fingerprint;
+use lintdiff_ingest_core::fingerprint;
 use lintdiff_types::{Location, NormPath};
 
 /// Generate a message of specified length with realistic content.

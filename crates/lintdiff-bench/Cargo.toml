@@ -15,9 +15,7 @@ documentation.workspace = true
 publish = false
 
 [dependencies]
-lintdiff-diff = { path = "../lintdiff-diff" }
-lintdiff-diagnostics = { path = "../lintdiff-diagnostics" }
-lintdiff-fingerprint = { path = "../lintdiff-fingerprint" }
+lintdiff-ingest-core = { path = "../lintdiff-ingest-core" }
 lintdiff-types = { path = "../lintdiff-types" }
 
 [dev-dependencies]
