@@ -1,5 +1,5 @@
 [package]
-name = "lintdiff-bdd-harness"
+name = "lintdiff-engine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -7,15 +7,20 @@ rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
 readme.workspace = true
-description = "Fixture harness with feature-flag matrix helpers for lintdiff BDD tests."
+description = "Pure diagnostic analysis and comparison engine for lintdiff."
 keywords.workspace = true
 categories.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-publish = false
 
 [dependencies]
-lintdiff-bdd-grid = { path = "../lintdiff-bdd-grid" }
-lintdiff-engine = { path = "../lintdiff-engine" }
-lintdiff-feature-flags = { path = "../lintdiff-feature-flags" }
 lintdiff-types = { path = "../lintdiff-types" }
+
+globset.workspace = true
+hex.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

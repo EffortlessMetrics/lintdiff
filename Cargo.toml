@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
   "crates/lintdiff-types",
-  "crates/lintdiff-ingest-core",
+  "crates/lintdiff-engine",
   "crates/lintdiff-stats",
   "crates/lintdiff-render",
   "crates/lintdiff-render-markdown",

@@ -17,7 +17,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use lintdiff_ingest_core::fingerprint;
+use lintdiff_engine::fingerprint;
 use lintdiff_types::{Location, NormPath};
 
 fuzz_target!(|data: &[u8]| {

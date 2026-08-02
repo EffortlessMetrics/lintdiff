@@ -3,7 +3,7 @@ use cucumber::{given, then, when, World as _};
 use lintdiff_bdd_harness::{
     apply_feature_flag_value, read_fixture as fixture, run_ingest_from_fixtures, verdict_status,
 };
-use lintdiff_ingest_core::{compile_filters, path_allowed};
+use lintdiff_engine::{compile_filters, path_allowed};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
 use lintdiff_types::{LintdiffConfig, Report};
 

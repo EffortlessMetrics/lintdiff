@@ -177,16 +177,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-fuzz"
-version = "0.0.0"
-dependencies = [
- "libfuzzer-sys",
- "lintdiff-ingest-core",
- "lintdiff-types",
-]
-
-[[package]]
-name = "lintdiff-ingest-core"
+name = "lintdiff-engine"
 version = "0.1.0"
 dependencies = [
  "globset",
@@ -195,6 +186,15 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror",
+]
+
+[[package]]
+name = "lintdiff-fuzz"
+version = "0.0.0"
+dependencies = [
+ "libfuzzer-sys",
+ "lintdiff-engine",
+ "lintdiff-types",
 ]
 
 [[package]]

@@ -132,18 +132,37 @@ action = "fold"
 destination = "lintdiff-engine"
 canonical_owner = "lintdiff-engine"
 class = "runtime_engine"
-runtime_reachable = true
+runtime_reachable = false
 published = false
-external_consumers = []
+external_consumers = ["lintdiff-app", "lintdiff-app-io", "lintdiff-bdd-harness", "lintdiff-bench", "lintdiff-cli", "fuzz"]
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "PR-94 publication claim is not external-consumer proof; refresh before rename"
+external_consumer_evidence = "MC-7 cutover left only workspace consumers; MC-8 renamed the package; no independent public consumer found in the pre-cutover GitHub/import audit"
 source_files = ["crates/lintdiff-ingest-core/Cargo.toml", "crates/lintdiff-ingest-core/src/**"]
 tests = ["crates/lintdiff-ingest-core/tests/**"]
-properties = []
-fuzz_targets = []
-benchmarks = []
+properties = ["crates/lintdiff-ingest-core/tests/source/property_tests.rs", "crates/lintdiff-ingest-core/tests/identity/property_tests.rs"]
+fuzz_targets = ["fuzz/fuzz_targets/diagnostics_parser.rs", "fuzz/fuzz_targets/diff_parser.rs", "fuzz/fuzz_targets/finding_fingerprint.rs"]
+benchmarks = ["crates/lintdiff-bench/benches/diagnostics_parsing.rs", "crates/lintdiff-bench/benches/diff_parsing.rs", "crates/lintdiff-bench/benches/fingerprint.rs"]
 migration_pr = "MC-6/MC-7/MC-8"
-final_disposition = "rename to lintdiff-engine only after coherent cutover and registry gate"
+final_disposition = "retired as the package name; renamed to lintdiff-engine after the coherent cutover"
+
+[[packages]]
+name = "lintdiff-engine"
+action = "keep"
+destination = "lintdiff-engine"
+canonical_owner = "lintdiff-engine"
+class = "runtime_engine"
+runtime_reachable = true
+published = false
+external_consumers = ["lintdiff-app", "lintdiff-app-io", "lintdiff-bdd-harness", "lintdiff-bench", "lintdiff-cli", "fuzz"]
+registry_history = "crates.io API 2026-08-02: not found (publish=false)"
+external_consumer_evidence = "renamed from lintdiff-ingest-core in MC-8; all consumers are workspace or excluded-fuzz consumers; no independent public consumer found in the pre-cutover GitHub/import audit"
+source_files = ["crates/lintdiff-engine/Cargo.toml", "crates/lintdiff-engine/src/**"]
+tests = ["crates/lintdiff-engine/tests/**"]
+properties = ["crates/lintdiff-engine/tests/source/property_tests.rs", "crates/lintdiff-engine/tests/identity/property_tests.rs"]
+fuzz_targets = ["fuzz/fuzz_targets/diagnostics_parser.rs", "fuzz/fuzz_targets/diff_parser.rs", "fuzz/fuzz_targets/finding_fingerprint.rs"]
+benchmarks = ["crates/lintdiff-bench/benches/diagnostics_parsing.rs", "crates/lintdiff-bench/benches/diff_parsing.rs", "crates/lintdiff-bench/benches/fingerprint.rs"]
+migration_pr = "MC-8"
+final_disposition = "retained as the renamed pure engine package; publish=false"
 
 [[packages]]
 name = "lintdiff-policy"
