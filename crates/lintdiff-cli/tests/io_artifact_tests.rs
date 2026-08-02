@@ -2,7 +2,7 @@
 
 use std::fs;
 
-use lintdiff_app_io::{now_rfc3339, write_report_json, write_text};
+use lintdiff::io::{now_rfc3339, write_report_json, write_text};
 use lintdiff_types::{
     Counts, Finding, GitInfo, HostInfo, Location, Report, RunInfo, Severity, ToolInfo, Verdict,
     VerdictStatus,

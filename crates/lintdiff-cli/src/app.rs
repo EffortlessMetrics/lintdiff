@@ -2,10 +2,12 @@ use std::io::{BufReader, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use lintdiff_app_git::{acquire_diff, determine_repo_root, gather_git_info, AppGitError};
-use lintdiff_app_io::{
-    acquire_diagnostics, load_config, now_rfc3339, parse_diagnostics, write_report_json,
-    write_text, AppIoError,
+pub use crate::git::AppGitError;
+pub use crate::io::AppIoError;
+
+use crate::git::{acquire_diff, determine_repo_root, gather_git_info};
+use crate::io::{
+    acquire_diagnostics, load_config, now_rfc3339, parse_diagnostics, write_report_json, write_text,
 };
 use lintdiff_engine::parse_unified_diff;
 use lintdiff_engine::{ingest_on_diff, IngestOnDiffParams};

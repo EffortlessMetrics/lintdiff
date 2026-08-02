@@ -4,7 +4,7 @@ use std::fs::{self, File};
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
 
-use lintdiff_app_io::{acquire_diagnostics, parse_diagnostics, AppIoError};
+use lintdiff::io::{acquire_diagnostics, parse_diagnostics, AppIoError};
 use lintdiff_engine::DiagnosticLevel;
 use tempfile::TempDir;
 

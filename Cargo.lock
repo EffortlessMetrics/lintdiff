@@ -1737,53 +1737,19 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "cucumber",
- "lintdiff-app",
- "lintdiff-app-git",
- "lintdiff-app-io",
  "lintdiff-bdd-harness",
- "lintdiff-engine",
- "lintdiff-render",
- "lintdiff-types",
- "regex",
- "serde_json",
- "tokio",
- "uselesskey",
-]
-
-[[package]]
-name = "lintdiff-app"
-version = "0.1.0"
-dependencies = [
- "lintdiff-app-git",
- "lintdiff-app-io",
  "lintdiff-engine",
  "lintdiff-feature-flags",
  "lintdiff-render",
  "lintdiff-types",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-app-git"
-version = "0.1.0"
-dependencies = [
- "lintdiff-types",
- "tempfile",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-app-io"
-version = "0.1.0"
-dependencies = [
- "lintdiff-engine",
- "lintdiff-types",
+ "regex",
  "serde_json",
  "tempfile",
  "thiserror 2.0.19",
  "time",
+ "tokio",
  "toml",
+ "uselesskey",
 ]
 
 [[package]]

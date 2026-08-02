@@ -3,8 +3,8 @@ use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use crate::app::{run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions};
 use clap::{Parser, Subcommand, ValueEnum};
-use lintdiff_app::{run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
 use lintdiff_types::{Report, ToolInfo};
 
@@ -119,8 +119,8 @@ fn print_error(guidance: &ErrorGuidance) {
 }
 
 /// Convert an AppError to ErrorGuidance with detailed remediation info
-fn app_error_to_guidance(error: &lintdiff_app::AppError) -> ErrorGuidance {
-    use lintdiff_app::AppError;
+fn app_error_to_guidance(error: &crate::app::AppError) -> ErrorGuidance {
+    use crate::app::AppError;
 
     match error {
         AppError::RunCommand { msg } => {
@@ -183,8 +183,8 @@ fn app_error_to_guidance(error: &lintdiff_app::AppError) -> ErrorGuidance {
 }
 
 /// Convert an AppIoError to ErrorGuidance
-fn io_error_to_guidance(error: &lintdiff_app_io::AppIoError) -> ErrorGuidance {
-    use lintdiff_app_io::AppIoError;
+fn io_error_to_guidance(error: &crate::app::AppIoError) -> ErrorGuidance {
+    use crate::app::AppIoError;
 
     match error {
         AppIoError::ReadFile { path, source } => {
@@ -250,8 +250,8 @@ fn io_error_to_guidance(error: &lintdiff_app_io::AppIoError) -> ErrorGuidance {
 }
 
 /// Convert an AppGitError to ErrorGuidance
-fn git_error_to_guidance(error: &lintdiff_app_git::AppGitError) -> ErrorGuidance {
-    use lintdiff_app_git::AppGitError;
+fn git_error_to_guidance(error: &crate::app::AppGitError) -> ErrorGuidance {
+    use crate::app::AppGitError;
 
     match error {
         AppGitError::Command { msg } => {

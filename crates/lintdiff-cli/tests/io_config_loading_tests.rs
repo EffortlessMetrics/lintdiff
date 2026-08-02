@@ -3,7 +3,7 @@
 use std::fs;
 use std::io::Write;
 
-use lintdiff_app_io::{load_config, AppIoError};
+use lintdiff::io::{load_config, AppIoError};
 use lintdiff_types::{FailOn, Profile};
 use tempfile::TempDir;
 
