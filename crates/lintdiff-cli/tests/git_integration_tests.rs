@@ -1,4 +1,4 @@
-//! Integration tests for lintdiff-app-git
+//! Integration tests for the lintdiff application Git module.
 //!
 //! These tests create temporary git repositories to test git operations.
 //! Tests are skipped if git is not available on the system.
@@ -7,7 +7,7 @@ use std::fs;
 use std::process::Command;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use lintdiff_app_git::{acquire_diff, determine_repo_root, gather_git_info, AppGitError};
+use lintdiff::git::{acquire_diff, determine_repo_root, gather_git_info, AppGitError};
 use tempfile::TempDir;
 
 /// Helper to check if git is available on the system

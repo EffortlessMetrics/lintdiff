@@ -322,18 +322,18 @@ action = "fold"
 destination = "lintdiff::git"
 canonical_owner = "lintdiff::git"
 class = "application_adapter"
-runtime_reachable = true
+runtime_reachable = false
 published = false
-external_consumers = []
+external_consumers = ["lintdiff"]
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-10 absorbed the concrete Git adapter and its integration proof into lintdiff; no independent public consumer found"
 source_files = ["crates/lintdiff-app-git/Cargo.toml", "crates/lintdiff-app-git/src/**"]
 tests = ["crates/lintdiff-app-git/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-10"
-final_disposition = "fold concrete Git adapter into application shell"
+final_disposition = "retired as a package and folded into lintdiff::git in MC-10"
 
 [[packages]]
 name = "lintdiff-app-io"
@@ -341,18 +341,18 @@ action = "fold"
 destination = "lintdiff::io"
 canonical_owner = "lintdiff::io"
 class = "application_adapter"
-runtime_reachable = true
+runtime_reachable = false
 published = false
-external_consumers = []
+external_consumers = ["lintdiff"]
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+external_consumer_evidence = "MC-10 absorbed the concrete IO adapter and its integration proof into lintdiff; no independent public consumer found"
 source_files = ["crates/lintdiff-app-io/Cargo.toml", "crates/lintdiff-app-io/src/**"]
 tests = ["crates/lintdiff-app-io/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-10"
-final_disposition = "fold concrete IO adapter and integration suite into application shell"
+final_disposition = "retired as a package and folded into lintdiff::io in MC-10"
 
 [[packages]]
 name = "lintdiff-app"
@@ -360,18 +360,18 @@ action = "fold"
 destination = "lintdiff::commands"
 canonical_owner = "lintdiff::commands"
 class = "application_orchestration"
-runtime_reachable = true
+runtime_reachable = false
 published = false
 external_consumers = []
 registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
-source_files = ["crates/lintdiff-app/Cargo.toml", "crates/lintdiff-app/src/**"]
-tests = []
+external_consumer_evidence = "MC-10 moved the orchestration, Git, and IO modules into lintdiff; MC-11 will rename the application directory and absorb feature flags"
+source_files = ["crates/lintdiff-app/Cargo.toml", "crates/lintdiff-app/src/**", "crates/lintdiff-app/tests/**"]
+tests = ["crates/lintdiff-app/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
 migration_pr = "MC-10"
-final_disposition = "fold imperative orchestration into lintdiff library shell"
+final_disposition = "retired as a package; orchestration moved into lintdiff::app in MC-10"
 
 [[packages]]
 name = "lintdiff"
@@ -384,13 +384,13 @@ published = false
 external_consumers = ["GitHub Action and release archive product surface"]
 registry_history = "crates.io API 2026-08-02: not found as lintdiff package"
 external_consumer_evidence = "product consumer is GitHub release/Action; do not infer Rust API from package name"
-source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/lib.rs", "crates/lintdiff-cli/src/cli.rs", "crates/lintdiff-cli/src/main.rs", "crates/lintdiff-cli/build.rs"]
+source_files = ["crates/lintdiff-cli/Cargo.toml", "crates/lintdiff-cli/src/lib.rs", "crates/lintdiff-cli/src/app.rs", "crates/lintdiff-cli/src/git.rs", "crates/lintdiff-cli/src/io.rs", "crates/lintdiff-cli/src/cli.rs", "crates/lintdiff-cli/src/main.rs", "crates/lintdiff-cli/build.rs"]
 tests = ["crates/lintdiff-cli/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-9/MC-11"
-final_disposition = "library shell added in MC-9; rename directory from crates/lintdiff-cli to crates/lintdiff remains MC-11"
+migration_pr = "MC-9/MC-10/MC-11"
+final_disposition = "library shell added in MC-9; orchestration, Git, IO, and their integration proof absorbed in MC-10; rename directory from crates/lintdiff-cli to crates/lintdiff remains MC-11"
 
 [[packages]]
 name = "lintdiff-config"

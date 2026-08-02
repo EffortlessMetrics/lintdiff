@@ -183,7 +183,7 @@ Feature: Diff-scoped diagnostics
     Then path is allowed
 
   # =============================================================================
-  # End-to-end workflow scenarios (lintdiff-app integration)
+  # End-to-end workflow scenarios (lintdiff application integration)
   # =============================================================================
 
   Scenario: Full pipeline produces consistent output
