@@ -1893,16 +1893,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-budget"
-version = "0.1.0"
-dependencies = [
- "lintdiff-config-types",
- "lintdiff-counts",
- "proptest",
- "serde",
-]
-
-[[package]]
 name = "lintdiff-ci-env"
 version = "0.1.0"
 dependencies = [
@@ -1948,24 +1938,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.19",
  "toml",
-]
-
-[[package]]
-name = "lintdiff-config-types"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-counts"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.19",
 ]
 
 [[package]]
