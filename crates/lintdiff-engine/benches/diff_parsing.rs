@@ -3,7 +3,8 @@
 //! Measures the performance of `lintdiff_engine::parse_unified_diff` across
 //! various diff sizes and complexities.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
 
 use lintdiff_engine::parse_unified_diff;
 

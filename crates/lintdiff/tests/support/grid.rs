@@ -1,5 +1,11 @@
 //! Scenario-grid helpers for applying feature flags in BDD-style matrix tests.
 
+#![allow(
+    dead_code,
+    unused_imports,
+    reason = "shared BDD grid support is compiled by multiple test targets with different helper subsets"
+)]
+
 use lintdiff_types::{FeatureFlags, LintdiffConfig};
 
 const FEATURE_FLAG_KEYS: [&str; 2] = ["primary_span_matching", "path_filters"];
