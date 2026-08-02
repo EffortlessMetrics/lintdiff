@@ -31,7 +31,6 @@ Deliverables:
 
 - Workspace structure and crate boundaries (microcrates)
 - JSON schemas:
-  - `schemas/receipt.envelope.v1.json`
   - `schemas/lintdiff.report.v1.json`
 - Canonical artifacts contract enforced by tests:
   - `artifacts/lintdiff/report.json` always written on success

@@ -30,7 +30,6 @@ Schemas are stored in the `schemas/` directory:
 ```
 schemas/
 ├── lintdiff.report.v1.json      # Report schema (version 1)
-└── receipt.envelope.v1.json     # Receipt envelope schema (version 1)
 ```
 
 ### Versioning Policy
@@ -38,7 +37,7 @@ schemas/
 1. **Semantic versioning for schemas**: Major version increments indicate breaking changes
 2. **Backward compatibility**: New minor/patch versions must be backward compatible
 3. **Breaking changes require new versions**: Incompatible changes must use a new major version (e.g., `v2`)
-4. **Schema inclusion**: Schemas are included in releases and documentation
+4. **Schema inclusion**: The canonical report schema is included in releases and documentation
 
 ### Validation
 

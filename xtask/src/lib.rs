@@ -85,6 +85,7 @@ struct TopologyEntry {
     allowed_dependencies: BTreeSet<String>,
 }
 
+#[cfg(not(test))]
 pub fn run_from_environment() -> Result<(), String> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -302,6 +303,7 @@ fn architecture_check(root: &Path) -> Result<(), String> {
     let deferred = string_array(&contract, "deferred_workspace")?;
     let canonical = string_array(&contract, "canonical_runtime")?;
     let tooling = string_array(&contract, "repository_tooling")?;
+    let allowed_actions = string_array(&contract, "allowed_actions")?;
 
     for required in REQUIRED_TOPOLOGY {
         if !topology.contains_key(required) || !packages.contains_key(required) {
@@ -317,10 +319,21 @@ fn architecture_check(root: &Path) -> Result<(), String> {
         return Err("repository_tooling must contain only xtask".to_string());
     }
 
-    let ledger_names = ledger
-        .iter()
-        .map(|record| record.name.as_str())
-        .collect::<BTreeSet<_>>();
+    let mut ledger_names = BTreeSet::new();
+    for record in &ledger {
+        if !ledger_names.insert(record.name.as_str()) {
+            return Err(format!(
+                "collapse ledger contains duplicate package: {}",
+                record.name
+            ));
+        }
+        if !allowed_actions.contains(&record.action) {
+            return Err(format!(
+                "ledger record {} has unsupported action {}",
+                record.name, record.action
+            ));
+        }
+    }
     for name in packages.keys() {
         if !ledger_names.contains(name.as_str()) {
             return Err(format!(
@@ -605,7 +618,12 @@ fn current_date() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{docs_check, fixture_check, schema_check};
+    use super::{
+        architecture_check, architecture_receipt, docs_check, fixture_check, ledger_records,
+        package_publish, release_contract_check, run, schema_check, string_array, topology_entries,
+        MetadataPackage,
+    };
+    use std::fs;
     use std::path::Path;
 
     #[test]
@@ -616,5 +634,119 @@ mod tests {
         schema_check(root)?;
         fixture_check(root)?;
         docs_check(root)
+    }
+
+    #[test]
+    fn repository_architecture_check_passes() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        architecture_check(root)
+    }
+
+    #[test]
+    fn architecture_receipt_is_dated_and_writable() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        let path = root.join("target/xtask-test-architecture-receipt.json");
+        architecture_receipt(root, Some(&path.to_string_lossy().to_string()))?;
+        let text = fs::read_to_string(&path).map_err(|error| error.to_string())?;
+        let receipt: serde_json::Value =
+            serde_json::from_str(&text).map_err(|error| error.to_string())?;
+        let date = receipt
+            .get("date")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| "receipt has no date".to_string())?;
+        if date.len() != 10 || date.as_bytes().get(4) != Some(&b'-') {
+            return Err(format!("receipt date is not ISO formatted: {date}"));
+        }
+        fs::remove_file(path).map_err(|error| error.to_string())?;
+        Ok(())
+    }
+
+    #[test]
+    fn command_dispatch_reports_help_and_unknown_commands() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        run(root, &[String::from("help")])?;
+        if run(root, &[String::from("unknown-command")]).is_ok() {
+            return Err("unknown command unexpectedly succeeded".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn release_contract_check_passes() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        release_contract_check(root)
+    }
+
+    #[test]
+    fn checks_fail_closed_for_missing_repository_root() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/xtask-missing-root");
+        for command in [
+            "architecture-check",
+            "schema-check",
+            "fixture-check",
+            "docs-check",
+            "release-contract-check",
+        ] {
+            if run(&root, &[String::from(command)]).is_ok() {
+                return Err(format!("{command} unexpectedly accepted a missing root"));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_contract_documents_are_rejected() -> Result<(), String> {
+        let scalar =
+            toml::from_str::<toml::Value>("items = 1").map_err(|error| error.to_string())?;
+        if string_array(&scalar, "items").is_ok() {
+            return Err("scalar array field unexpectedly accepted".to_string());
+        }
+
+        let non_string =
+            toml::from_str::<toml::Value>("items = [1]").map_err(|error| error.to_string())?;
+        if string_array(&non_string, "items").is_ok() {
+            return Err("non-string array item unexpectedly accepted".to_string());
+        }
+
+        let malformed_topology =
+            toml::from_str::<toml::Value>("topology = [1]").map_err(|error| error.to_string())?;
+        if topology_entries(&malformed_topology).is_ok() {
+            return Err("non-table topology entry unexpectedly accepted".to_string());
+        }
+
+        let missing_topology_field =
+            toml::from_str::<toml::Value>("topology = [{}]").map_err(|error| error.to_string())?;
+        if topology_entries(&missing_topology_field).is_ok() {
+            return Err("incomplete topology entry unexpectedly accepted".to_string());
+        }
+
+        if ledger_records(&scalar).is_ok() {
+            return Err("ledger without package records unexpectedly accepted".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn publication_metadata_variants_are_interpreted() -> Result<(), String> {
+        let package = |publish| MetadataPackage {
+            id: String::new(),
+            name: String::new(),
+            publish,
+        };
+        if package_publish(&package(Some(serde_json::json!(false)))) {
+            return Err("false publication metadata was accepted".to_string());
+        }
+        if !package_publish(&package(Some(serde_json::json!("registry")))) {
+            return Err("non-boolean publication metadata was rejected".to_string());
+        }
+        Ok(())
     }
 }

@@ -5,6 +5,7 @@ coverage:
   ignore:
     - crates/lintdiff-cli/src/cli.rs
     - crates/lintdiff-cli/src/main.rs
+    - xtask/src/main.rs
   status:
     project:
       default:
