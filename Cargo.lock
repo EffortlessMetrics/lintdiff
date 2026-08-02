@@ -780,9 +780,6 @@ name = "deranged"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
-dependencies = [
- "serde_core",
-]
 
 [[package]]
 name = "derive_more"
@@ -1751,15 +1748,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-diagnostic-level"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "lintdiff-engine"
 version = "0.1.0"
 dependencies = [
@@ -1774,48 +1762,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "lintdiff-git-info"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-glob"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "lintdiff-host-info"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
 name = "lintdiff-render"
 version = "0.1.0"
 dependencies = [
  "lintdiff-types",
  "serde_json",
-]
-
-[[package]]
-name = "lintdiff-run-info"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
- "time",
 ]
 
 [[package]]
