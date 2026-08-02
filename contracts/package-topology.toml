@@ -21,13 +21,7 @@ canonical_runtime = [
 
 repository_tooling = ["xtask"]
 conditional_dev_support = ["lintdiff-test-support"]
-deferred_workspace = [
-  "lintdiff-glob",
-  "lintdiff-git-info",
-  "lintdiff-diagnostic-level",
-  "lintdiff-host-info",
-  "lintdiff-run-info",
-]
+deferred_workspace = []
 excluded_auxiliary_workspaces = ["fuzz"]
 allowed_actions = ["keep", "fold", "mine_delete", "temporary_wrapper", "defer"]
 

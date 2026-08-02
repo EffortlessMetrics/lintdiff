@@ -648,15 +648,15 @@ class = "utility"
 runtime_reachable = false
 published = false
 external_consumers = []
-registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+registry_history = "crates.io API 2026-08-02: HTTP 404; cargo search no result; no registry reverse dependencies"
+external_consumer_evidence = "cargo metadata has no workspace consumers; GitHub code search found only this repository's historical files"
 source_files = ["crates/lintdiff-glob/Cargo.toml", "crates/lintdiff-glob/src/**"]
-tests = ["crates/lintdiff-glob/tests/**"]
+tests = ["crates/lintdiff-glob/tests/**; candidate cases superseded by lintdiff-engine matching tests"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-4/MC-5"
-final_disposition = "mine policy path matching into engine policy"
+migration_pr = "MC-15A"
+final_disposition = "deleted after consumer gate; live matching uses lintdiff-engine with globset and canonical matching tests"
 
 [[packages]]
 name = "lintdiff-severity"
@@ -1047,15 +1047,15 @@ class = "competing_authority"
 runtime_reachable = false
 published = false
 external_consumers = []
-registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+registry_history = "crates.io API 2026-08-02: HTTP 404; cargo search no result; no registry reverse dependencies"
+external_consumer_evidence = "cargo metadata has no workspace consumers; GitHub code search found only this repository's historical files"
 source_files = ["crates/lintdiff-git-info/Cargo.toml", "crates/lintdiff-git-info/src/**"]
 tests = ["crates/lintdiff-git-info/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A"
-final_disposition = "mine metadata semantics into protocol types or app adapters"
+migration_pr = "MC-15A"
+final_disposition = "deleted after consumer gate; GitInfo is canonical in lintdiff-types::report"
 
 [[packages]]
 name = "lintdiff-report-builder"
@@ -1104,15 +1104,15 @@ class = "competing_authority"
 runtime_reachable = false
 published = false
 external_consumers = []
-registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+registry_history = "crates.io API 2026-08-02: HTTP 404; cargo search no result; no registry reverse dependencies"
+external_consumer_evidence = "cargo metadata has no workspace consumers; GitHub code search found only this repository's historical files"
 source_files = ["crates/lintdiff-diagnostic-level/Cargo.toml", "crates/lintdiff-diagnostic-level/src/**"]
 tests = ["crates/lintdiff-diagnostic-level/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A"
-final_disposition = "mine diagnostic-level semantics into canonical protocol severity"
+migration_pr = "MC-15A"
+final_disposition = "deleted after consumer gate; DiagnosticLevel is canonical in lintdiff-engine::diagnostics"
 
 [[packages]]
 name = "lintdiff-diff-stats"
@@ -1161,15 +1161,15 @@ class = "competing_authority"
 runtime_reachable = false
 published = false
 external_consumers = []
-registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+registry_history = "crates.io API 2026-08-02: HTTP 404; cargo search no result; no registry reverse dependencies"
+external_consumer_evidence = "cargo metadata has no workspace consumers; GitHub code search found only this repository's historical files"
 source_files = ["crates/lintdiff-host-info/Cargo.toml", "crates/lintdiff-host-info/src/**"]
 tests = ["crates/lintdiff-host-info/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A"
-final_disposition = "mine metadata semantics into canonical protocol provenance"
+migration_pr = "MC-15A"
+final_disposition = "deleted after consumer gate; HostInfo is canonical in lintdiff-types::report"
 
 [[packages]]
 name = "lintdiff-run-info"
@@ -1180,15 +1180,15 @@ class = "competing_authority"
 runtime_reachable = false
 published = false
 external_consumers = []
-registry_history = "crates.io API 2026-08-02: not found"
-external_consumer_evidence = "workspace-only inventory; GitHub and reverse-dependency gate pending"
+registry_history = "crates.io API 2026-08-02: HTTP 404; cargo search no result; no registry reverse dependencies"
+external_consumer_evidence = "cargo metadata has no workspace consumers; GitHub code search found only this repository's historical files"
 source_files = ["crates/lintdiff-run-info/Cargo.toml", "crates/lintdiff-run-info/src/**"]
 tests = ["crates/lintdiff-run-info/tests/**"]
 properties = []
 fuzz_targets = []
 benchmarks = []
-migration_pr = "MC-2A"
-final_disposition = "mine run metadata semantics into canonical protocol model"
+migration_pr = "MC-15A"
+final_disposition = "deleted after consumer gate; RunInfo is canonical in lintdiff-types::report"
 
 [[packages]]
 name = "lintdiff-slugify"
