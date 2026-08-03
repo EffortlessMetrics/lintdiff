@@ -131,7 +131,11 @@ runs:
 
         BINARY_PATH=$(LINTDIFF_TARGET="$TARGET" LINTDIFF_EXTENSION="$EXT" \
           "$ACTION_PATH/scripts/action/install.sh" --version "$VERSION")
-        echo "$(dirname "$BINARY_PATH")" >> "$GITHUB_PATH"
+        path_entry="$(dirname "$BINARY_PATH")"
+        if command -v cygpath >/dev/null 2>&1; then
+          path_entry="$(cygpath -w "$path_entry")"
+        fi
+        echo "$path_entry" >> "$GITHUB_PATH"
 
     - name: Run lintdiff
       id: run
