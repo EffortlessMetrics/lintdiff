@@ -12,8 +12,8 @@ comparison with adjacent tools.
 ## Product Status
 
 The supported product is the release-binary CLI and the GitHub Action. The
-current published example uses the exact `v0.1.0` Action tag; `v0.1.1` is a
-separate trustworthy-release workstream.
+release target is the exact `v0.1.1` Action tag; use it only after the tag and
+post-release canary gates pass.
 
 ### Infrastructure Highlights
 
@@ -67,7 +67,7 @@ jobs:
         with:
           fetch-depth: 0  # Required for git diff
       - run: cargo clippy --message-format=json > clippy.jsonl
-      - uses: EffortlessMetrics/lintdiff@v0.1.0
+      - uses: EffortlessMetrics/lintdiff@v0.1.1
         with:
           diagnostics: clippy.jsonl
           fail_on: warn  # Optional: error, warn, or never

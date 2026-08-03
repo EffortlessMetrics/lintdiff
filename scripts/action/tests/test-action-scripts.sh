@@ -24,6 +24,8 @@ assert_failure() {
 [[ "$("$resolve" feature/ref v0.1.1)" == 'v0.1.1' ]] || fail 'explicit version did not resolve branch ref'
 assert_failure "$resolve" v0.1.1 v0.1.2
 assert_failure "$resolve" feature/ref ''
+assert_failure "$resolve" feature/ref latest
+assert_failure "$resolve" feature/ref v0
 
 source_dir="$tmp/source with spaces"
 runner_temp="$tmp/runner with spaces"

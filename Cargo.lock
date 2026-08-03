@@ -1730,7 +1730,7 @@ checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
 name = "lintdiff"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "cucumber",
@@ -1750,7 +1750,7 @@ dependencies = [
 
 [[package]]
 name = "lintdiff-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "criterion",
  "globset",
@@ -1767,7 +1767,7 @@ dependencies = [
 
 [[package]]
 name = "lintdiff-render"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "lintdiff-types",
  "serde_json",
@@ -1775,7 +1775,7 @@ dependencies = [
 
 [[package]]
 name = "lintdiff-types"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "jsonschema",
  "serde",
@@ -4231,7 +4231,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "jsonschema",
  "serde",

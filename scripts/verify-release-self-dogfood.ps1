@@ -107,6 +107,7 @@ function Validate-LintdiffReadmeRefs {
         [Parameter(Mandatory)][string]$AllowedActionRef,
         [Parameter(Mandatory)][string]$SourceLabel,
         [string]$ExpectedReleaseTag = '',
+        [Parameter(Mandatory)][string]$WorkspaceVersion,
         [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$PinnedVersions,
         [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[version]]$PinnedTagVersions
     )
@@ -129,9 +130,15 @@ function Validate-LintdiffReadmeRefs {
                     "$SourceLabel uses '$versionRef' but release mode expects '$ExpectedReleaseTag'"
                 )
             }
-            Assert-True ($RemoteTagRefs.ContainsKey($versionRef)) (
-                "$SourceLabel uses unpublished action tag '$versionRef' (not found in remote refs)"
-            )
+            if ($RemoteTagRefs.ContainsKey($versionRef)) {
+                Write-Host ("$SourceLabel tag=$versionRef is published")
+            }
+            elseif (-not $isReleaseMode -and $versionRef -eq $WorkspaceVersion) {
+                Write-Host ("$SourceLabel tag=$versionRef is the pending workspace release tag")
+            }
+            else {
+                throw "$SourceLabel uses unpublished action tag '$versionRef' (not found in remote refs)"
+            }
             $PinnedVersions.Add($versionRef)
             $PinnedTagVersions.Add([version]($versionRef.TrimStart('v')))
         }
@@ -180,6 +187,7 @@ Validate-LintdiffReadmeRefs `
     -AllowedActionRef $allowedActionRef `
     -ExpectedReleaseTag $ExpectedReleaseTag `
     -SourceLabel 'README' `
+    -WorkspaceVersion $workspaceVersion `
     -PinnedVersions $readmePinnedVersions `
     -PinnedTagVersions $readmePinnedTagVersions
 
@@ -200,6 +208,7 @@ try {
         -AllowedActionRef $allowedActionRef `
         -ExpectedReleaseTag $ExpectedReleaseTag `
         -SourceLabel 'NegativeFixture' `
+        -WorkspaceVersion $workspaceVersion `
         -PinnedVersions $ignorePinnedVersions `
         -PinnedTagVersions $ignorePinnedTagVersions
 }
