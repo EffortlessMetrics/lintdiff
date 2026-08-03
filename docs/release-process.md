@@ -21,7 +21,7 @@ lintdiff uses an automated release workflow defined in [`.github/workflows/relea
 
 The release workflow is triggered by:
 
-1. **Tag Push**: Pushing a tag matching `v*.*.*` (e.g., `v0.2.0`, `v1.0.0-beta.1`)
+1. **Tag Push**: Pushing a tag matching `v*.*.*` (e.g., `v0.1.1`, `v1.0.0-beta.1`)
 2. **Manual Dispatch**: Via the GitHub Actions UI with a specified version tag
 
 ### Workflow Jobs
@@ -124,7 +124,7 @@ Update the version in the workspace `Cargo.toml`:
 
 ```toml
 [workspace.package]
-version = "0.2.0"  # Update this
+version = "0.1.1"  # Update this for the trustworthy narrow release
 ```
 
 The workspace version is inherited by all crates. Verify individual crate `Cargo.toml` files use workspace inheritance:
@@ -154,19 +154,23 @@ Add a new section for the release:
 
 Move any unreleased items from the `[Unreleased]` section to the new version section.
 
-#### 3. Commit and Push Changes
+#### 3. Prepare and approve the release commit
 
 ```bash
 git add -A
-git commit -m "chore: prepare release v0.2.0"
-git push origin main
+git commit -m "chore(release): prepare v0.1.1"
+git push origin release/v0.1.1
 ```
 
-#### 4. Create and Push the Tag
+Open a release PR from the prepared branch and run the full release gates. Tagging,
+publishing, and release creation require explicit authorization after the exact
+release commit and asset plan have been reviewed.
+
+#### 4. Create and Push the Tag after authorization
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 #### 5. Monitor the Workflow
@@ -184,13 +188,13 @@ Once the workflow completes:
 3. Download and test binaries on at least one platform:
    ```bash
    # Linux/macOS
-   curl -fsSL https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-unknown-linux-gnu.tar.gz | tar xz
+   curl -fsSL https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
    ./lintdiff --version
    ```
 4. Verify checksums match:
    ```bash
-   sha256sum lintdiff-x86_64-unknown-linux-gnu.tar.gz
-   # Compare with checksums-0.2.0.txt
+   sha256sum lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz
+   # Compare with checksums-0.1.1.txt
    ```
 
 ### Manual Release via Workflow Dispatch
@@ -217,7 +221,7 @@ Pin to a specific version in your workflow:
 
 ```yaml
 - name: Run lintdiff
-  uses: effortless-metrics/lintdiff@v0.2.0
+  uses: effortless-metrics/lintdiff@v0.1.1
   with:
     base: main
     head: HEAD
@@ -229,31 +233,31 @@ The GitHub Action supports a `version` input:
 
 ```yaml
 - name: Run lintdiff
-  uses: effortless-metrics/lintdiff@main  # Use main branch of action
+  uses: effortless-metrics/lintdiff@main  # Development/ref testing only
   with:
-    version: v0.2.0  # Pin lintdiff binary version
+    version: v0.1.1  # Required when the Action ref is not an exact tag
     base: main
     head: HEAD
 ```
 
-Options for `version`:
-- `latest` (default): Uses the latest release
-- `v0.2.0`: Uses a specific version
-- `v1.0.0-beta.1`: Uses a pre-release version
+The `version` input accepts only an exact release version such as `v0.1.1` or
+`v1.0.0-beta.1`. An exact Action tag derives its default version from that tag;
+branch and SHA refs must provide `version`, and missing or conflicting values
+fail closed. There is no `latest` fallback or moving `v0` alias.
 
 ### Direct Binary Download URLs
 
 Binaries can be downloaded directly from GitHub releases:
 
 ```
-https://github.com/effortless-metrics/lintdiff/releases/download/{TAG}/lintdiff-{TARGET}.{EXT}
+https://github.com/effortless-metrics/lintdiff/releases/download/{TAG}/lintdiff-{VERSION}-{TARGET}.{EXT}
 ```
 
 Examples:
-- Linux: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-unknown-linux-gnu.tar.gz`
-- macOS (Intel): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-apple-darwin.tar.gz`
-- macOS (ARM): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-aarch64-apple-darwin.tar.gz`
-- Windows: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-pc-windows-msvc.zip`
+- Linux: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz`
+- macOS (Intel): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-apple-darwin.tar.gz`
+- macOS (ARM): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-aarch64-apple-darwin.tar.gz`
+- Windows: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-pc-windows-msvc.zip`
 
 ### Checksum Verification
 
@@ -279,7 +283,7 @@ TARGET="x86_64-unknown-linux-gnu"
 EXT="tar.gz"
 
 BASE_URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}"
-BINARY="lintdiff-${TARGET}.${EXT}"
+BINARY="lintdiff-${VERSION#v}-${TARGET}.${EXT}"
 CHECKSUMS="checksums-${VERSION#v}.txt"
 
 # Download files

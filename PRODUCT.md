@@ -36,7 +36,7 @@ JSONL path, a version input, and a working directory. Public examples use an
 exact published Action tag:
 
 ```yaml
-- uses: EffortlessMetrics/lintdiff@v0.1.0
+- uses: EffortlessMetrics/lintdiff@v0.1.1
   with:
     diagnostics: artifacts/clippy.jsonl
     fail_on: warn
@@ -62,8 +62,8 @@ claim that a finding was caused by the change.
 
 - The supported distribution surfaces are the release-binary CLI and the
   GitHub Action at an exact release tag.
-- The current published example is `v0.1.0`; the narrow `v0.1.1` release is not
-  claimed until its release and Action canary gates pass.
+- The current published example is `v0.1.1`, which is supported only after the
+  exact-tag release and post-release Action canary gates pass.
 - The current release-asset matrix is Linux x86_64, macOS x86_64, macOS
   arm64, and Windows x86_64. Other host/platform combinations are unsupported.
 - There is no supported `cargo install lintdiff` workflow.
