@@ -195,6 +195,7 @@ dependencies = [
  "libfuzzer-sys",
  "lintdiff-engine",
  "lintdiff-types",
+ "serde_json",
 ]
 
 [[package]]
