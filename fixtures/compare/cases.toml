@@ -7,7 +7,7 @@ rationale = "The warning exists in both analyses and moves only because an unrel
 base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":3,"line_end":3,"column_start":5,"column_end":6,"is_primary":true}]}}'
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":4,"line_end":4,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,3 +1,4 @@\n fn main() {\n+    let inserted = 1;\n     let value = 1;\n }\n"
-expected_change_kind = "existing"
+expected_change_kind = "unchanged"
 expected_diff_scope = "touched"
 expected_match_basis = "line_mapped"
 expected_movement = "shifted"
@@ -20,7 +20,7 @@ rationale = "The diagnostic is unchanged while Git rename evidence moves the fil
 base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/old.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/new.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "diff --git a/src/old.rs b/src/new.rs\nsimilarity index 100%\nrename from src/old.rs\nrename to src/new.rs\n"
-expected_change_kind = "existing"
+expected_change_kind = "unchanged"
 expected_diff_scope = "unknown"
 expected_match_basis = "rename_mapped"
 expected_movement = "renamed"
@@ -33,7 +33,7 @@ rationale = "A pre-existing warning intersects a changed line and must remain ex
 base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "existing"
+expected_change_kind = "unchanged"
 expected_diff_scope = "touched"
 expected_match_basis = "exact"
 expected_movement = "same"
@@ -73,7 +73,7 @@ base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","m
 head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
 {"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'''
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "ambiguous"
+expected_pairing_state = "ambiguous"
 expected_diff_scope = "touched"
 expected_match_basis = "ambiguous"
 expected_movement = "same"
@@ -151,7 +151,7 @@ rationale = "Equivalent absolute and repository-relative paths normalize to one 
 base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"C:/repo/src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "existing"
+expected_change_kind = "unchanged"
 expected_diff_scope = "touched"
 expected_match_basis = "exact"
 expected_movement = "same"
@@ -165,7 +165,7 @@ base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","m
 head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
 {"reason":"build-finished","success":true}'''
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "ambiguous"
+expected_pairing_state = "blocked"
 expected_diff_scope = "unknown"
 expected_match_basis = "none"
 expected_movement = "unknown"
@@ -181,7 +181,7 @@ base_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning",
 head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
 {"reason":"build-finished","success":true,"toolchain":"rustc 1.81.0"}'''
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "ambiguous"
+expected_pairing_state = "blocked"
 expected_diff_scope = "unknown"
 expected_match_basis = "none"
 expected_movement = "unknown"
@@ -197,10 +197,52 @@ base_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning",
 head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
 {"reason":"build-finished","success":true,"target":"wasm32-unknown-unknown","features":["web"]}'''
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
-expected_change_kind = "ambiguous"
+expected_pairing_state = "blocked"
 expected_diff_scope = "unknown"
 expected_match_basis = "none"
 expected_movement = "unknown"
 expected_comparability = "incomparable"
 expected_provenance_failure = "target_and_feature_scope_mismatch"
+expected_label = "incomparable"
+
+[[cases]]
+id = "discovery_ripgrep_3482_new_on_diff"
+rationale = "The historical corpus found head-only Clippy warnings on newly added indexing code; source movement must remain separate from the new-on-diff evidence."
+base_diagnostics = '{"reason":"compiler-message","package_id":"indexing-unit","target":{"name":"core","kind":["lib"]},"message":{"level":"warning","message":"used `assert_eq!` with a literal bool","code":{"code":"clippy::bool_assert_comparison"},"spans":[{"file_name":"crates/core/flags/defs.rs","line_start":3422,"line_end":3422,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","package_id":"indexing-unit","target":{"name":"core","kind":["lib"]},"message":{"level":"warning","message":"used `assert_eq!` with a literal bool","code":{"code":"clippy::bool_assert_comparison"},"spans":[{"file_name":"crates/core/flags/defs.rs","line_start":3617,"line_end":3617,"is_primary":true}]}}'
+source_diff = "--- a/crates/core/flags/defs.rs\n+++ b/crates/core/flags/defs.rs\n@@ -3422,0 +3617,3 @@\n+    assert_eq!(expected, actual);\n+    assert_eq!(enabled, true);\n+    assert_eq!(ready, false);\n"
+expected_change_kind = "new"
+expected_diff_scope = "touched"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "comparable"
+expected_label = "new_on_diff"
+
+[[cases]]
+id = "discovery_pst_1314_existing_adjacent"
+rationale = "The historical corpus changed line 173 while the existing manual_checked_ops warning remained on line 172; file overlap is not line overlap."
+base_diagnostics = '{"reason":"compiler-message","package_id":"pst-ffi","target":{"name":"pst_ffi","kind":["test"]},"message":{"level":"warning","message":"this operation can be performed using checked arithmetic","code":{"code":"clippy::manual_checked_ops"},"spans":[{"file_name":"crates/pst-ffi/tests/ffi_mutation_resistance_validation.rs","line_start":172,"line_end":172,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","package_id":"pst-ffi","target":{"name":"pst_ffi","kind":["test"]},"message":{"level":"warning","message":"this operation can be performed using checked arithmetic","code":{"code":"clippy::manual_checked_ops"},"spans":[{"file_name":"crates/pst-ffi/tests/ffi_mutation_resistance_validation.rs","line_start":172,"line_end":172,"is_primary":true}]}}'
+source_diff = "--- a/crates/pst-ffi/tests/ffi_mutation_resistance_validation.rs\n+++ b/crates/pst-ffi/tests/ffi_mutation_resistance_validation.rs\n@@ -173 +173 @@\n-    let usage_percent = (used * 100) / capacity;\n+    let usage_percent = (used * 100).checked_div(capacity).unwrap_or(0);\n"
+expected_change_kind = "unchanged"
+expected_diff_scope = "untouched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "existing_untouched"
+
+[[cases]]
+id = "discovery_ripgrep_3487_incomplete_head"
+rationale = "The historical head analysis emitted compiler diagnostics but failed before producing a successful complete build state; no confident new or resolved claim is permitted."
+base_diagnostics = '''{"reason":"compiler-message","package_id":"indexing-unit","target":{"name":"core","kind":["lib"]},"message":{"level":"warning","message":"indexing warning","code":{"code":"clippy::example"},"spans":[{"file_name":"crates/core/flags/defs.rs","line_start":10,"line_end":10,"is_primary":true}]}}
+{"reason":"build-finished","success":true}'''
+head_diagnostics = '''{"reason":"compiler-message","package_id":"indexing-unit","target":{"name":"core","kind":["lib"]},"message":{"level":"error","message":"cannot find index implementation","code":{"code":"E0433"},"spans":[]}}
+{"reason":"build-finished","success":false}'''
+source_diff = "--- a/crates/core/flags/defs.rs\n+++ b/crates/core/flags/defs.rs\n@@ -10,0 +10,3 @@\n+pub struct Index;\n+pub struct IndexPath;\n+pub struct IndexForce;\n"
+expected_pairing_state = "blocked"
+expected_diff_scope = "unknown"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "incomparable"
+expected_provenance_failure = "incomplete_head"
 expected_label = "incomparable"

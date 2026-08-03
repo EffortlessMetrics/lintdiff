@@ -23,17 +23,36 @@ The protocol boundaries are deliberately separate:
 No implementation crate, workspace package, or public API is introduced by this
 model-and-corpus change.
 
+## Pairing evidence
+
+Pairing evidence is recorded before any confident change classification. It is
+not itself a `DeltaKind`:
+
+```text
+Matched { base, head, basis }
+BaseOnly { base }
+HeadOnly { head }
+Ambiguous { base_candidates, head_candidates, reasons }
+Blocked { reason }
+```
+
+An ambiguous candidate set remains ambiguous even when it is located on a
+changed line. A blocked pairing is produced when report-level comparability
+does not permit a delta claim.
+
 ## Independent evidence axes
 
 Every paired or unpaired diagnostic records these dimensions independently:
 
-### Change kind
+### Confident change kind
 
-`new`, `existing`, `resolved`, `modified`, or `ambiguous`.
+`unchanged`, `new`, `resolved`, or `modified`.
 
 `new` and `resolved` are comparison results. `modified` means the identity is
-paired but a material diagnostic field changed. `ambiguous` is valid evidence
-when more than one candidate has the same best confidence.
+paired but a material diagnostic field changed. An unchanged paired diagnostic
+is the source of the derived `existing_touched` and `existing_untouched`
+labels. Ambiguity belongs to pairing evidence and never receives a confident
+change kind.
 
 ### Diff scope
 
@@ -75,6 +94,7 @@ Each inventory records hard provenance when available:
 - base/head revision;
 - tool name and version;
 - compiler/toolchain identity;
+- producer package, manifest, target name, and target kind;
 - target triple;
 - enabled feature scope;
 - Cargo completion and build-success evidence.
@@ -99,6 +119,11 @@ The report-level comparability state is one of:
 incomparable report may preserve raw inventories and source evidence, but it
 must not manufacture `new`, `resolved`, or causal labels.
 
+For the first delta version, both analyses must be successful and complete for
+confident `new`, `resolved`, or unchanged-pair claims. A failed-complete stream
+may retain an inventory receipt, but it is not treated as a complete inventory
+for comparison.
+
 ## Derived human labels
 
 Human labels are projections over the independent axes and may not replace
@@ -111,7 +136,7 @@ existing  + touched   -> existing_touched
 existing  + untouched -> existing_untouched
 resolved             -> resolved
 modified             -> modified
-ambiguous            -> ambiguous
+ambiguous pairing    -> ambiguous
 ```
 
 `no_location`, `unknown`, `none`, and incomparable states remain visible in the
@@ -120,9 +145,9 @@ evidence even when a projection is budgeted or omitted.
 ## Ambiguity rules
 
 - Preserve all candidates at the best confidence level.
-- Emit `ambiguous` when two or more candidates remain tied.
+- Emit an ambiguous pairing when two or more candidates remain tied.
 - Never pair duplicate diagnostics by input order.
-- Never turn an ambiguous or incomparable result into `new` or `resolved`.
+- Never turn an ambiguous or incomparable result into a confident change kind.
 - Preserve the candidate identities and reasons needed for later adjudication.
 
 ## Policy defaults
@@ -160,6 +185,9 @@ both positive and falsifying cases:
 | `incomplete_base` | Incomplete base cannot justify a new/resolved claim |
 | `different_toolchains` | Toolchain mismatch is report-level incomparable |
 | `different_target_features` | Target and feature scope are independent hard provenance |
+| `discovery_ripgrep_3482_new_on_diff` | A historical head-only warning on added indexing code is a real `new_on_diff` candidate |
+| `discovery_pst_1314_existing_adjacent` | A warning adjacent to, but not on, the changed line remains existing_untouched |
+| `discovery_ripgrep_3487_incomplete_head` | A failed-complete head analysis blocks a confident delta |
 
 Every later inventory, source-correspondence, pairing, delta-receipt, and
 external-verdict issue must cite this corpus and retain its adjudications.
@@ -169,11 +197,12 @@ external-verdict issue must cite this corpus and retain its adjudications.
 1. `lintdiff.report.v1` bytes and semantics remain unchanged.
 2. Every diagnostic is retained in a complete inventory before filtering,
    source scope, policy, or budgeting.
-3. Change kind, diff scope, match basis, movement, comparability, and derived
-   labels are independently inspectable.
+3. Pairing evidence, confident change kind, diff scope, match basis, movement,
+   comparability, and derived labels are independently inspectable.
 4. A source match is claimed only when earned by hunk ranges, offsets, or
    explicit rename evidence.
-5. Ambiguous candidates remain ambiguous; list order is never proof.
+5. Ambiguous candidates remain ambiguous and receive no `DeltaKind`; list order
+   is never proof.
 6. Incomplete or mismatched hard provenance is fail-closed.
 7. `new` means new relative to a comparable base analysis, not causal proof.
 8. Human projections consume the canonical typed evidence and cannot invent a
