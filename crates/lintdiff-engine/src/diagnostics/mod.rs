@@ -62,7 +62,7 @@ use lintdiff_types::NormPath;
 /// assert_eq!(diag.level, DiagnosticLevel::Error);
 /// assert_eq!(diag.code_raw.as_deref(), Some("E0425"));
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Diagnostic {
     pub level: DiagnosticLevel,
     pub code_raw: Option<String>,
@@ -129,7 +129,7 @@ pub enum DiagnosticLevel {
 /// assert_eq!(span.line_start, 42);
 /// assert!(span.is_primary);
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Span {
     /// The file path where the span is located.
     pub file: NormPath,
@@ -184,6 +184,14 @@ pub enum DiagnosticsParseError {
     },
 }
 
+/// The normalized diagnostics and completion evidence from one Cargo stream.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CargoDiagnosticStream {
+    pub diagnostics: Vec<Diagnostic>,
+    pub build_finished: bool,
+    pub build_success: Option<bool>,
+}
+
 /// Parse a cargo JSON-lines stream, returning only compiler messages.
 ///
 /// This function reads a stream of JSON lines (as produced by
@@ -221,7 +229,16 @@ pub enum DiagnosticsParseError {
 pub fn parse_cargo_messages<R: BufRead>(
     reader: R,
 ) -> Result<Vec<Diagnostic>, DiagnosticsParseError> {
+    Ok(parse_cargo_messages_with_status(reader)?.diagnostics)
+}
+
+/// Parse Cargo JSONL while retaining the terminal build-finished evidence.
+pub fn parse_cargo_messages_with_status<R: BufRead>(
+    reader: R,
+) -> Result<CargoDiagnosticStream, DiagnosticsParseError> {
     let mut out: Vec<Diagnostic> = Vec::new();
+    let mut build_finished = false;
+    let mut build_success = None;
 
     for (idx, line_res) in reader.lines().enumerate() {
         let line_no = idx + 1;
@@ -242,6 +259,11 @@ pub fn parse_cargo_messages<R: BufRead>(
 
         // cargo messages are objects with "reason"
         let reason = v.get("reason").and_then(|x| x.as_str());
+        if reason == Some("build-finished") {
+            build_finished = true;
+            build_success = v.get("success").and_then(|x| x.as_bool());
+            continue;
+        }
         if reason != Some("compiler-message") {
             continue;
         }
@@ -328,7 +350,11 @@ pub fn parse_cargo_messages<R: BufRead>(
         });
     }
 
-    Ok(out)
+    Ok(CargoDiagnosticStream {
+        diagnostics: out,
+        build_finished,
+        build_success,
+    })
 }
 
 #[cfg(test)]
@@ -348,5 +374,28 @@ mod tests {
             Some("clippy::needless_borrow")
         );
         assert_eq!(diags[0].spans[0].file.as_str(), "src/lib.rs");
+    }
+
+    #[test]
+    fn parses_build_completion_evidence_without_changing_compatibility_wrapper() {
+        let input = r#"{"reason":"compiler-message","message":{"level":"error","message":"failed"}}
+{"reason":"build-finished","success":false}"#;
+
+        let stream = parse_cargo_messages_with_status(Cursor::new(input)).unwrap();
+        assert_eq!(stream.diagnostics.len(), 1);
+        assert!(stream.build_finished);
+        assert_eq!(stream.build_success, Some(false));
+        assert_eq!(parse_cargo_messages(Cursor::new(input)).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn incomplete_stream_has_no_build_success_value() {
+        let stream = parse_cargo_messages_with_status(Cursor::new(
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"partial"}}"#,
+        ))
+        .unwrap();
+
+        assert!(!stream.build_finished);
+        assert_eq!(stream.build_success, None);
     }
 }

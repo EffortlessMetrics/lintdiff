@@ -1,7 +1,7 @@
 # Basic lintdiff workflow for Rust projects
 # ===========================================
 # This workflow runs lintdiff on pull requests to identify lint issues
-# introduced by the changes in the PR.
+# located on lines touched by the PR.
 #
 # Features demonstrated:
 # - Complete PR lint checking with clippy
@@ -56,11 +56,23 @@ jobs:
       # Step 4: Run clippy to generate diagnostics
       # The --message-format=json flag outputs machine-readable diagnostics
       # We redirect to a file for lintdiff to process
-      # The '|| true' ensures the workflow continues even if clippy finds issues
       - name: Run Clippy
+        id: clippy
+        continue-on-error: true
         run: |
           echo "Running clippy with JSON output..."
-          cargo clippy --all-features --message-format=json 2>/dev/null > clippy.jsonl || true
+          set +e
+          cargo clippy --all-features --message-format=json 2>/dev/null > clippy.jsonl
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          if jq -e -s 'any(.[]; .reason == "build-finished")' clippy.jsonl >/dev/null 2>&1; then
+            echo "build_finished=true" >> "$GITHUB_OUTPUT"
+            BUILD_SUCCESS=$(jq -s -r '[.[] | select(.reason == "build-finished") | .success] | .[-1]' clippy.jsonl)
+            echo "build_success=$BUILD_SUCCESS" >> "$GITHUB_OUTPUT"
+          else
+            echo "build_finished=false" >> "$GITHUB_OUTPUT"
+            echo "build_success=" >> "$GITHUB_OUTPUT"
+          fi
           echo "Clippy diagnostics saved to clippy.jsonl"
 
       # Step 5: Run lintdiff to filter diagnostics to changed lines
@@ -68,10 +80,15 @@ jobs:
       # Feature flags example: Using --all-features to check all code paths
       - name: Run lintdiff
         id: lintdiff
+        if: always()
         uses: effortless-metrics/lintdiff@v0.1.0
         with:
           # Path to clippy diagnostics output
           diagnostics: clippy.jsonl
+          upstream_exit_code: ${{ steps.clippy.outputs.exit_code }}
+          upstream_build_finished: ${{ steps.clippy.outputs.build_finished }}
+          upstream_build_success: ${{ steps.clippy.outputs.build_success }}
+          upstream_command: '["cargo","clippy","--all-features","--message-format=json"]'
           # Fail the workflow if errors are found in changed code
           fail_on: error
           # Optional: Specify a custom config file (uncomment if needed)
