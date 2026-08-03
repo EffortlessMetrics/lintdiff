@@ -509,7 +509,7 @@ fn parse_observation(
     let normalized_spans = spans.iter().map(legacy_span).collect();
 
     DiagnosticObservation {
-        producer: parse_producer(value),
+        producer: parse_producer(value, repo_root),
         raw_level,
         raw_code: raw_code.clone(),
         message: message.clone(),
@@ -526,17 +526,17 @@ fn parse_observation(
     }
 }
 
-fn parse_producer(value: &Value) -> ProducerUnit {
+fn parse_producer(value: &Value, repo_root: Option<&Path>) -> ProducerUnit {
     ProducerUnit {
         package_id: value
             .get("package_id")
             .and_then(Value::as_str)
-            .map(str::to_string),
+            .map(|package_id| canonical_package_id(package_id, repo_root)),
         manifest_path: value
             .get("manifest_path")
             .and_then(Value::as_str)
-            .map(str::to_string),
-        target: parse_target(value.get("target")),
+            .map(|path| canonical_producer_path(path, repo_root)),
+        target: parse_target(value.get("target"), repo_root),
         profile: value
             .get("profile")
             .and_then(Value::as_object)
@@ -546,7 +546,7 @@ fn parse_producer(value: &Value) -> ProducerUnit {
     }
 }
 
-fn parse_target(value: Option<&Value>) -> Option<CargoTarget> {
+fn parse_target(value: Option<&Value>, repo_root: Option<&Path>) -> Option<CargoTarget> {
     let target = value?.as_object()?;
     Some(CargoTarget {
         name: target
@@ -558,12 +558,51 @@ fn parse_target(value: Option<&Value>) -> Option<CargoTarget> {
         src_path: target
             .get("src_path")
             .and_then(Value::as_str)
-            .map(str::to_string),
+            .map(|path| canonical_producer_path(path, repo_root)),
         edition: target
             .get("edition")
             .and_then(Value::as_str)
             .map(str::to_string),
     })
+}
+
+fn canonical_package_id(package_id: &str, repo_root: Option<&Path>) -> String {
+    if repo_root.is_some() && package_id.starts_with("path+file://") {
+        if let Some((_, package)) = package_id.rsplit_once('#') {
+            return format!("path+file://#{package}");
+        }
+    }
+    package_id.to_string()
+}
+
+fn canonical_producer_path(raw: &str, repo_root: Option<&Path>) -> String {
+    let raw_without_extended_prefix = raw.strip_prefix("\\\\?\\").unwrap_or(raw);
+    let raw_normalized = raw_without_extended_prefix.replace('\\', "/");
+    if let Some(repo_root) = repo_root {
+        let mut root_normalized = repo_root.to_string_lossy().into_owned();
+        if let Some(stripped) = root_normalized.strip_prefix("\\\\?\\") {
+            root_normalized = stripped.to_string();
+        }
+        root_normalized = root_normalized.replace('\\', "/");
+        let root_prefix = format!("{}/", root_normalized.trim_end_matches('/'));
+        let comparable_raw = if root_normalized.as_bytes().get(1) == Some(&b':') {
+            raw_normalized.to_ascii_lowercase()
+        } else {
+            raw_normalized.clone()
+        };
+        let comparable_root = if root_normalized.as_bytes().get(1) == Some(&b':') {
+            root_prefix.to_ascii_lowercase()
+        } else {
+            root_prefix
+        };
+        if comparable_raw.starts_with(&comparable_root) {
+            let relative = raw_normalized
+                .get(comparable_root.len()..)
+                .unwrap_or_default();
+            return lintdiff_types::NormPath::from_repo_path(relative).to_string();
+        }
+    }
+    raw_normalized
 }
 
 fn string_array(value: Option<&Value>) -> Vec<String> {
@@ -856,6 +895,66 @@ mod tests {
         assert_eq!(span.raw_file_name.as_deref(), Some(raw_file_name.as_str()));
         assert_eq!(
             span.normalized.as_ref().map(|span| span.file.as_str()),
+            Some("src/lib.rs")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn producer_identity_is_stable_across_base_and_head_worktrees(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        fn stream(root: &str) -> Result<String, serde_json::Error> {
+            serde_json::to_string(&serde_json::json!({
+                "reason": "compiler-message",
+                "package_id": format!("path+file://{root}#demo@0.1.0"),
+                "manifest_path": format!("{root}\\Cargo.toml"),
+                "target": {
+                    "name": "demo",
+                    "kind": ["lib"],
+                    "crate_types": ["lib"],
+                    "src_path": format!("{root}\\src\\lib.rs"),
+                    "edition": "2024"
+                },
+                "message": {
+                    "level": "warning",
+                    "message": "unused value",
+                    "spans": [{"file_name": "src/lib.rs", "line_start": 1, "line_end": 1, "is_primary": true}]
+                }
+            }))
+        }
+
+        let base_root = r"C:\analysis\base";
+        let head_root = r"C:\analysis\head";
+        let base = parse_cargo_analysis_with_repo_root(
+            Cursor::new(stream(base_root)?),
+            Some(Path::new(base_root)),
+        )?;
+        let head = parse_cargo_analysis_with_repo_root(
+            Cursor::new(stream(head_root)?),
+            Some(Path::new(head_root)),
+        )?;
+        let base_producer = &base
+            .observations
+            .first()
+            .ok_or("missing base observation")?
+            .producer;
+        let head_producer = &head
+            .observations
+            .first()
+            .ok_or("missing head observation")?
+            .producer;
+
+        assert_eq!(base_producer, head_producer);
+        assert_eq!(
+            base_producer.package_id.as_deref(),
+            Some("path+file://#demo@0.1.0")
+        );
+        assert_eq!(base_producer.manifest_path.as_deref(), Some("Cargo.toml"));
+        assert_eq!(
+            base_producer
+                .target
+                .as_ref()
+                .and_then(|target| target.src_path.as_deref()),
             Some("src/lib.rs")
         );
         Ok(())
