@@ -37,6 +37,7 @@ diff --git a/src/lib.rs b/src/lib.rs
         git: None,
         diff_map: Some(diff_map),
         diagnostics: Some(diags),
+        analysis: None,
         repo_root: Some(NormPath::new("/repo")),
         config: cfg,
         repro: None,

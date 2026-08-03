@@ -6,6 +6,7 @@
 
 mod diagnostics;
 mod identity;
+mod inventory;
 mod matching;
 mod policy;
 mod receipt;
