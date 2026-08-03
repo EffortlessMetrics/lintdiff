@@ -197,6 +197,21 @@ Once the workflow completes:
    # Compare with checksums-0.1.1.txt
    ```
 
+### v0.1.1 Post-release canary
+
+After the exact-tag Action canary confirms the installed executable reports
+`lintdiff 0.1.1`, run the receipt checks below against the published tag:
+
+- ordinary repository paths still produce a valid `lintdiff.report.v1`;
+- a repository containing real top-level `a/` and `b/` directories preserves
+  those path components in diagnostics and changed-file matching;
+- quoted and space-containing Git paths, including a rename record, produce
+  the expected repository-relative paths;
+- a failed upstream Cargo run still leaves a receipt with its exact exit code,
+  completion evidence, and schema-valid output;
+- each downloaded archive matches its companion checksum, and the root-level
+  Unix archive extracts the executable without stripping its only path entry.
+
 ### Manual Release via Workflow Dispatch
 
 If you need to trigger a release without pushing a tag:

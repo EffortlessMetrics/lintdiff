@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserved complete upstream Cargo evidence in `lintdiff.report.v1`, including
   the exact process exit code, `build-finished` presence, build success, and
   completeness state. Reports are retained when the upstream build fails.
+- Corrected repository-path identity so real directories named `a/` or `b/`
+  are preserved while Git diff transport prefixes are removed only when earned;
+  quoted/spaced paths and rename records are covered by regression tests.
 - Added executable Action proof across Linux x86_64, macOS x86_64, macOS arm64,
   and Windows x86_64, including report schema, output, checksum, and artifact
   checks.
