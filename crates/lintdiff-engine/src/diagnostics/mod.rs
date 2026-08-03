@@ -841,12 +841,17 @@ mod tests {
     #[test]
     fn repository_root_earns_context_correct_absolute_paths(
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let input = r#"{"reason":"compiler-message","message":{"level":"warning","message":"absolute","spans":[{"file_name":"C:\\repo\\src\\lib.rs","line_start":4,"line_end":4,"is_primary":true}]}}"#;
-        let analysis =
-            parse_cargo_analysis_with_repo_root(Cursor::new(input), Some(Path::new(r"C:\repo")))?;
+        let repo_root = std::env::current_dir()?;
+        let source_path = repo_root.join("src").join("lib.rs");
+        let raw_file_name = source_path.to_string_lossy().to_string();
+        let raw_file_name_json = serde_json::to_string(&raw_file_name)?;
+        let input = format!(
+            r#"{{"reason":"compiler-message","message":{{"level":"warning","message":"absolute","spans":[{{"file_name":{raw_file_name_json},"line_start":4,"line_end":4,"is_primary":true}}]}}}}"#
+        );
+        let analysis = parse_cargo_analysis_with_repo_root(Cursor::new(input), Some(&repo_root))?;
         let observation = analysis.observations.first().ok_or("missing observation")?;
         let span = observation.spans.first().ok_or("missing span")?;
-        assert_eq!(span.raw_file_name.as_deref(), Some(r"C:\repo\src\lib.rs"));
+        assert_eq!(span.raw_file_name.as_deref(), Some(raw_file_name.as_str()));
         assert_eq!(
             span.normalized.as_ref().map(|span| span.file.as_str()),
             Some("src/lib.rs")
