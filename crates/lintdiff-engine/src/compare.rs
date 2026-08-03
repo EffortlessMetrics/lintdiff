@@ -645,6 +645,103 @@ mod tests {
     }
 
     #[test]
+    fn source_mapping_pairs_renamed_diagnostics() {
+        let base = diagnostic("base", "old", "semantic", "src/old.rs", 2);
+        let head = diagnostic("head", "new", "semantic", "src/new.rs", 2);
+        let source = crate::parse_source_change_set(
+            "diff --git a/src/old.rs b/src/new.rs\nsimilarity index 100%\nrename from src/old.rs\nrename to src/new.rs\n",
+        )
+        .expect("valid rename diff");
+        let result = compare_inventories(&inventory(vec![base]), &inventory(vec![head]), &source);
+        assert!(matches!(
+            result.evidence.as_slice(),
+            [PairingEvidence::Matched {
+                basis: MatchBasis::RenameMapped,
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn unique_semantic_identity_pairs_after_message_change() {
+        let base = diagnostic("base", "old", "semantic", "src/lib.rs", 2);
+        let mut head = diagnostic("head", "new", "semantic", "src/lib.rs", 2);
+        head.normalized_message = "changed".to_string();
+        let result = compare_inventories(
+            &inventory(vec![base]),
+            &inventory(vec![head]),
+            &SourceChangeSet::default(),
+        );
+        assert!(matches!(
+            result.evidence.as_slice(),
+            [PairingEvidence::Matched {
+                basis: MatchBasis::SemanticUnique,
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn unique_context_identity_pairs_without_semantic_or_code_match() {
+        let mut base = diagnostic("base", "old", "base-semantic", "src/lib.rs", 2);
+        base.context_id = Some("context".to_string());
+        let mut head = diagnostic("head", "new", "head-semantic", "src/lib.rs", 2);
+        head.context_id = Some("context".to_string());
+        head.code = "E".to_string();
+        head.normalized_message = "changed".to_string();
+        let result = compare_inventories(
+            &inventory(vec![base]),
+            &inventory(vec![head]),
+            &SourceChangeSet::default(),
+        );
+        assert!(matches!(
+            result.evidence.as_slice(),
+            [PairingEvidence::Matched {
+                basis: MatchBasis::ContextUnique,
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn modified_context_pairs_same_code_with_changed_semantics() {
+        let base = diagnostic("base", "old", "base-semantic", "src/lib.rs", 2);
+        let mut head = diagnostic("head", "new", "head-semantic", "src/lib.rs", 2);
+        head.normalized_message = "changed".to_string();
+        let result = compare_inventories(
+            &inventory(vec![base]),
+            &inventory(vec![head]),
+            &SourceChangeSet::default(),
+        );
+        assert!(matches!(
+            result.evidence.as_slice(),
+            [PairingEvidence::Matched {
+                basis: MatchBasis::ModifiedContextUnique,
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn contextual_provenance_changes_are_retained_without_blocking_pairing() {
+        let record = diagnostic("same", "same", "semantic", "src/lib.rs", 2);
+        let mut head = inventory(vec![record.clone()]);
+        head.analysis.hard.revision = Some("head".to_string());
+        head.analysis.contextual.workflow = Some("changed".to_string());
+        let result =
+            compare_inventories(&inventory(vec![record]), &head, &SourceChangeSet::default());
+        assert_eq!(result.comparability.status, ComparabilityStatus::Comparable);
+        assert_eq!(
+            result
+                .contextual_changes
+                .iter()
+                .map(|change| change.field.as_str())
+                .collect::<Vec<_>>(),
+            ["revision", "workflow"]
+        );
+    }
+
+    #[test]
     fn duplicate_candidates_are_ambiguous_and_not_classified() {
         let base = vec![
             diagnostic("base-a", "same", "semantic", "src/lib.rs", 2),
