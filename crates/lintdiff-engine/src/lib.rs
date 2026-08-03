@@ -12,8 +12,11 @@ mod receipt;
 mod source;
 
 pub use diagnostics::{
-    parse_cargo_messages, parse_cargo_messages_with_status, CargoDiagnosticStream, Diagnostic,
-    DiagnosticLevel, DiagnosticsParseError, Span,
+    parse_cargo_analysis, parse_cargo_analysis_with_repo_root, parse_cargo_messages,
+    parse_cargo_messages_with_status, AnalysisCompletion, AnalysisScope, CargoAnalysis,
+    CargoDiagnosticStream, CargoTarget, Diagnostic, DiagnosticChild, DiagnosticLevel,
+    DiagnosticObservation, DiagnosticSuggestion, DiagnosticsParseError, ObservationSpan,
+    ProducerUnit, Span, UpstreamExecution,
 };
 pub use identity::fingerprint;
 pub use matching::{compile_filters, path_allowed, relativize_span_path, select_spans, Filters};
