@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/schemas/lintdiff.delta.v1.json",
+  "title": "lintdiff diagnostic delta v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "base_inventory_id", "head_inventory_id", "source_diff_id", "source_diff_algorithm", "provenance", "items", "summary", "policy", "verdict"],
+  "properties": {
+    "schema": { "const": "lintdiff.delta.v1" },
+    "base_inventory_id": { "type": "string" },
+    "head_inventory_id": { "type": "string" },
+    "source_diff_id": { "type": "string", "pattern": "^source_diff_id_v1:[0-9a-f]{64}$" },
+    "source_diff_algorithm": { "const": "sha256-v1" },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "summary": { "$ref": "#/$defs/summary" },
+    "policy": { "$ref": "#/$defs/policy" },
+    "verdict": { "$ref": "#/$defs/verdict" }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparability", "contextual_changes"],
+      "properties": {
+        "comparability": { "$ref": "#/$defs/comparability" },
+        "contextual_changes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "comparability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons"],
+      "properties": {
+        "status": { "enum": ["comparable", "incomparable"] },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["state", "change_kind", "diff_scope", "match_basis", "movement", "label"],
+      "properties": {
+        "state": { "enum": ["matched", "base_only", "head_only", "ambiguous"] },
+        "base": { "$ref": "#/$defs/diagnostic" },
+        "head": { "$ref": "#/$defs/diagnostic" },
+        "base_candidates": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+        "head_candidates": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+        "basis": { "type": "string" },
+        "reasons": { "type": "array", "items": { "type": "string" } },
+        "change_kind": { "type": ["string", "null"] },
+        "diff_scope": { "enum": ["touched", "untouched", "no_location", "unknown"] },
+        "match_basis": { "enum": ["exact", "line_mapped", "rename_mapped", "semantic", "context", "modified_context", "none", "ambiguous"] },
+        "movement": { "enum": ["same", "shifted", "renamed", "shifted_and_renamed", "unknown"] },
+        "label": { "type": ["string", "null"] }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["observation_id", "occurrence_id", "semantic_id", "producer", "level_raw", "level", "code", "message", "normalized_message", "spans", "children"],
+      "properties": {
+        "observation_id": { "type": "string" },
+        "occurrence_id": { "type": "string" },
+        "semantic_id": { "type": "string" },
+        "producer": { "type": "object" },
+        "level_raw": { "type": "string" },
+        "level": { "type": "string" },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "normalized_message": { "type": "string" },
+        "spans": { "type": "array" },
+        "children": { "type": "array" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "unchanged", "new", "resolved", "modified", "ambiguous", "touched", "untouched", "no_location", "unknown_scope"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "unchanged": { "type": "integer", "minimum": 0 },
+        "new": { "type": "integer", "minimum": 0 },
+        "resolved": { "type": "integer", "minimum": 0 },
+        "modified": { "type": "integer", "minimum": 0 },
+        "ambiguous": { "type": "integer", "minimum": 0 },
+        "touched": { "type": "integer", "minimum": 0 },
+        "untouched": { "type": "integer", "minimum": 0 },
+        "no_location": { "type": "integer", "minimum": 0 },
+        "unknown_scope": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "block_new_errors", "block_new_warnings", "block_ambiguous"],
+      "properties": {
+        "profile": { "enum": ["advisory", "strict"] },
+        "block_new_errors": { "type": "boolean" },
+        "block_new_warnings": { "type": "boolean" },
+        "block_ambiguous": { "type": "boolean" }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons"],
+      "properties": {
+        "status": { "enum": ["accepted", "rejected", "incomparable"] },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

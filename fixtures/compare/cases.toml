@@ -8,11 +8,11 @@ base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","m
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":4,"line_end":4,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,3 +1,4 @@\n fn main() {\n+    let inserted = 1;\n     let value = 1;\n }\n"
 expected_change_kind = "unchanged"
-expected_diff_scope = "touched"
+expected_diff_scope = "untouched"
 expected_match_basis = "line_mapped"
 expected_movement = "shifted"
 expected_comparability = "comparable"
-expected_label = "existing_touched"
+expected_label = "existing_untouched"
 
 [[cases]]
 id = "file_rename_unchanged_warning"
@@ -21,7 +21,7 @@ base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","m
 head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/new.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
 source_diff = "diff --git a/src/old.rs b/src/new.rs\nsimilarity index 100%\nrename from src/old.rs\nrename to src/new.rs\n"
 expected_change_kind = "unchanged"
-expected_diff_scope = "unknown"
+expected_diff_scope = "untouched"
 expected_match_basis = "rename_mapped"
 expected_movement = "renamed"
 expected_comparability = "comparable"
@@ -61,8 +61,8 @@ head_diagnostics = ""
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
 expected_change_kind = "resolved"
 expected_diff_scope = "touched"
-expected_match_basis = "exact"
-expected_movement = "same"
+expected_match_basis = "none"
+expected_movement = "unknown"
 expected_comparability = "comparable"
 expected_label = "resolved"
 
@@ -76,7 +76,7 @@ source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value =
 expected_pairing_state = "ambiguous"
 expected_diff_scope = "touched"
 expected_match_basis = "ambiguous"
-expected_movement = "same"
+expected_movement = "unknown"
 expected_comparability = "comparable"
 expected_label = "ambiguous"
 
@@ -88,7 +88,7 @@ head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","m
 source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
 expected_change_kind = "modified"
 expected_diff_scope = "touched"
-expected_match_basis = "exact"
+expected_match_basis = "modified_context"
 expected_movement = "same"
 expected_comparability = "comparable"
 expected_label = "modified"

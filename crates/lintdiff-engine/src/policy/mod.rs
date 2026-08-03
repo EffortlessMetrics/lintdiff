@@ -99,3 +99,65 @@ mod verdict;
 
 pub use code::{format_level, is_code_allowed, map_level_to_severity, normalize_diagnostic_code};
 pub use verdict::{compute_verdict, counts_from_findings};
+
+use lintdiff_types::delta::{
+    DeltaKind, DeltaReceipt, DeltaVerdict, DeltaVerdictStatus, PairingEvidence,
+};
+
+/// Apply the experimental delta policy after evidence and classifications exist.
+pub fn evaluate_delta_policy(receipt: &DeltaReceipt) -> DeltaVerdict {
+    if receipt.provenance.comparability.status
+        == lintdiff_types::delta::ComparabilityStatus::Incomparable
+    {
+        return DeltaVerdict {
+            status: DeltaVerdictStatus::Incomparable,
+            reasons: receipt
+                .provenance
+                .comparability
+                .reasons
+                .iter()
+                .map(|reason| format!("incomparable_{}", delta_reason_token(*reason)))
+                .collect(),
+        };
+    }
+
+    let mut reasons = Vec::new();
+    for item in &receipt.items {
+        match (&item.pairing, item.change_kind) {
+            (PairingEvidence::HeadOnly { head }, Some(DeltaKind::New))
+                if receipt.policy.block_new_errors && head.level == "error" =>
+            {
+                reasons.push("new_error".to_string());
+            }
+            (PairingEvidence::HeadOnly { head }, Some(DeltaKind::New))
+                if receipt.policy.block_new_warnings && head.level == "warning" =>
+            {
+                reasons.push("new_warning".to_string());
+            }
+            (PairingEvidence::Ambiguous { .. }, None) if receipt.policy.block_ambiguous => {
+                reasons.push("ambiguous_pairing".to_string());
+            }
+            _ => {}
+        }
+    }
+    reasons.sort();
+    reasons.dedup();
+    DeltaVerdict {
+        status: if reasons.is_empty() {
+            DeltaVerdictStatus::Accepted
+        } else {
+            DeltaVerdictStatus::Rejected
+        },
+        reasons,
+    }
+}
+
+fn delta_reason_token(reason: lintdiff_types::delta::DeltaReason) -> &'static str {
+    match reason {
+        lintdiff_types::delta::DeltaReason::BaseAnalysisIncomplete => "base_analysis_incomplete",
+        lintdiff_types::delta::DeltaReason::HeadAnalysisIncomplete => "head_analysis_incomplete",
+        lintdiff_types::delta::DeltaReason::HardScopeMismatch => "hard_scope_mismatch",
+        lintdiff_types::delta::DeltaReason::MultipleCandidates => "multiple_candidates",
+        lintdiff_types::delta::DeltaReason::NoEarnedCorrespondence => "no_earned_correspondence",
+    }
+}

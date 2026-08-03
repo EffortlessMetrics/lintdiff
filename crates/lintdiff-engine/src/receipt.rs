@@ -3,6 +3,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::compare::{movement_for_pair, DiagnosticRef, PairingEvidence as EnginePairingEvidence};
 use crate::diagnostics::{CargoAnalysis, Diagnostic, Span};
 use crate::identity::fingerprint;
 use crate::inventory::InternalInventory;
@@ -12,6 +13,13 @@ use crate::policy::{
 };
 use crate::source::DiffMap;
 use lintdiff_types::{
+    delta::{
+        Comparability as DeltaComparability, ComparabilityStatus as DeltaComparabilityStatus,
+        DeltaItem, DeltaKind, DeltaLabel, DeltaPolicy, DeltaProvenance, DeltaReason, DeltaReceipt,
+        DeltaSummary, DeltaVerdict, DeltaVerdictStatus, DiffScope, MatchBasis as DeltaMatchBasis,
+        Movement as DeltaMovement, PairingEvidence as DeltaPairingEvidence, DELTA_SCHEMA_ID,
+        SOURCE_DIFF_ID_ALGORITHM,
+    },
     sort_findings, sort_findings_cmp, Counts, DiagnosticDisposition, Disposition, EffectiveConfig,
     ExplainSummary, Finding, GitInfo, HostInfo, LineRange, Location, NormPath, Report, RunInfo,
     Severity, ToolInfo, Verdict, VerdictStatus, CHECK_DIAGNOSTICS_ON_DIFF, SCHEMA_ID, TOOL_NAME,
@@ -428,6 +436,290 @@ pub fn truncate_message(msg: &str, max_len: usize) -> String {
     }
 }
 
+/// Build the complete comparison receipt before policy is applied.
+pub fn build_delta_receipt(
+    base: &lintdiff_types::inventory::Inventory,
+    head: &lintdiff_types::inventory::Inventory,
+    source: &crate::source::SourceChangeSet,
+    source_diff_id: String,
+    policy: DeltaPolicy,
+) -> DeltaReceipt {
+    let comparison = crate::compare::compare_inventories(base, head, source);
+    let items = comparison
+        .evidence
+        .iter()
+        .map(|evidence| delta_item(evidence, source))
+        .collect::<Vec<_>>();
+    let summary = summarize_delta(&items);
+    let mut receipt = DeltaReceipt {
+        schema: DELTA_SCHEMA_ID.to_string(),
+        base_inventory_id: base.inventory_id.clone(),
+        head_inventory_id: head.inventory_id.clone(),
+        source_diff_id,
+        source_diff_algorithm: SOURCE_DIFF_ID_ALGORITHM.to_string(),
+        provenance: DeltaProvenance {
+            comparability: DeltaComparability {
+                status: match comparison.comparability.status {
+                    crate::compare::ComparabilityStatus::Comparable => {
+                        DeltaComparabilityStatus::Comparable
+                    }
+                    crate::compare::ComparabilityStatus::Incomparable => {
+                        DeltaComparabilityStatus::Incomparable
+                    }
+                },
+                reasons: comparison
+                    .comparability
+                    .reasons
+                    .iter()
+                    .copied()
+                    .map(delta_reason)
+                    .collect(),
+            },
+            contextual_changes: comparison
+                .contextual_changes
+                .iter()
+                .map(|change| change.field.clone())
+                .collect(),
+        },
+        items,
+        summary,
+        policy,
+        verdict: DeltaVerdict {
+            status: DeltaVerdictStatus::Accepted,
+            reasons: Vec::new(),
+        },
+    };
+    receipt.verdict = crate::policy::evaluate_delta_policy(&receipt);
+    receipt
+}
+
+fn delta_item(
+    evidence: &EnginePairingEvidence,
+    source: &crate::source::SourceChangeSet,
+) -> DeltaItem {
+    match evidence {
+        EnginePairingEvidence::Matched { base, head, basis } => {
+            let base_ref = base.as_ref();
+            let head_ref = head.as_ref();
+            let change_kind = if materially_equal(base_ref, head_ref) {
+                DeltaKind::Unchanged
+            } else {
+                DeltaKind::Modified
+            };
+            let scope = scope_for_diagnostic(&head_ref.diagnostic, source);
+            DeltaItem {
+                pairing: DeltaPairingEvidence::Matched {
+                    base: Box::new(base_ref.diagnostic.clone()),
+                    head: Box::new(head_ref.diagnostic.clone()),
+                    basis: delta_basis(*basis),
+                },
+                change_kind: Some(change_kind),
+                diff_scope: scope,
+                match_basis: delta_basis(*basis),
+                movement: movement_for_pair(base_ref, head_ref, source),
+                label: match change_kind {
+                    DeltaKind::Unchanged => match scope {
+                        DiffScope::Touched => Some(DeltaLabel::ExistingTouched),
+                        DiffScope::Untouched => Some(DeltaLabel::ExistingUntouched),
+                        DiffScope::NoLocation | DiffScope::Unknown => None,
+                    },
+                    DeltaKind::Modified => Some(DeltaLabel::Modified),
+                    DeltaKind::New | DeltaKind::Resolved => None,
+                },
+            }
+        }
+        EnginePairingEvidence::BaseOnly { base } => DeltaItem {
+            pairing: DeltaPairingEvidence::BaseOnly {
+                base: Box::new(base.diagnostic.clone()),
+            },
+            change_kind: Some(DeltaKind::Resolved),
+            diff_scope: scope_for_base_diagnostic(&base.diagnostic, source),
+            match_basis: DeltaMatchBasis::None,
+            movement: DeltaMovement::Unknown,
+            label: Some(DeltaLabel::Resolved),
+        },
+        EnginePairingEvidence::HeadOnly { head } => {
+            let scope = scope_for_diagnostic(&head.diagnostic, source);
+            DeltaItem {
+                pairing: DeltaPairingEvidence::HeadOnly {
+                    head: Box::new(head.diagnostic.clone()),
+                },
+                change_kind: Some(DeltaKind::New),
+                diff_scope: scope,
+                match_basis: DeltaMatchBasis::None,
+                movement: DeltaMovement::Unknown,
+                label: match scope {
+                    DiffScope::Touched => Some(DeltaLabel::NewOnDiff),
+                    DiffScope::Untouched => Some(DeltaLabel::NewOffDiff),
+                    DiffScope::NoLocation | DiffScope::Unknown => None,
+                },
+            }
+        }
+        EnginePairingEvidence::Ambiguous {
+            base_candidates,
+            head_candidates,
+            reasons,
+        } => DeltaItem {
+            pairing: DeltaPairingEvidence::Ambiguous {
+                base_candidates: base_candidates
+                    .iter()
+                    .map(|candidate| candidate.diagnostic.clone())
+                    .collect(),
+                head_candidates: head_candidates
+                    .iter()
+                    .map(|candidate| candidate.diagnostic.clone())
+                    .collect(),
+                reasons: reasons.iter().copied().map(delta_reason).collect(),
+            },
+            change_kind: None,
+            diff_scope: ambiguous_scope(base_candidates, head_candidates, source),
+            match_basis: DeltaMatchBasis::Ambiguous,
+            movement: DeltaMovement::Unknown,
+            label: Some(DeltaLabel::Ambiguous),
+        },
+    }
+}
+
+fn materially_equal(base: &DiagnosticRef, head: &DiagnosticRef) -> bool {
+    base.diagnostic.producer == head.diagnostic.producer
+        && base.diagnostic.level == head.diagnostic.level
+        && base.diagnostic.code == head.diagnostic.code
+        && base.diagnostic.message == head.diagnostic.message
+        && base.diagnostic.normalized_message == head.diagnostic.normalized_message
+        && base.diagnostic.rendered == head.diagnostic.rendered
+        && base.diagnostic.children == head.diagnostic.children
+}
+
+fn scope_for_diagnostic(
+    diagnostic: &lintdiff_types::inventory::DiagnosticRecord,
+    source: &crate::source::SourceChangeSet,
+) -> DiffScope {
+    let Some((path, line)) = diagnostic_path(diagnostic) else {
+        return if diagnostic.spans.is_empty() {
+            DiffScope::NoLocation
+        } else {
+            DiffScope::Unknown
+        };
+    };
+    let Some(file) = source.files.values().find(|file| {
+        file.new_path.as_ref() == Some(&path)
+            || (file.new_path.is_none() && file.old_path.as_ref() == Some(&path))
+    }) else {
+        return DiffScope::Unknown;
+    };
+    if file.added.iter().any(|range| range.contains_line(line)) {
+        DiffScope::Touched
+    } else {
+        DiffScope::Untouched
+    }
+}
+
+fn scope_for_base_diagnostic(
+    diagnostic: &lintdiff_types::inventory::DiagnosticRecord,
+    source: &crate::source::SourceChangeSet,
+) -> DiffScope {
+    let Some((path, line)) = diagnostic_path(diagnostic) else {
+        return if diagnostic.spans.is_empty() {
+            DiffScope::NoLocation
+        } else {
+            DiffScope::Unknown
+        };
+    };
+    let Some(file) = source
+        .files
+        .values()
+        .find(|file| file.old_path.as_ref() == Some(&path))
+    else {
+        return DiffScope::Unknown;
+    };
+    if file.deleted.iter().any(|range| range.contains_line(line)) {
+        DiffScope::Touched
+    } else {
+        DiffScope::Untouched
+    }
+}
+
+fn ambiguous_scope(
+    base: &[DiagnosticRef],
+    head: &[DiagnosticRef],
+    source: &crate::source::SourceChangeSet,
+) -> DiffScope {
+    let scopes = head
+        .iter()
+        .map(|candidate| scope_for_diagnostic(&candidate.diagnostic, source))
+        .chain(
+            base.iter()
+                .map(|candidate| scope_for_base_diagnostic(&candidate.diagnostic, source)),
+        )
+        .collect::<Vec<_>>();
+    if scopes.contains(&DiffScope::Touched) {
+        DiffScope::Touched
+    } else if scopes.iter().all(|scope| *scope == DiffScope::Untouched) {
+        DiffScope::Untouched
+    } else if scopes.contains(&DiffScope::NoLocation) {
+        DiffScope::NoLocation
+    } else {
+        DiffScope::Unknown
+    }
+}
+
+fn diagnostic_path(
+    diagnostic: &lintdiff_types::inventory::DiagnosticRecord,
+) -> Option<(NormPath, u32)> {
+    let span = diagnostic
+        .primary_span
+        .and_then(|index| diagnostic.spans.get(index))
+        .or_else(|| diagnostic.spans.iter().find(|span| span.path.is_some()))?;
+    Some((
+        NormPath::from_repo_path(span.path.as_deref()?),
+        span.line_start?,
+    ))
+}
+
+fn delta_basis(basis: crate::compare::MatchBasis) -> DeltaMatchBasis {
+    match basis {
+        crate::compare::MatchBasis::ExactOccurrence => DeltaMatchBasis::Exact,
+        crate::compare::MatchBasis::LineMapped => DeltaMatchBasis::LineMapped,
+        crate::compare::MatchBasis::RenameMapped => DeltaMatchBasis::RenameMapped,
+        crate::compare::MatchBasis::SemanticUnique => DeltaMatchBasis::Semantic,
+        crate::compare::MatchBasis::ContextUnique => DeltaMatchBasis::Context,
+        crate::compare::MatchBasis::ModifiedContextUnique => DeltaMatchBasis::ModifiedContext,
+    }
+}
+
+fn delta_reason(reason: crate::compare::ReasonCode) -> DeltaReason {
+    match reason {
+        crate::compare::ReasonCode::BaseAnalysisIncomplete => DeltaReason::BaseAnalysisIncomplete,
+        crate::compare::ReasonCode::HeadAnalysisIncomplete => DeltaReason::HeadAnalysisIncomplete,
+        crate::compare::ReasonCode::HardScopeMismatch => DeltaReason::HardScopeMismatch,
+        crate::compare::ReasonCode::MultipleCandidates => DeltaReason::MultipleCandidates,
+        crate::compare::ReasonCode::NoEarnedCorrespondence => DeltaReason::NoEarnedCorrespondence,
+    }
+}
+
+fn summarize_delta(items: &[DeltaItem]) -> DeltaSummary {
+    let mut summary = DeltaSummary {
+        total: items.len() as u32,
+        ..Default::default()
+    };
+    for item in items {
+        match item.change_kind {
+            Some(DeltaKind::Unchanged) => summary.unchanged += 1,
+            Some(DeltaKind::New) => summary.new += 1,
+            Some(DeltaKind::Resolved) => summary.resolved += 1,
+            Some(DeltaKind::Modified) => summary.modified += 1,
+            None => summary.ambiguous += 1,
+        }
+        match item.diff_scope {
+            DiffScope::Touched => summary.touched += 1,
+            DiffScope::Untouched => summary.untouched += 1,
+            DiffScope::NoLocation => summary.no_location += 1,
+            DiffScope::Unknown => summary.unknown_scope += 1,
+        }
+    }
+    summary
+}
+
 fn tool_error_finding(code: &str, msg: &str) -> Finding {
     Finding {
         severity: Severity::Error,
@@ -446,7 +738,7 @@ fn tool_error_finding(code: &str, msg: &str) -> Finding {
 mod tests {
     use super::*;
     use crate::diagnostics::{parse_cargo_analysis, parse_cargo_messages};
-    use crate::source::parse_unified_diff;
+    use crate::source::{parse_source_change_set, parse_unified_diff};
     use std::io::Cursor;
 
     #[test]
@@ -765,5 +1057,205 @@ diff --git a/src/lib.rs b/src/lib.rs
         let summary = data.get("explain_summary").unwrap();
         assert_eq!(summary["included"], 1);
         assert_eq!(summary["cut_by_budget"], 2);
+    }
+
+    fn delta_inventory(
+        diagnostics: Vec<lintdiff_types::inventory::DiagnosticRecord>,
+    ) -> lintdiff_types::inventory::Inventory {
+        use lintdiff_types::inventory::{
+            AnalysisProvenance, CompletionState, HardProvenance, InventorySummary, UpstreamEvidence,
+        };
+
+        lintdiff_types::inventory::Inventory {
+            schema: lintdiff_types::inventory::INVENTORY_SCHEMA_ID.to_string(),
+            tool: ToolInfo {
+                name: "lintdiff".to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            analysis: AnalysisProvenance {
+                hard: HardProvenance {
+                    diagnostic_format: "cargo-json".to_string(),
+                    command: vec!["cargo".to_string(), "clippy".to_string()],
+                    repository: Some("repo".to_string()),
+                    toolchain: Some("stable".to_string()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            upstream: UpstreamEvidence {
+                completion: CompletionState::SuccessfulComplete,
+                build_finished_seen: true,
+                build_success: Some(true),
+                exit_code: Some(0),
+                duration_ms: None,
+            },
+            inventory_id: "inventory_id_v1:test".to_string(),
+            diagnostics,
+            summary: InventorySummary::default(),
+        }
+    }
+
+    fn delta_diagnostic(
+        id: &str,
+        code: &str,
+        message: &str,
+        path: &str,
+        line: u32,
+    ) -> lintdiff_types::inventory::DiagnosticRecord {
+        use lintdiff_types::inventory::{DiagnosticSpan, ProducerUnit};
+
+        lintdiff_types::inventory::DiagnosticRecord {
+            observation_id: format!("observation_id_v1:{id}"),
+            occurrence_id: format!("occurrence_id_v1:{id}"),
+            semantic_id: format!("semantic_id_v1:{id}"),
+            context_id: None,
+            producer: ProducerUnit {
+                package_id: Some("pkg".to_string()),
+                ..Default::default()
+            },
+            level_raw: "warning".to_string(),
+            level: "warning".to_string(),
+            code_raw: Some(code.to_string()),
+            code: code.to_string(),
+            message: message.to_string(),
+            normalized_message: message.to_string(),
+            rendered: None,
+            spans: vec![DiagnosticSpan {
+                raw_file_name: Some(path.to_string()),
+                raw_line_start: Some(line),
+                raw_line_end: Some(line),
+                raw_column_start: None,
+                raw_column_end: None,
+                path: Some(path.to_string()),
+                line_start: Some(line),
+                line_end: Some(line),
+                column_start: None,
+                column_end: None,
+                is_primary: true,
+            }],
+            primary_span: Some(0),
+            children: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn delta_receipt_preserves_new_resolved_and_scope_labels() {
+        use lintdiff_types::delta::{DeltaKind, DeltaLabel};
+
+        let base = delta_inventory(vec![delta_diagnostic(
+            "old",
+            "old-code",
+            "old warning",
+            "src/lib.rs",
+            1,
+        )]);
+        let head = delta_inventory(vec![delta_diagnostic(
+            "new",
+            "new-code",
+            "new warning",
+            "src/lib.rs",
+            1,
+        )]);
+        let source = parse_source_change_set(
+            "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,1 @@\n+new\n",
+        )
+        .expect("valid diff");
+
+        let receipt = build_delta_receipt(
+            &base,
+            &head,
+            &source,
+            "source_diff_id_v1:test".to_string(),
+            lintdiff_types::delta::DeltaPolicy::default(),
+        );
+
+        assert_eq!(receipt.summary.total, 2);
+        assert!(receipt.items.iter().any(|item| {
+            item.change_kind == Some(DeltaKind::Resolved)
+                && item.label == Some(DeltaLabel::Resolved)
+        }));
+        assert!(receipt.items.iter().any(|item| {
+            item.change_kind == Some(DeltaKind::New) && item.label == Some(DeltaLabel::NewOnDiff)
+        }));
+    }
+
+    #[test]
+    fn delta_receipt_keeps_ambiguity_without_a_change_kind() {
+        use lintdiff_types::delta::{DeltaLabel, PairingEvidence};
+
+        let base = delta_inventory(vec![
+            delta_diagnostic("base-a", "same", "same warning", "src/lib.rs", 2),
+            delta_diagnostic("base-b", "same", "same warning", "src/lib.rs", 4),
+        ]);
+        let head = delta_inventory(vec![delta_diagnostic(
+            "head",
+            "same",
+            "same warning",
+            "src/lib.rs",
+            3,
+        )]);
+        let receipt = build_delta_receipt(
+            &base,
+            &head,
+            &crate::source::SourceChangeSet::default(),
+            "source_diff_id_v1:test".to_string(),
+            lintdiff_types::delta::DeltaPolicy::default(),
+        );
+
+        assert_eq!(receipt.summary.ambiguous, 1);
+        assert!(receipt.items.iter().any(|item| {
+            matches!(item.pairing, PairingEvidence::Ambiguous { .. })
+                && item.change_kind.is_none()
+                && item.label == Some(DeltaLabel::Ambiguous)
+        }));
+    }
+
+    #[test]
+    fn delta_receipt_rejects_strict_new_warning_and_incomparable_runs() {
+        use lintdiff_types::delta::{DeltaPolicy, DeltaProfile, DeltaVerdictStatus};
+        use lintdiff_types::inventory::CompletionState;
+
+        let base = delta_inventory(Vec::new());
+        let head = delta_inventory(vec![delta_diagnostic(
+            "new",
+            "new-code",
+            "new warning",
+            "src/lib.rs",
+            1,
+        )]);
+        let strict = DeltaPolicy {
+            profile: DeltaProfile::Strict,
+            block_new_errors: false,
+            block_new_warnings: true,
+            block_ambiguous: false,
+        };
+        let source = parse_source_change_set(
+            "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,1 @@\n+new\n",
+        )
+        .expect("valid diff");
+        let rejected = build_delta_receipt(
+            &base,
+            &head,
+            &source,
+            "source_diff_id_v1:test".to_string(),
+            strict,
+        );
+        assert_eq!(rejected.verdict.status, DeltaVerdictStatus::Rejected);
+
+        let mut incomplete = head;
+        incomplete.upstream.completion = CompletionState::IncompleteStream;
+        let incomparable = build_delta_receipt(
+            &base,
+            &incomplete,
+            &source,
+            "source_diff_id_v1:test".to_string(),
+            DeltaPolicy::default(),
+        );
+        assert_eq!(
+            incomparable.verdict.status,
+            DeltaVerdictStatus::Incomparable
+        );
+        assert!(incomparable.items.is_empty());
     }
 }

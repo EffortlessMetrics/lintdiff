@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use lintdiff_types::delta::Movement;
 use lintdiff_types::inventory::{DiagnosticRecord, Inventory};
 
 use crate::source::{LocationMapping, SourceChangeSet};
@@ -186,6 +187,7 @@ pub fn compare_inventories(
         &head,
         &mut base_used,
         &mut head_used,
+        source,
     ));
     for (index, diagnostic) in base.iter().enumerate() {
         if !base_used[index] {
@@ -270,13 +272,14 @@ fn ambiguous_groups(
     head: &[DiagnosticRef],
     base_used: &mut [bool],
     head_used: &mut [bool],
+    source: &SourceChangeSet,
 ) -> Vec<PairingEvidence> {
     let mut evidence = Vec::new();
     for start in 0..base.len() {
         if base_used[start] {
             continue;
         }
-        let initial_heads = candidate_heads(&base[start], head, head_used);
+        let initial_heads = candidate_heads(&base[start], head, head_used, source);
         if initial_heads.is_empty() {
             continue;
         }
@@ -287,9 +290,9 @@ fn ambiguous_groups(
             for base_index in 0..base.len() {
                 if !base_used[base_index]
                     && !base_group.contains(&base_index)
-                    && head_group
-                        .iter()
-                        .any(|&head_index| candidate_pair(&base[base_index], &head[head_index]))
+                    && head_group.iter().any(|&head_index| {
+                        candidate_pair(&base[base_index], &head[head_index], source)
+                    })
                 {
                     changed |= base_group.insert(base_index);
                 }
@@ -297,9 +300,9 @@ fn ambiguous_groups(
             for head_index in 0..head.len() {
                 if !head_used[head_index]
                     && !head_group.contains(&head_index)
-                    && base_group
-                        .iter()
-                        .any(|&base_index| candidate_pair(&base[base_index], &head[head_index]))
+                    && base_group.iter().any(|&base_index| {
+                        candidate_pair(&base[base_index], &head[head_index], source)
+                    })
                 {
                     changed |= head_group.insert(head_index);
                 }
@@ -335,15 +338,21 @@ fn ambiguous_groups(
     evidence
 }
 
-fn candidate_heads(base: &DiagnosticRef, head: &[DiagnosticRef], head_used: &[bool]) -> Vec<usize> {
+fn candidate_heads(
+    base: &DiagnosticRef,
+    head: &[DiagnosticRef],
+    head_used: &[bool],
+    source: &SourceChangeSet,
+) -> Vec<usize> {
     (0..head.len())
-        .filter(|&index| !head_used[index] && candidate_pair(base, &head[index]))
+        .filter(|&index| !head_used[index] && candidate_pair(base, &head[index], source))
         .collect()
 }
 
-fn candidate_pair(base: &DiagnosticRef, head: &DiagnosticRef) -> bool {
+fn candidate_pair(base: &DiagnosticRef, head: &DiagnosticRef, source: &SourceChangeSet) -> bool {
     same_producer(base, head)
         && (base.semantic_id == head.semantic_id || base.diagnostic.code == head.diagnostic.code)
+        && (source.files.is_empty() || location_relation(base, head, source).is_some())
 }
 
 fn sorted_refs(inventory: &Inventory) -> Vec<DiagnosticRef> {
@@ -411,7 +420,7 @@ enum MatchMovement {
 }
 
 impl DiagnosticRef {
-    fn diagnostic_path(&self) -> Option<(NormPath, u32)> {
+    pub(crate) fn diagnostic_path(&self) -> Option<(NormPath, u32)> {
         let span = self
             .diagnostic
             .primary_span
@@ -426,6 +435,20 @@ impl DiagnosticRef {
             NormPath::from_repo_path(span.path.as_deref()?),
             span.line_start?,
         ))
+    }
+}
+
+pub(crate) fn movement_for_pair(
+    base: &DiagnosticRef,
+    head: &DiagnosticRef,
+    source: &SourceChangeSet,
+) -> Movement {
+    match location_relation(base, head, source) {
+        Some(MatchMovement::Same) => Movement::Same,
+        Some(MatchMovement::Shifted) => Movement::Shifted,
+        Some(MatchMovement::Renamed) => Movement::Renamed,
+        Some(MatchMovement::ShiftedAndRenamed) => Movement::ShiftedAndRenamed,
+        Some(MatchMovement::Unknown) | None => Movement::Unknown,
     }
 }
 

@@ -20,6 +20,7 @@ lintdiff-render = { path = "../lintdiff-render" }
 lintdiff-types = { path = "../lintdiff-types" }
 
 clap.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 time.workspace = true

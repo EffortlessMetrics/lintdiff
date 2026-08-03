@@ -116,7 +116,15 @@ pub fn inventory_from_analysis(
             "producer": producer,
             "code": observation.code,
             "normalized_message": normalized_message,
-            "spans": spans,
+            // Occurrence identity follows repository-normalized source
+            // coordinates, not transport spellings such as absolute versus
+            // relative Cargo paths.
+            "spans": observation
+                .source
+                .spans
+                .iter()
+                .map(normalized_span_seed)
+                .collect::<Vec<_>>(),
         });
         let semantic_seed = json!({
             "producer": wire_producer(&source.producer),
@@ -244,6 +252,18 @@ fn observation_seed(observation: &InventoryObservation) -> Result<Value, serde_j
         "spans": source.spans.iter().map(wire_span).collect::<Vec<_>>(),
         "children": source.children.iter().map(wire_child).collect::<Vec<_>>(),
     }))
+}
+
+fn normalized_span_seed(span: &ObservationSpan) -> Value {
+    let normalized = span.normalized.as_ref();
+    json!({
+        "path": normalized.map(|value| value.file.as_str()),
+        "line_start": normalized.map(|value| value.line_start),
+        "line_end": normalized.map(|value| value.line_end),
+        "column_start": normalized.and_then(|value| value.col_start),
+        "column_end": normalized.and_then(|value| value.col_end),
+        "is_primary": span.is_primary,
+    })
 }
 
 fn wire_producer(producer: &ProducerUnit) -> WireProducerUnit {

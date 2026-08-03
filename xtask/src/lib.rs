@@ -535,7 +535,37 @@ fn schema_check(root: &Path) -> Result<(), String> {
                 .to_string(),
         );
     }
-    println!("schema_check=pass schema_id={schema_id} inventory_schema_id={inventory_schema_id}");
+    let delta_schema: JsonValue =
+        serde_json::from_str(&read_text(root, "schemas/lintdiff.delta.v1.json")?)
+            .map_err(|error| format!("parse live delta schema: {error}"))?;
+    let delta_fixture_path = root.join("crates/lintdiff-types/tests/fixtures/sample.delta.json");
+    let delta_fixture: JsonValue = serde_json::from_str(
+        &fs::read_to_string(&delta_fixture_path)
+            .map_err(|error| format!("read {}: {error}", delta_fixture_path.display()))?,
+    )
+    .map_err(|error| format!("parse sample delta: {error}"))?;
+    let delta_validator = jsonschema::draft202012::options()
+        .build(&delta_schema)
+        .map_err(|error| format!("compile live delta schema: {error}"))?;
+    if let Err(error) = delta_validator.validate(&delta_fixture) {
+        return Err(format!("sample delta does not validate: {error}"));
+    }
+    let delta_schema_id = delta_schema
+        .pointer("/properties/schema/const")
+        .and_then(JsonValue::as_str)
+        .ok_or_else(|| "live delta schema has no schema const".to_string())?;
+    if delta_schema_id != "lintdiff.delta.v1" {
+        return Err(format!("unexpected delta schema id: {delta_schema_id}"));
+    }
+    let delta_source = read_text(root, "crates/lintdiff-types/src/delta.rs")?;
+    if !delta_source.contains("pub const DELTA_SCHEMA_ID: &str = \"lintdiff.delta.v1\";") {
+        return Err(
+            "lintdiff-types delta authority is not synchronized with the live schema".to_string(),
+        );
+    }
+    println!(
+        "schema_check=pass schema_id={schema_id} inventory_schema_id={inventory_schema_id} delta_schema_id={delta_schema_id}"
+    );
     Ok(())
 }
 
@@ -598,7 +628,29 @@ fn fixture_check(root: &Path) -> Result<(), String> {
     if jsonl_count == 0 || diff_count == 0 {
         return Err("fixture corpus must contain JSONL diagnostics and diff fixtures".to_string());
     }
-    println!("fixture_check=pass jsonl={jsonl_count} diffs={diff_count}");
+    let compare_path = root.join("fixtures/compare/cases.toml");
+    let compare: toml::Value = toml::from_str(
+        &fs::read_to_string(&compare_path)
+            .map_err(|error| format!("read {}: {error}", compare_path.display()))?,
+    )
+    .map_err(|error| format!("parse {}: {error}", compare_path.display()))?;
+    let cases = compare
+        .get("cases")
+        .and_then(toml::Value::as_array)
+        .ok_or_else(|| "comparison fixture has no cases array".to_string())?;
+    if cases.is_empty()
+        || cases.iter().any(|case| {
+            ["id", "base_diagnostics", "head_diagnostics", "source_diff"]
+                .iter()
+                .any(|field| case.get(*field).and_then(toml::Value::as_str).is_none())
+        })
+    {
+        return Err("comparison fixture cases are missing required fields".to_string());
+    }
+    println!(
+        "fixture_check=pass jsonl={jsonl_count} diffs={diff_count} compare_cases={}",
+        cases.len()
+    );
     Ok(())
 }
 

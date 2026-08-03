@@ -4,6 +4,27 @@ This document freezes the evidence model for the diagnostic-delta experiment.
 It is a design and adjudication contract, not an implementation API. The current
 `lintdiff.report.v1` location-scoped receipt remains unchanged.
 
+The first implementation consumes inventories and a source diff; it does not
+check out or build either revision:
+
+```bash
+lintdiff compare \
+  --base-inventory artifacts/base.inventory.json \
+  --head-inventory artifacts/head.inventory.json \
+  --diff-file artifacts/patch.diff \
+  --out artifacts/lintdiff/delta.json \
+  --md artifacts/lintdiff/delta.md
+```
+
+The default policy is advisory. An explicit `--profile strict` or the
+equivalent file configuration opts into blocking new errors and warnings:
+
+```toml
+[delta]
+profile = "strict"
+block_ambiguous = false
+```
+
 ## Product boundary
 
 The experiment compares two complete normalized diagnostic inventories: one
@@ -191,6 +212,13 @@ both positive and falsifying cases:
 
 Every later inventory, source-correspondence, pairing, delta-receipt, and
 external-verdict issue must cite this corpus and retain its adjudications.
+
+The implementation harness executes every case in this file. It treats a
+fixture without a `build-finished` event as a successful complete stream only
+for cases explicitly adjudicated as comparable; incomplete cases retain their
+blocked state. Source scope follows changed lines, so an unchanged diagnostic
+that moves through an insertion remains `existing_untouched`; a base-only or
+head-only item has `none`/`unknown` matching axes because no pair was earned.
 
 ## Invariants for implementation
 
