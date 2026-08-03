@@ -30,7 +30,7 @@
 //! - [`Span`]: A source code location referenced by a diagnostic
 //! - [`DiagnosticsParseError`]: Errors that can occur during parsing
 
-use std::io::BufRead;
+use std::{io::BufRead, path::Path};
 
 use serde_json::Value;
 use thiserror::Error;
@@ -184,12 +184,150 @@ pub enum DiagnosticsParseError {
     },
 }
 
+/// The Cargo producer identity attached to one compiler-message emission.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ProducerUnit {
+    pub package_id: Option<String>,
+    pub manifest_path: Option<String>,
+    pub target: Option<CargoTarget>,
+    pub profile: Option<String>,
+}
+
+/// The package target that produced a compiler message.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoTarget {
+    pub name: Option<String>,
+    pub kind: Vec<String>,
+    pub crate_types: Vec<String>,
+    pub src_path: Option<String>,
+    pub edition: Option<String>,
+}
+
+/// Hard and contextual inputs that determine whether two analyses are comparable.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AnalysisScope {
+    pub repository: Option<String>,
+    pub revision: Option<String>,
+    pub toolchain: Option<String>,
+    pub target: Option<String>,
+    pub features: Vec<String>,
+    pub package_selection: Vec<String>,
+    pub target_selection: Vec<String>,
+    pub lint_config_hash: Option<String>,
+}
+
+/// A source span retaining raw Cargo values alongside the current normalized span.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObservationSpan {
+    pub raw_file_name: Option<String>,
+    pub raw_line_start: Option<u32>,
+    pub raw_line_end: Option<u32>,
+    pub raw_column_start: Option<u32>,
+    pub raw_column_end: Option<u32>,
+    pub normalized: Option<Span>,
+    pub is_primary: bool,
+}
+
+/// A suggestion emitted as part of a compiler child diagnostic.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiagnosticSuggestion {
+    pub file_name: Option<String>,
+    pub line_start: Option<u32>,
+    pub line_end: Option<u32>,
+    pub replacement: Option<String>,
+    pub applicability: Option<String>,
+}
+
+/// A child note, help message, or nested diagnostic.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiagnosticChild {
+    pub raw_level: String,
+    pub level: DiagnosticLevel,
+    pub message: String,
+    pub rendered: Option<String>,
+    pub spans: Vec<ObservationSpan>,
+    pub suggestions: Vec<DiagnosticSuggestion>,
+}
+
+/// One Cargo compiler-message observation, before filtering or policy.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiagnosticObservation {
+    pub producer: ProducerUnit,
+    pub raw_level: String,
+    pub raw_code: Option<String>,
+    pub message: String,
+    pub rendered: Option<String>,
+    pub spans: Vec<ObservationSpan>,
+    pub children: Vec<DiagnosticChild>,
+    pub diagnostic: Diagnostic,
+}
+
+/// Completion state for one parsed Cargo analysis stream.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AnalysisCompletion {
+    SuccessfulComplete,
+    FailedComplete,
+    IncompleteStream,
+    RuntimeFailure,
+}
+
+/// Process and Cargo completion evidence for one analysis.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct UpstreamExecution {
+    pub command: Vec<String>,
+    pub exit_code: Option<i32>,
+    pub duration_ms: Option<u64>,
+    pub build_finished_seen: bool,
+    pub build_success: Option<bool>,
+    pub completion: Option<AnalysisCompletion>,
+}
+
+/// Complete Cargo observations and terminal stream evidence.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CargoAnalysis {
+    pub scope: AnalysisScope,
+    pub observations: Vec<DiagnosticObservation>,
+    pub execution: UpstreamExecution,
+}
+
+impl CargoAnalysis {
+    /// Construct analysis evidence for a process that could not produce a Cargo stream.
+    pub fn runtime_failure(command: Vec<String>, duration_ms: Option<u64>) -> Self {
+        Self {
+            scope: AnalysisScope::default(),
+            observations: Vec::new(),
+            execution: UpstreamExecution {
+                command,
+                duration_ms,
+                completion: Some(AnalysisCompletion::RuntimeFailure),
+                ..UpstreamExecution::default()
+            },
+        }
+    }
+
+    /// Attach process metadata acquired by the application shell.
+    pub fn with_process_evidence(
+        mut self,
+        command: Vec<String>,
+        exit_code: Option<i32>,
+        duration_ms: Option<u64>,
+    ) -> Self {
+        self.execution.command = command;
+        self.execution.exit_code = exit_code;
+        self.execution.duration_ms = duration_ms;
+        self
+    }
+}
+
 /// The normalized diagnostics and completion evidence from one Cargo stream.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CargoDiagnosticStream {
     pub diagnostics: Vec<Diagnostic>,
+    pub observations: Vec<DiagnosticObservation>,
     pub build_finished: bool,
     pub build_success: Option<bool>,
+    pub completion: AnalysisCompletion,
+    pub execution: UpstreamExecution,
 }
 
 /// Parse a cargo JSON-lines stream, returning only compiler messages.
@@ -232,13 +370,20 @@ pub fn parse_cargo_messages<R: BufRead>(
     Ok(parse_cargo_messages_with_status(reader)?.diagnostics)
 }
 
-/// Parse Cargo JSONL while retaining the terminal build-finished evidence.
-pub fn parse_cargo_messages_with_status<R: BufRead>(
+/// Parse a Cargo JSONL stream into complete, one-emission observations.
+pub fn parse_cargo_analysis<R: BufRead>(reader: R) -> Result<CargoAnalysis, DiagnosticsParseError> {
+    parse_cargo_analysis_with_repo_root(reader, None)
+}
+
+/// Parse Cargo JSONL and earn repository-relative paths from a known root.
+pub fn parse_cargo_analysis_with_repo_root<R: BufRead>(
     reader: R,
-) -> Result<CargoDiagnosticStream, DiagnosticsParseError> {
-    let mut out: Vec<Diagnostic> = Vec::new();
-    let mut build_finished = false;
+    repo_root: Option<&Path>,
+) -> Result<CargoAnalysis, DiagnosticsParseError> {
+    let mut observations = Vec::new();
+    let mut build_finished_seen = false;
     let mut build_success = None;
+    let mut scope = AnalysisScope::default();
 
     for (idx, line_res) in reader.lines().enumerate() {
         let line_no = idx + 1;
@@ -251,110 +396,350 @@ pub fn parse_cargo_messages_with_status<R: BufRead>(
             continue;
         }
 
-        let v: Value =
+        let value: Value =
             serde_json::from_str(&line).map_err(|e| DiagnosticsParseError::InvalidJson {
                 line: line_no,
                 source: e,
             })?;
 
-        // cargo messages are objects with "reason"
-        let reason = v.get("reason").and_then(|x| x.as_str());
+        let reason = value.get("reason").and_then(Value::as_str);
         if reason == Some("build-finished") {
-            build_finished = true;
-            build_success = v.get("success").and_then(|x| x.as_bool());
+            build_finished_seen = true;
+            build_success = value.get("success").and_then(Value::as_bool);
+            scope.toolchain = value
+                .get("toolchain")
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            scope.target = value
+                .get("target")
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            scope.features = string_array(value.get("features"));
             continue;
         }
         if reason != Some("compiler-message") {
             continue;
         }
 
-        let msg = v
-            .get("message")
-            .ok_or_else(|| DiagnosticsParseError::InvalidShape {
-                line: line_no,
-                msg: "missing 'message' field".to_string(),
-            })?;
+        let message_value =
+            value
+                .get("message")
+                .ok_or_else(|| DiagnosticsParseError::InvalidShape {
+                    line: line_no,
+                    msg: "missing 'message' field".to_string(),
+                })?;
 
-        let level_raw = msg.get("level").and_then(|x| x.as_str()).unwrap_or("other");
-        let level = match level_raw {
-            "error" => DiagnosticLevel::Error,
-            "warning" => DiagnosticLevel::Warning,
-            "note" => DiagnosticLevel::Note,
-            "help" => DiagnosticLevel::Help,
-            other => DiagnosticLevel::Other(other.to_string()),
-        };
-
-        let message = msg
-            .get("message")
-            .and_then(|x| x.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let rendered = msg
-            .get("rendered")
-            .and_then(|x| x.as_str())
-            .map(|s| s.to_string());
-
-        let code_raw = msg
-            .get("code")
-            .and_then(|c| c.get("code"))
-            .and_then(|x| x.as_str())
-            .map(|s| s.to_string());
-
-        let spans_val = msg
-            .get("spans")
-            .and_then(|x| x.as_array())
-            .cloned()
-            .unwrap_or_default();
-        let mut spans: Vec<Span> = Vec::new();
-        for sp in spans_val {
-            let file_name = sp.get("file_name").and_then(|x| x.as_str()).unwrap_or("");
-            let line_start = sp.get("line_start").and_then(|x| x.as_u64()).unwrap_or(0) as u32;
-            let line_end = sp
-                .get("line_end")
-                .and_then(|x| x.as_u64())
-                .unwrap_or(line_start as u64) as u32;
-            let col_start = sp
-                .get("column_start")
-                .and_then(|x| x.as_u64())
-                .map(|n| n as u32);
-            let col_end = sp
-                .get("column_end")
-                .and_then(|x| x.as_u64())
-                .map(|n| n as u32);
-            let is_primary = sp
-                .get("is_primary")
-                .and_then(|x| x.as_bool())
-                .unwrap_or(false);
-
-            // rustc uses 1-based lines/cols; if missing, keep 0 but avoid underflow.
-            let ls = line_start.max(1);
-            let le = line_end.max(ls);
-
-            spans.push(Span {
-                file: NormPath::from_repo_path(file_name),
-                line_start: ls,
-                line_end: le,
-                col_start,
-                col_end,
-                is_primary,
-            });
-        }
-
-        out.push(Diagnostic {
-            level,
-            code_raw,
-            message,
-            spans,
-            rendered,
-        });
+        observations.push(parse_observation(&value, message_value, repo_root));
     }
 
-    Ok(CargoDiagnosticStream {
-        diagnostics: out,
-        build_finished,
-        build_success,
+    let completion = match (build_finished_seen, build_success) {
+        (true, Some(true)) => AnalysisCompletion::SuccessfulComplete,
+        (true, Some(false)) => AnalysisCompletion::FailedComplete,
+        _ => AnalysisCompletion::IncompleteStream,
+    };
+
+    Ok(CargoAnalysis {
+        scope,
+        observations,
+        execution: UpstreamExecution {
+            build_finished_seen,
+            build_success,
+            completion: Some(completion),
+            ..UpstreamExecution::default()
+        },
     })
+}
+
+/// Parse Cargo JSONL while retaining the terminal build-finished evidence.
+pub fn parse_cargo_messages_with_status<R: BufRead>(
+    reader: R,
+) -> Result<CargoDiagnosticStream, DiagnosticsParseError> {
+    let analysis = parse_cargo_analysis(reader)?;
+    let diagnostics = analysis
+        .observations
+        .iter()
+        .map(|observation| observation.diagnostic.clone())
+        .collect();
+    let execution = analysis.execution.clone();
+    let completion = execution
+        .completion
+        .ok_or_else(|| DiagnosticsParseError::InvalidShape {
+            line: 0,
+            msg: "parsed Cargo analysis did not contain completion state".to_string(),
+        })?;
+    Ok(CargoDiagnosticStream {
+        diagnostics,
+        observations: analysis.observations,
+        build_finished: execution.build_finished_seen,
+        build_success: execution.build_success,
+        completion,
+        execution,
+    })
+}
+
+fn parse_observation(
+    value: &Value,
+    message_value: &Value,
+    repo_root: Option<&Path>,
+) -> DiagnosticObservation {
+    let raw_level = message_value
+        .get("level")
+        .and_then(Value::as_str)
+        .unwrap_or("other")
+        .to_string();
+    let level = parse_level(&raw_level);
+    let message = message_value
+        .get("message")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let rendered = message_value
+        .get("rendered")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let raw_code = message_value
+        .get("code")
+        .and_then(|code| code.get("code"))
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let spans = parse_spans(message_value.get("spans"), repo_root);
+    let children = parse_children(message_value.get("children"), repo_root);
+    let normalized_spans = spans.iter().map(legacy_span).collect();
+
+    DiagnosticObservation {
+        producer: parse_producer(value),
+        raw_level,
+        raw_code: raw_code.clone(),
+        message: message.clone(),
+        rendered: rendered.clone(),
+        spans,
+        children,
+        diagnostic: Diagnostic {
+            level,
+            code_raw: raw_code,
+            message,
+            spans: normalized_spans,
+            rendered,
+        },
+    }
+}
+
+fn parse_producer(value: &Value) -> ProducerUnit {
+    ProducerUnit {
+        package_id: value
+            .get("package_id")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        manifest_path: value
+            .get("manifest_path")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        target: parse_target(value.get("target")),
+        profile: value
+            .get("profile")
+            .and_then(Value::as_object)
+            .and_then(|profile| profile.get("opt_level"))
+            .and_then(Value::as_str)
+            .map(str::to_string),
+    }
+}
+
+fn parse_target(value: Option<&Value>) -> Option<CargoTarget> {
+    let target = value?.as_object()?;
+    Some(CargoTarget {
+        name: target
+            .get("name")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        kind: string_array(target.get("kind")),
+        crate_types: string_array(target.get("crate_types")),
+        src_path: target
+            .get("src_path")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        edition: target
+            .get("edition")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+    })
+}
+
+fn string_array(value: Option<&Value>) -> Vec<String> {
+    value
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn parse_level(raw: &str) -> DiagnosticLevel {
+    match raw {
+        "error" => DiagnosticLevel::Error,
+        "warning" => DiagnosticLevel::Warning,
+        "note" => DiagnosticLevel::Note,
+        "help" => DiagnosticLevel::Help,
+        other => DiagnosticLevel::Other(other.to_string()),
+    }
+}
+
+fn parse_spans(value: Option<&Value>, repo_root: Option<&Path>) -> Vec<ObservationSpan> {
+    value
+        .and_then(Value::as_array)
+        .map(|spans| {
+            spans
+                .iter()
+                .map(|span| parse_span(span, repo_root))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn parse_span(value: &Value, repo_root: Option<&Path>) -> ObservationSpan {
+    let raw_file_name = value
+        .get("file_name")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let raw_line_start = value.get("line_start").and_then(as_u32);
+    let raw_line_end = value.get("line_end").and_then(as_u32);
+    let raw_column_start = value.get("column_start").and_then(as_u32);
+    let raw_column_end = value.get("column_end").and_then(as_u32);
+    let is_primary = value
+        .get("is_primary")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let normalized = match (
+        repository_path(raw_file_name.as_deref(), repo_root),
+        raw_line_start,
+    ) {
+        (Some(file), Some(line_start)) if line_start > 0 => Some(Span {
+            file,
+            line_start,
+            line_end: raw_line_end
+                .filter(|line_end| *line_end > 0)
+                .unwrap_or(line_start)
+                .max(line_start),
+            col_start: raw_column_start,
+            col_end: raw_column_end,
+            is_primary,
+        }),
+        _ => None,
+    };
+
+    ObservationSpan {
+        raw_file_name,
+        raw_line_start,
+        raw_line_end,
+        raw_column_start,
+        raw_column_end,
+        normalized,
+        is_primary,
+    }
+}
+
+fn repository_path(raw_file_name: Option<&str>, repo_root: Option<&Path>) -> Option<NormPath> {
+    let raw_file_name = raw_file_name?;
+    let repo_root = repo_root?;
+    let raw = Path::new(raw_file_name);
+    if raw.is_absolute() {
+        let relative = raw.strip_prefix(repo_root).ok()?;
+        relative.to_str().map(NormPath::from_repo_path)
+    } else {
+        Some(NormPath::from_repo_path(raw_file_name))
+    }
+}
+
+fn legacy_span(span: &ObservationSpan) -> Span {
+    let line_start = span.raw_line_start.unwrap_or(0).max(1);
+    Span {
+        file: NormPath::from_repo_path(span.raw_file_name.as_deref().unwrap_or("")),
+        line_start,
+        line_end: span
+            .raw_line_end
+            .or(span.raw_line_start)
+            .unwrap_or(0)
+            .max(line_start),
+        col_start: span.raw_column_start,
+        col_end: span.raw_column_end,
+        is_primary: span.is_primary,
+    }
+}
+
+fn as_u32(value: &Value) -> Option<u32> {
+    value.as_u64().and_then(|number| u32::try_from(number).ok())
+}
+
+fn parse_children(value: Option<&Value>, repo_root: Option<&Path>) -> Vec<DiagnosticChild> {
+    value
+        .and_then(Value::as_array)
+        .map(|children| {
+            children
+                .iter()
+                .map(|child| {
+                    let raw_level = child
+                        .get("level")
+                        .and_then(Value::as_str)
+                        .unwrap_or("other")
+                        .to_string();
+                    let spans = parse_spans(child.get("spans"), repo_root);
+                    let suggestions = parse_suggestions(child.get("spans"));
+                    DiagnosticChild {
+                        raw_level: raw_level.clone(),
+                        level: parse_level(&raw_level),
+                        message: child
+                            .get("message")
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .to_string(),
+                        rendered: child
+                            .get("rendered")
+                            .and_then(Value::as_str)
+                            .map(str::to_string),
+                        spans,
+                        suggestions,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn parse_suggestions(value: Option<&Value>) -> Vec<DiagnosticSuggestion> {
+    value
+        .and_then(Value::as_array)
+        .map(|spans| {
+            spans
+                .iter()
+                .filter_map(|span| {
+                    let replacement = span
+                        .get("suggested_replacement")
+                        .and_then(Value::as_str)
+                        .map(str::to_string);
+                    let applicability = span
+                        .get("suggestion_applicability")
+                        .and_then(Value::as_str)
+                        .map(str::to_string);
+                    if replacement.is_none() && applicability.is_none() {
+                        return None;
+                    }
+                    Some(DiagnosticSuggestion {
+                        file_name: span
+                            .get("file_name")
+                            .and_then(Value::as_str)
+                            .map(str::to_string),
+                        line_start: span.get("line_start").and_then(as_u32),
+                        line_end: span.get("line_end").and_then(as_u32),
+                        replacement,
+                        applicability,
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -405,5 +790,107 @@ mod tests {
 
         assert!(!stream.build_finished);
         assert_eq!(stream.build_success, None);
+        assert_eq!(stream.completion, AnalysisCompletion::IncompleteStream);
+    }
+
+    #[test]
+    fn complete_analysis_preserves_producer_children_and_suggestions(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let input = r#"{"reason":"compiler-message","package_id":"path+file:///repo#pkg","manifest_path":"/repo/Cargo.toml","target":{"name":"demo","kind":["lib"],"crate_types":["lib"],"src_path":"/repo/src/lib.rs","edition":"2024"},"message":{"level":"warning","message":"unused value","code":{"code":"unused_variables"},"rendered":"warning: unused value","spans":[{"file_name":"src/lib.rs","line_start":0,"is_primary":true}],"children":[{"level":"help","message":"remove it","spans":[{"file_name":"src/lib.rs","line_start":3,"line_end":3,"suggested_replacement":"","suggestion_applicability":"MachineApplicable"}]}]}}
+{"reason":"build-finished","success":true,"toolchain":"rustc 1.86.0","target":"x86_64-pc-windows-msvc","features":["default","clippy"]}"#;
+
+        let analysis = parse_cargo_analysis(Cursor::new(input))?;
+        assert_eq!(analysis.observations.len(), 1);
+        assert_eq!(
+            analysis.execution.completion,
+            Some(AnalysisCompletion::SuccessfulComplete)
+        );
+        assert_eq!(analysis.scope.toolchain.as_deref(), Some("rustc 1.86.0"));
+        assert_eq!(
+            analysis.scope.target.as_deref(),
+            Some("x86_64-pc-windows-msvc")
+        );
+        assert_eq!(analysis.scope.features, ["default", "clippy"]);
+        let observation = analysis.observations.first().ok_or("missing observation")?;
+        assert_eq!(
+            observation.producer.package_id.as_deref(),
+            Some("path+file:///repo#pkg")
+        );
+        assert_eq!(
+            observation
+                .producer
+                .target
+                .as_ref()
+                .and_then(|target| target.name.as_deref()),
+            Some("demo")
+        );
+        let span = observation.spans.first().ok_or("missing span")?;
+        assert_eq!(span.raw_line_start, Some(0));
+        assert!(span.normalized.is_none());
+        assert_eq!(observation.diagnostic.spans[0].line_start, 1);
+        let child = observation.children.first().ok_or("missing child")?;
+        let suggestion = child.suggestions.first().ok_or("missing suggestion")?;
+        assert_eq!(suggestion.replacement.as_deref(), Some(""));
+        assert_eq!(
+            suggestion.applicability.as_deref(),
+            Some("MachineApplicable")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn repository_root_earns_context_correct_absolute_paths(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let repo_root = std::env::current_dir()?;
+        let source_path = repo_root.join("src").join("lib.rs");
+        let raw_file_name = source_path.to_string_lossy().to_string();
+        let raw_file_name_json = serde_json::to_string(&raw_file_name)?;
+        let input = format!(
+            r#"{{"reason":"compiler-message","message":{{"level":"warning","message":"absolute","spans":[{{"file_name":{raw_file_name_json},"line_start":4,"line_end":4,"is_primary":true}}]}}}}"#
+        );
+        let analysis = parse_cargo_analysis_with_repo_root(Cursor::new(input), Some(&repo_root))?;
+        let observation = analysis.observations.first().ok_or("missing observation")?;
+        let span = observation.spans.first().ok_or("missing span")?;
+        assert_eq!(span.raw_file_name.as_deref(), Some(raw_file_name.as_str()));
+        assert_eq!(
+            span.normalized.as_ref().map(|span| span.file.as_str()),
+            Some("src/lib.rs")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn runtime_failure_is_explicit_analysis_evidence() {
+        let analysis = CargoAnalysis::runtime_failure(vec!["cargo".to_string()], Some(12));
+        assert!(analysis.observations.is_empty());
+        assert_eq!(
+            analysis.execution.completion,
+            Some(AnalysisCompletion::RuntimeFailure)
+        );
+        assert_eq!(analysis.execution.duration_ms, Some(12));
+    }
+
+    #[test]
+    fn each_compiler_message_is_one_observation() -> Result<(), Box<dyn std::error::Error>> {
+        let input = r#"{"reason":"compiler-message","package_id":"pkg-a","target":{"name":"a"},"message":{"level":"warning","message":"first"}}
+{"reason":"compiler-artifact","package_id":"pkg-a"}
+{"reason":"compiler-message","package_id":"pkg-b","target":{"name":"b"},"message":{"level":"error","message":"second"}}
+{"reason":"build-finished","success":false}"#;
+
+        let analysis = parse_cargo_analysis(Cursor::new(input))?;
+        assert_eq!(analysis.observations.len(), 2);
+        assert_eq!(
+            analysis.observations[0].producer.package_id.as_deref(),
+            Some("pkg-a")
+        );
+        assert_eq!(
+            analysis.observations[1].producer.package_id.as_deref(),
+            Some("pkg-b")
+        );
+        assert_eq!(
+            analysis.execution.completion,
+            Some(AnalysisCompletion::FailedComplete)
+        );
+        Ok(())
     }
 }
