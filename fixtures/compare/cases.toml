@@ -1,0 +1,206 @@
+# Diagnostic-delta golden corpus. Each case contains base/head Cargo JSONL,
+# a unified diff, independent expected evidence axes, and human adjudication.
+
+[[cases]]
+id = "unrelated_insertion_shift"
+rationale = "The warning exists in both analyses and moves only because an unrelated line was inserted."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":3,"line_end":3,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":4,"line_end":4,"column_start":5,"column_end":6,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,3 +1,4 @@\n fn main() {\n+    let inserted = 1;\n     let value = 1;\n }\n"
+expected_change_kind = "existing"
+expected_diff_scope = "touched"
+expected_match_basis = "line_mapped"
+expected_movement = "shifted"
+expected_comparability = "comparable"
+expected_label = "existing_touched"
+
+[[cases]]
+id = "file_rename_unchanged_warning"
+rationale = "The diagnostic is unchanged while Git rename evidence moves the file; same-path matching is insufficient."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/old.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/new.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+source_diff = "diff --git a/src/old.rs b/src/new.rs\nsimilarity index 100%\nrename from src/old.rs\nrename to src/new.rs\n"
+expected_change_kind = "existing"
+expected_diff_scope = "unknown"
+expected_match_basis = "rename_mapped"
+expected_movement = "renamed"
+expected_comparability = "comparable"
+expected_label = "existing_untouched"
+
+[[cases]]
+id = "old_warning_on_touched_line"
+rationale = "A pre-existing warning intersects a changed line and must remain existing_touched, not new."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "existing"
+expected_diff_scope = "touched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "existing_touched"
+
+[[cases]]
+id = "new_warning_on_untouched_line"
+rationale = "The head-only warning is on an unchanged line and must not inherit changed-line scope."
+base_diagnostics = ""
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":5,"line_end":5,"column_start":5,"column_end":6,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "new"
+expected_diff_scope = "untouched"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "comparable"
+expected_label = "new_off_diff"
+
+[[cases]]
+id = "resolved_warning"
+rationale = "A comparable base warning absent from the head is resolved."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = ""
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "resolved"
+expected_diff_scope = "touched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "resolved"
+
+[[cases]]
+id = "duplicate_identical_diagnostics"
+rationale = "Two identical head diagnostics cannot be paired by list position; the candidate group is ambiguous."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'''
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "ambiguous"
+expected_diff_scope = "touched"
+expected_match_basis = "ambiguous"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "ambiguous"
+
+[[cases]]
+id = "changed_message"
+rationale = "The stable code and location pair, while the message changes materially."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"old message","code":{"code":"clippy::example"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":1,"column_end":4,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"new message","code":{"code":"clippy::example"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":1,"column_end":4,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "modified"
+expected_diff_scope = "touched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "modified"
+
+[[cases]]
+id = "changed_severity"
+rationale = "Severity changes do not erase the pairing identity; policy can inspect the change separately."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"message","code":{"code":"clippy::example"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":1,"column_end":4,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"error","message":"message","code":{"code":"clippy::example"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":1,"column_end":4,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "modified"
+expected_diff_scope = "touched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "modified"
+
+[[cases]]
+id = "no_span_diagnostic"
+rationale = "A diagnostic without spans has no earned source scope and cannot be called untouched."
+base_diagnostics = ""
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"crate warning","code":{"code":"rustdoc::broken_intra_doc_links"},"spans":[]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "new"
+expected_diff_scope = "no_location"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "comparable"
+expected_label = "new"
+
+[[cases]]
+id = "multi_span_diagnostic"
+rationale = "A multi-span diagnostic is in scope only when its selected primary or earned span intersects the diff."
+base_diagnostics = ""
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"multiple spans","code":{"code":"clippy::example"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":1,"column_end":4,"is_primary":true},{"file_name":"src/lib.rs","line_start":8,"line_end":8,"column_start":1,"column_end":4,"is_primary":false}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "new"
+expected_diff_scope = "touched"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "comparable"
+expected_label = "new_on_diff"
+
+[[cases]]
+id = "macro_generated_path"
+rationale = "A macro or generated path is retained as diagnostic evidence but source scope is unknown without explicit correspondence."
+base_diagnostics = ""
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"generated warning","code":{"code":"macro::generated"},"spans":[{"file_name":"/tmp/generated.rs","line_start":4,"line_end":4,"column_start":1,"column_end":4,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    invoke!();\n+    invoke_changed!();\n"
+expected_change_kind = "new"
+expected_diff_scope = "unknown"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "comparable"
+expected_label = "new"
+
+[[cases]]
+id = "absolute_relative_paths"
+rationale = "Equivalent absolute and repository-relative paths normalize to one repository path before matching."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"C:/repo/src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "existing"
+expected_diff_scope = "touched"
+expected_match_basis = "exact"
+expected_movement = "same"
+expected_comparability = "comparable"
+expected_label = "existing_touched"
+
+[[cases]]
+id = "incomplete_base"
+rationale = "A missing build-finished signal makes the comparison incomparable even when diagnostic text matches."
+base_diagnostics = '{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}'
+head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"build-finished","success":true}'''
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "ambiguous"
+expected_diff_scope = "unknown"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "incomparable"
+expected_provenance_failure = "incomplete_base"
+expected_label = "incomparable"
+
+[[cases]]
+id = "different_toolchains"
+rationale = "Different compiler identities are a report-level comparability failure, not a diagnostic change."
+base_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"build-finished","success":true,"toolchain":"rustc 1.80.0"}'''
+head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"build-finished","success":true,"toolchain":"rustc 1.81.0"}'''
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "ambiguous"
+expected_diff_scope = "unknown"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "incomparable"
+expected_provenance_failure = "toolchain_mismatch"
+expected_label = "incomparable"
+
+[[cases]]
+id = "different_target_features"
+rationale = "Target and enabled feature scope are hard provenance dimensions and cannot be collapsed into newness."
+base_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"build-finished","success":true,"target":"x86_64-unknown-linux-gnu","features":["default"]}'''
+head_diagnostics = '''{"reason":"compiler-message","message":{"level":"warning","message":"unused variable","code":{"code":"unused_variables"},"spans":[{"file_name":"src/lib.rs","line_start":2,"line_end":2,"column_start":5,"column_end":6,"is_primary":true}]}}
+{"reason":"build-finished","success":true,"target":"wasm32-unknown-unknown","features":["web"]}'''
+source_diff = "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -2 +2 @@\n-    let value = 1;\n+    let value = 2;\n"
+expected_change_kind = "ambiguous"
+expected_diff_scope = "unknown"
+expected_match_basis = "none"
+expected_movement = "unknown"
+expected_comparability = "incomparable"
+expected_provenance_failure = "target_and_feature_scope_mismatch"
+expected_label = "incomparable"
