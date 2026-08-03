@@ -1,4 +1,4 @@
-name: release-action-contract
+name: release-contract-static
 
 on:
   push:
@@ -7,17 +7,19 @@ on:
       - "action.yml"
       - "scripts/action/**"
       - "scripts/verify-release-action-contract.ps1"
+      - ".github/workflows/release-action-contract.yml"
   pull_request:
     paths:
       - ".github/workflows/release.yml"
       - "action.yml"
       - "scripts/action/**"
       - "scripts/verify-release-action-contract.ps1"
+      - ".github/workflows/release-action-contract.yml"
   workflow_dispatch:
 
 jobs:
   contract-check:
-    name: Verify Action/release contract
+    name: Verify static Action/release contract
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

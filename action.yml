@@ -43,6 +43,9 @@ inputs:
     description: "Working directory for lintdiff"
     required: false
     default: "."
+  root:
+    description: "Repository root used for diff and Git metadata"
+    required: false
 
 outputs:
   verdict:
@@ -139,6 +142,7 @@ runs:
         INPUT_UPSTREAM_BUILD_FINISHED: ${{ inputs.upstream_build_finished }}
         INPUT_UPSTREAM_BUILD_SUCCESS: ${{ inputs.upstream_build_success }}
         INPUT_UPSTREAM_COMMAND: ${{ inputs.upstream_command }}
+        INPUT_ROOT: ${{ inputs.root }}
         ACTION_PATH: ${{ github.action_path }}
         LINTDIFF_BIN: lintdiff
       run: |
@@ -170,6 +174,9 @@ runs:
         fi
         if [ -n "$INPUT_UPSTREAM_COMMAND" ]; then
           ARGS+=(--upstream-command "$INPUT_UPSTREAM_COMMAND")
+        fi
+        if [ -n "$INPUT_ROOT" ]; then
+          ARGS+=(--root "$INPUT_ROOT")
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"
