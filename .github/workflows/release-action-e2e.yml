@@ -38,16 +38,16 @@ jobs:
             checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-unknown-linux-musl.tar.gz.sha256
           - name: macos-x86_64
             os: macos-15-intel
-            archive_url: ''
-            checksum_url: ''
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-apple-darwin.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-apple-darwin.tar.gz.sha256
           - name: macos-arm64
             os: macos-14
-            archive_url: ''
-            checksum_url: ''
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-aarch64-apple-darwin.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-aarch64-apple-darwin.tar.gz.sha256
           - name: windows-x86_64
             os: windows-latest
-            archive_url: ''
-            checksum_url: ''
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-pc-windows-msvc.zip
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-pc-windows-msvc.zip.sha256
 
     steps:
       - name: Check out candidate Action
@@ -96,12 +96,23 @@ jobs:
           "head=$(git -C $fixture rev-parse HEAD)" >> $env:GITHUB_OUTPUT
           "diagnostics=$(Join-Path $fixture 'diagnostics.jsonl')" >> $env:GITHUB_OUTPUT
 
+      - name: Build current binary for unreleased upstream evidence
+        id: current
+        shell: bash
+        run: |
+          cargo build --quiet -p lintdiff --bin lintdiff
+          binary="$(pwd)/target/debug/lintdiff"
+          if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
+            binary="${binary}.exe"
+          fi
+          echo "binary=$binary" >> "$GITHUB_OUTPUT"
+
       - name: Execute local composite Action
         id: lintdiff
         uses: ./
         env:
-          # v0.1.0 predates the current release matrix and published only a Linux musl asset.
-          # v0.1.1 must publish the gnu asset selected by the Action's normal mapping.
+          # v0.1.0 predates the current release matrix and uses unversioned asset names.
+          # v0.1.1 must publish the versioned assets selected by the Action's normal mapping.
           LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
           LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
         with:
@@ -144,6 +155,7 @@ jobs:
         env:
           LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
           LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
+          LINTDIFF_BIN: ${{ steps.current.outputs.binary }}
         with:
           version: v0.1.0
           root: ${{ steps.fixture.outputs.root }}

@@ -144,7 +144,6 @@ runs:
         INPUT_UPSTREAM_COMMAND: ${{ inputs.upstream_command }}
         INPUT_ROOT: ${{ inputs.root }}
         ACTION_PATH: ${{ github.action_path }}
-        LINTDIFF_BIN: lintdiff
       run: |
         ARGS=(ci github)
 
