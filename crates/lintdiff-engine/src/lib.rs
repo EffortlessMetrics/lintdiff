@@ -20,6 +20,7 @@ pub use diagnostics::{
     ProducerUnit, Span, UpstreamExecution,
 };
 pub use identity::fingerprint;
+pub use inventory::inventory_from_analysis;
 pub use matching::{compile_filters, path_allowed, relativize_span_path, select_spans, Filters};
 pub use policy::{
     compute_verdict, counts_from_findings, format_level, is_code_allowed, map_level_to_severity,

@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use crate::app::{
-    run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions, UpstreamInput,
+    run_and_ingest, run_ci_github, run_ingest, run_inventory, AnnotationFormat, IngestOptions,
+    InventoryOptions, UpstreamInput,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
@@ -177,6 +178,10 @@ fn app_error_to_guidance(error: &crate::app::AppError) -> ErrorGuidance {
                     .example("See lintdiff.toml.example for a valid configuration template.")
             }
         }
+
+        AppError::Inventory { msg } => ErrorGuidance::new(msg)
+            .context("The complete diagnostic inventory could not be emitted.")
+            .suggestion("Provide valid Cargo JSONL and, when supplied, a JSON string array in --analysis-command-file."),
 
         AppError::Io(io_error) => io_error_to_guidance(io_error),
 
@@ -368,6 +373,41 @@ enum Commands {
         /// Emit CI annotations.
         #[arg(long, value_enum, default_value_t = AnnotationsArg::None)]
         annotations: AnnotationsArg,
+    },
+
+    /// Emit a complete normalized diagnostic inventory before diff filtering or policy.
+    Inventory {
+        /// Path to diagnostics jsonl. If omitted, read Cargo JSONL from stdin.
+        #[arg(long)]
+        diagnostics: Option<PathBuf>,
+
+        /// Repo root used to normalize absolute diagnostic paths.
+        #[arg(long)]
+        root: Option<PathBuf>,
+
+        /// JSON file containing the structured analysis command array.
+        #[arg(long)]
+        analysis_command_file: Option<PathBuf>,
+
+        /// Exact upstream process exit code.
+        #[arg(long)]
+        upstream_exit_code: Option<i32>,
+
+        /// Whether Cargo emitted build-finished.
+        #[arg(long)]
+        upstream_build_finished: Option<bool>,
+
+        /// Success value from Cargo build-finished.
+        #[arg(long)]
+        upstream_build_success: Option<bool>,
+
+        /// Upstream command as a JSON string array.
+        #[arg(long)]
+        upstream_command: Option<String>,
+
+        /// Where to write the inventory artifact.
+        #[arg(long, default_value = "artifacts/lintdiff/inventory.json")]
+        out: PathBuf,
     },
 
     /// Run a command (usually cargo clippy) and ingest its JSON output.
@@ -585,6 +625,56 @@ fn dispatch(cmd: Commands) -> ExitCode {
                 Ok(outcome) => ExitCode::from(outcome.exit_code as u8),
                 Err(e) => {
                     let guidance = app_error_to_guidance(&e);
+                    print_error(&guidance);
+                    ExitCode::from(1)
+                }
+            }
+        }
+
+        Commands::Inventory {
+            diagnostics,
+            root,
+            analysis_command_file,
+            upstream_exit_code,
+            upstream_build_finished,
+            upstream_build_success,
+            upstream_command,
+            out,
+        } => {
+            let upstream = match parse_upstream_input(
+                upstream_command,
+                upstream_exit_code,
+                upstream_build_finished,
+                upstream_build_success,
+            ) {
+                Ok(Some(value)) => value,
+                Ok(None) => UpstreamInput::default(),
+                Err(error) => {
+                    print_error(&ErrorGuidance::new(error));
+                    return ExitCode::from(1);
+                }
+            };
+            let result = run_inventory(InventoryOptions {
+                diagnostics_path: diagnostics,
+                root,
+                analysis_command_file,
+                upstream,
+                contextual: lintdiff_types::inventory::ContextualProvenance {
+                    operating_system: Some(std::env::consts::OS.to_string()),
+                    architecture: Some(std::env::consts::ARCH.to_string()),
+                    ..Default::default()
+                },
+                tool: ToolInfo {
+                    name: "lintdiff".to_string(),
+                    version: env!("CARGO_PKG_VERSION").to_string(),
+                    commit: option_env!("GIT_SHA").map(str::to_string),
+                },
+                out_path: out,
+            });
+            match result {
+                Ok(_) => ExitCode::from(0),
+                Err(error) => {
+                    let guidance = app_error_to_guidance(&error);
                     print_error(&guidance);
                     ExitCode::from(1)
                 }
@@ -1271,6 +1361,29 @@ mod tests {
         ];
         assert_eq!(dispatch(parse(&explain_args)), ExitCode::from(0));
 
+        let inventory = std::env::temp_dir().join(format!(
+            "lintdiff-library-inventory-{}.json",
+            std::process::id()
+        ));
+        let inventory_args = vec![
+            "lintdiff".to_string(),
+            "inventory".to_string(),
+            "--diagnostics".to_string(),
+            diagnostics,
+            "--upstream-build-finished".to_string(),
+            "true".to_string(),
+            "--upstream-build-success".to_string(),
+            "true".to_string(),
+            "--out".to_string(),
+            inventory.to_string_lossy().into_owned(),
+        ];
+        assert_eq!(dispatch(parse(&inventory_args)), ExitCode::from(0));
+        let inventory_raw = std::fs::read_to_string(&inventory).expect("read inventory artifact");
+        let inventory_json: serde_json::Value =
+            serde_json::from_str(&inventory_raw).expect("parse inventory artifact");
+        assert_eq!(inventory_json["schema"], "lintdiff.inventory.v1");
+        assert_eq!(inventory_json["summary"]["total"], 1);
+
         let run_args = vec![
             "lintdiff".to_string(),
             "run".to_string(),
@@ -1293,5 +1406,6 @@ mod tests {
         assert_eq!(dispatch(parse(&missing_report_args)), ExitCode::from(1));
 
         let _ = std::fs::remove_file(report);
+        let _ = std::fs::remove_file(inventory);
     }
 }

@@ -98,6 +98,27 @@ pub fn gather_git_info(
     })
 }
 
+pub fn current_revision(repo_root: &Path) -> Result<String, AppGitError> {
+    let out = Command::new("git")
+        .current_dir(repo_root)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .map_err(|e| AppGitError::Command {
+            msg: format!("failed to run git rev-parse: {e}"),
+        })?;
+
+    if !out.status.success() {
+        return Err(AppGitError::Command {
+            msg: format!(
+                "git rev-parse failed: {}",
+                String::from_utf8_lossy(&out.stderr)
+            ),
+        });
+    }
+
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
 fn git_merge_base(repo_root: &Path, base: &str, head: &str) -> Result<String, AppGitError> {
     let out = Command::new("git")
         .current_dir(repo_root)

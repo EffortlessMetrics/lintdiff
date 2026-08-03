@@ -1,0 +1,68 @@
+{
+  "schema": "lintdiff.inventory.v1",
+  "tool": { "name": "lintdiff", "version": "0.1.0" },
+  "analysis": {
+    "hard": {
+      "diagnostic_format": "cargo-json",
+      "command": ["cargo", "clippy", "--message-format=json"],
+      "repository": "https://github.com/example/project",
+      "revision": "0123456789abcdef0123456789abcdef01234567",
+      "toolchain": "stable-x86_64-unknown-linux-gnu",
+      "target": "x86_64-unknown-linux-gnu",
+      "features": ["default"],
+      "package_selection": [],
+      "target_selection": []
+    },
+    "contextual": {
+      "changed_manifests": [],
+      "operating_system": "linux",
+      "architecture": "x86_64"
+    }
+  },
+  "upstream": {
+    "completion": "successful_complete",
+    "build_finished_seen": true,
+    "build_success": true,
+    "exit_code": 0
+  },
+  "inventory_id": "inventory_id_v1:96baffee660cdd9ddf7a51b0fcdfccb8480501cbfbc5262fa47094c2636a5c90",
+  "diagnostics": [
+    {
+      "observation_id": "observation_id_v1:e20c5690c884a2bb8721546e204874f477cf35ebb0c6aa867492b285ffc98bec",
+      "occurrence_id": "occurrence_id_v1:12d1d59792c8af56d13ec940938f7b57ce7fa8ef1b428a065e9c2d08c8c6caf4",
+      "semantic_id": "semantic_id_v1:24e96cc57647cfb23f55bcaa4f27457e67991d1ccdf4a1a1a25050935edd0d44",
+      "producer": {},
+      "level_raw": "warning",
+      "level": "warning",
+      "code_raw": "clippy::let_unit_value",
+      "code": "lintdiff.diagnostic.clippy.let_unit_value",
+      "message": "this expression has type `()`",
+      "normalized_message": "this expression has type `()`",
+      "spans": [
+        {
+          "raw_file_name": "/repo/src/lib.rs",
+          "raw_line_start": 1,
+          "raw_line_end": 1,
+          "raw_column_start": 1,
+          "raw_column_end": 10,
+          "path": "src/lib.rs",
+          "line_start": 1,
+          "line_end": 1,
+          "column_start": 1,
+          "column_end": 10,
+          "is_primary": true
+        }
+      ],
+      "primary_span": 0,
+      "children": []
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "errors": 0,
+    "warnings": 1,
+    "notes": 0,
+    "helps": 0,
+    "other": 0
+  }
+}

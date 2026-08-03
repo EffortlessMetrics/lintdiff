@@ -501,7 +501,41 @@ fn schema_check(root: &Path) -> Result<(), String> {
                 .to_string(),
         );
     }
-    println!("schema_check=pass schema_id={schema_id}");
+    let inventory_schema: JsonValue =
+        serde_json::from_str(&read_text(root, "schemas/lintdiff.inventory.v1.json")?)
+            .map_err(|error| format!("parse live inventory schema: {error}"))?;
+    let inventory_fixture_path =
+        root.join("crates/lintdiff-types/tests/fixtures/sample.inventory.json");
+    let inventory_fixture: JsonValue = serde_json::from_str(
+        &fs::read_to_string(&inventory_fixture_path)
+            .map_err(|error| format!("read {}: {error}", inventory_fixture_path.display()))?,
+    )
+    .map_err(|error| format!("parse sample inventory: {error}"))?;
+    let inventory_validator = jsonschema::draft202012::options()
+        .build(&inventory_schema)
+        .map_err(|error| format!("compile live inventory schema: {error}"))?;
+    if let Err(error) = inventory_validator.validate(&inventory_fixture) {
+        return Err(format!("sample inventory does not validate: {error}"));
+    }
+    let inventory_schema_id = inventory_schema
+        .pointer("/properties/schema/const")
+        .and_then(JsonValue::as_str)
+        .ok_or_else(|| "live inventory schema has no schema const".to_string())?;
+    if inventory_schema_id != "lintdiff.inventory.v1" {
+        return Err(format!(
+            "unexpected inventory schema id: {inventory_schema_id}"
+        ));
+    }
+    let inventory_source = read_text(root, "crates/lintdiff-types/src/inventory.rs")?;
+    if !inventory_source
+        .contains("pub const INVENTORY_SCHEMA_ID: &str = \"lintdiff.inventory.v1\";")
+    {
+        return Err(
+            "lintdiff-types inventory authority is not synchronized with the live schema"
+                .to_string(),
+        );
+    }
+    println!("schema_check=pass schema_id={schema_id} inventory_schema_id={inventory_schema_id}");
     Ok(())
 }
 

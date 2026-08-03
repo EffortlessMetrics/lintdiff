@@ -2,9 +2,10 @@ use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
 use lintdiff_engine::{
-    parse_cargo_messages, parse_cargo_messages_with_status, CargoDiagnosticStream, Diagnostic,
+    parse_cargo_analysis_with_repo_root, parse_cargo_messages, parse_cargo_messages_with_status,
+    CargoAnalysis, CargoDiagnosticStream, Diagnostic,
 };
-use lintdiff_types::{LintdiffConfig, Report};
+use lintdiff_types::{inventory::Inventory, LintdiffConfig, Report};
 use serde_json::to_vec_pretty;
 use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
@@ -111,6 +112,32 @@ pub fn acquire_diagnostics_with_status(
     Ok(Some(stream))
 }
 
+pub fn acquire_cargo_analysis(
+    path: Option<&Path>,
+    repo_root: &Path,
+) -> Result<CargoAnalysis, AppIoError> {
+    let mut buf = String::new();
+    if let Some(path) = path {
+        buf = std::fs::read_to_string(path).map_err(|source| AppIoError::ReadFile {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    } else {
+        io::stdin()
+            .read_to_string(&mut buf)
+            .map_err(|source| AppIoError::ReadFile {
+                path: PathBuf::from("<stdin>"),
+                source,
+            })?;
+    }
+
+    parse_cargo_analysis_with_repo_root(BufReader::new(buf.as_bytes()), Some(repo_root)).map_err(
+        |error| AppIoError::DiagnosticsParse {
+            msg: error.to_string(),
+        },
+    )
+}
+
 pub fn write_report_json(report: &Report, path: &Path) -> Result<(), AppIoError> {
     let bytes = to_vec_pretty(report).map_err(|e| AppIoError::Serialize { source: e })?;
     if let Some(parent) = path.parent() {
@@ -122,6 +149,20 @@ pub fn write_report_json(report: &Report, path: &Path) -> Result<(), AppIoError>
     std::fs::write(path, bytes).map_err(|e| AppIoError::WriteFile {
         path: path.to_path_buf(),
         source: e,
+    })
+}
+
+pub fn write_inventory_json(inventory: &Inventory, path: &Path) -> Result<(), AppIoError> {
+    let bytes = to_vec_pretty(inventory).map_err(|source| AppIoError::Serialize { source })?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|source| AppIoError::WriteFile {
+            path: parent.to_path_buf(),
+            source,
+        })?;
+    }
+    std::fs::write(path, bytes).map_err(|source| AppIoError::WriteFile {
+        path: path.to_path_buf(),
+        source,
     })
 }
 

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/schemas/lintdiff.inventory.v1.json",
+  "title": "lintdiff inventory v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "tool", "analysis", "upstream", "inventory_id", "diagnostics", "summary"],
+  "properties": {
+    "schema": { "const": "lintdiff.inventory.v1" },
+    "tool": { "$ref": "#/$defs/tool" },
+    "analysis": { "$ref": "#/$defs/analysis" },
+    "upstream": { "$ref": "#/$defs/upstream" },
+    "inventory_id": { "type": "string", "pattern": "^inventory_id_v1:[0-9a-f]{64}$" },
+    "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+    "summary": { "$ref": "#/$defs/summary" }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "lintdiff" },
+        "version": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hard", "contextual"],
+      "properties": {
+        "hard": { "$ref": "#/$defs/hard" },
+        "contextual": { "$ref": "#/$defs/contextual" }
+      }
+    },
+    "hard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diagnostic_format", "command", "features", "package_selection", "target_selection"],
+      "properties": {
+        "diagnostic_format": { "type": "string" },
+        "command": { "type": "array", "items": { "type": "string" } },
+        "repository": { "type": "string" },
+        "revision": { "type": "string" },
+        "toolchain": { "type": "string" },
+        "target": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "package_selection": { "type": "array", "items": { "type": "string" } },
+        "target_selection": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "contextual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed_manifests"],
+      "properties": {
+        "cargo_lock_hash": { "type": "string" },
+        "lint_config_hash": { "type": "string" },
+        "lintdiff_config_hash": { "type": "string" },
+        "changed_manifests": { "type": "array", "items": { "type": "string" } },
+        "workflow": { "type": "string" },
+        "operating_system": { "type": "string" },
+        "architecture": { "type": "string" }
+      }
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completion", "build_finished_seen"],
+      "properties": {
+        "completion": { "enum": ["successful_complete", "failed_complete", "incomplete_stream", "runtime_failure"] },
+        "build_finished_seen": { "type": "boolean" },
+        "build_success": { "type": "boolean" },
+        "exit_code": { "type": "integer" },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "occurrence_id", "semantic_id", "producer", "level_raw", "level", "code", "message", "normalized_message", "spans", "children"],
+      "properties": {
+        "observation_id": { "type": "string", "pattern": "^observation_id_v1:[0-9a-f]{64}$" },
+        "occurrence_id": { "type": "string", "pattern": "^occurrence_id_v1:[0-9a-f]{64}$" },
+        "semantic_id": { "type": "string", "pattern": "^semantic_id_v1:[0-9a-f]{64}$" },
+        "context_id": { "type": "string" },
+        "producer": { "$ref": "#/$defs/producer" },
+        "level_raw": { "type": "string" },
+        "level": { "type": "string" },
+        "code_raw": { "type": "string" },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "normalized_message": { "type": "string" },
+        "rendered": { "type": "string" },
+        "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } },
+        "primary_span": { "type": "integer", "minimum": 0 },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/child" } }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "package_id": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "target": { "$ref": "#/$defs/target" },
+        "profile": { "type": "string" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "type": "array", "items": { "type": "string" } },
+        "crate_types": { "type": "array", "items": { "type": "string" } },
+        "src_path": { "type": "string" },
+        "edition": { "type": "string" }
+      }
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["is_primary"],
+      "properties": {
+        "raw_file_name": { "type": "string" },
+        "raw_line_start": { "type": "integer", "minimum": 0 },
+        "raw_line_end": { "type": "integer", "minimum": 0 },
+        "raw_column_start": { "type": "integer", "minimum": 0 },
+        "raw_column_end": { "type": "integer", "minimum": 0 },
+        "path": { "type": "string" },
+        "line_start": { "type": "integer", "minimum": 1 },
+        "line_end": { "type": "integer", "minimum": 1 },
+        "column_start": { "type": "integer", "minimum": 1 },
+        "column_end": { "type": "integer", "minimum": 1 },
+        "is_primary": { "type": "boolean" }
+      }
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_level", "level", "message", "spans", "suggestions"],
+      "properties": {
+        "raw_level": { "type": "string" },
+        "level": { "type": "string" },
+        "message": { "type": "string" },
+        "rendered": { "type": "string" },
+        "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } },
+        "suggestions": { "type": "array", "items": { "$ref": "#/$defs/suggestion" } }
+      }
+    },
+    "suggestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file_name": { "type": "string" },
+        "line_start": { "type": "integer", "minimum": 0 },
+        "line_end": { "type": "integer", "minimum": 0 },
+        "replacement": { "type": "string" },
+        "applicability": { "type": "string" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "errors", "warnings", "notes", "helps", "other"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "notes": { "type": "integer", "minimum": 0 },
+        "helps": { "type": "integer", "minimum": 0 },
+        "other": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
