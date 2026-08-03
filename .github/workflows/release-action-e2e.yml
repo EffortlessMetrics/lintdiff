@@ -34,8 +34,8 @@ jobs:
         include:
           - name: ubuntu-x86_64
             os: ubuntu-latest
-            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-0.1.0-x86_64-unknown-linux-musl.tar.gz
-            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-0.1.0-x86_64-unknown-linux-musl.tar.gz.sha256
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-unknown-linux-musl.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-unknown-linux-musl.tar.gz.sha256
           - name: macos-x86_64
             os: macos-15-intel
             archive_url: ''
