@@ -25,4 +25,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+jsonschema.workspace = true
 proptest.workspace = true
+serde.workspace = true
+toml.workspace = true

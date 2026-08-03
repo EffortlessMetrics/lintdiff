@@ -150,12 +150,14 @@
 //! ```
 
 mod config;
+pub mod delta;
 pub mod inventory;
 mod ordering;
 mod path;
 mod report;
 
 pub use config::*;
+pub use delta::*;
 pub use inventory::*;
 pub use ordering::*;
 pub use path::*;

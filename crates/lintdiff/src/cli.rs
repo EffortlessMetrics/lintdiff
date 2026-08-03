@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use crate::app::{
-    run_and_ingest, run_ci_github, run_ingest, run_inventory, AnnotationFormat, IngestOptions,
-    InventoryOptions, UpstreamInput,
+    run_and_ingest, run_ci_github, run_compare, run_ingest, run_inventory, AnnotationFormat,
+    CompareOptions, IngestOptions, InventoryOptions, UpstreamInput,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
@@ -410,6 +410,41 @@ enum Commands {
         out: PathBuf,
     },
 
+    /// Compare two complete diagnostic inventories and emit a delta receipt.
+    Compare {
+        /// Base inventory produced by `lintdiff inventory`.
+        #[arg(long)]
+        base_inventory: PathBuf,
+
+        /// Head inventory produced by `lintdiff inventory`.
+        #[arg(long)]
+        head_inventory: PathBuf,
+
+        /// Unified diff used for source correspondence and changed-line scope.
+        #[arg(long)]
+        diff_file: PathBuf,
+
+        /// Where to write the complete delta receipt.
+        #[arg(long, default_value = "artifacts/lintdiff/delta.json")]
+        out: PathBuf,
+
+        /// Where to write the bounded Markdown projection.
+        #[arg(long)]
+        md: Option<PathBuf>,
+
+        /// lintdiff.toml path. If omitted, lintdiff.toml in the current directory is used.
+        #[arg(long)]
+        config: Option<PathBuf>,
+
+        /// Policy profile; explicit CLI selection overrides the config file.
+        #[arg(long, value_enum)]
+        profile: Option<DeltaProfileArg>,
+
+        /// Emit native GitHub annotations for selected head-side delta items.
+        #[arg(long, value_enum, default_value_t = AnnotationsArg::None)]
+        annotations: AnnotationsArg,
+    },
+
     /// Run a command (usually cargo clippy) and ingest its JSON output.
     Run {
         /// Diff patch file to use instead of git diff.
@@ -551,6 +586,21 @@ enum AnnotationsArg {
     None,
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
+enum DeltaProfileArg {
+    Advisory,
+    Strict,
+}
+
+impl From<DeltaProfileArg> for lintdiff_types::delta::DeltaProfile {
+    fn from(value: DeltaProfileArg) -> Self {
+        match value {
+            DeltaProfileArg::Advisory => Self::Advisory,
+            DeltaProfileArg::Strict => Self::Strict,
+        }
+    }
+}
+
 impl From<AnnotationsArg> for AnnotationFormat {
     fn from(v: AnnotationsArg) -> Self {
         match v {
@@ -673,6 +723,40 @@ fn dispatch(cmd: Commands) -> ExitCode {
             });
             match result {
                 Ok(_) => ExitCode::from(0),
+                Err(error) => {
+                    let guidance = app_error_to_guidance(&error);
+                    print_error(&guidance);
+                    ExitCode::from(1)
+                }
+            }
+        }
+
+        Commands::Compare {
+            base_inventory,
+            head_inventory,
+            diff_file,
+            out,
+            md,
+            config,
+            profile,
+            annotations,
+        } => {
+            let config = config.or_else(|| {
+                let default = PathBuf::from("lintdiff.toml");
+                default.is_file().then_some(default)
+            });
+            let result = run_compare(CompareOptions {
+                base_inventory_path: base_inventory,
+                head_inventory_path: head_inventory,
+                diff_path: diff_file,
+                out_path: out,
+                md_path: md,
+                annotations: annotations.into(),
+                config_path: config,
+                profile_override: profile.map(Into::into),
+            });
+            match result {
+                Ok(outcome) => ExitCode::from(outcome.exit_code as u8),
                 Err(error) => {
                     let guidance = app_error_to_guidance(&error);
                     print_error(&guidance);
@@ -1384,6 +1468,35 @@ mod tests {
         assert_eq!(inventory_json["schema"], "lintdiff.inventory.v1");
         assert_eq!(inventory_json["summary"]["total"], 1);
 
+        let delta = std::env::temp_dir().join(format!(
+            "lintdiff-library-delta-{}.json",
+            std::process::id()
+        ));
+        let delta_md =
+            std::env::temp_dir().join(format!("lintdiff-library-delta-{}.md", std::process::id()));
+        let compare_args = vec![
+            "lintdiff".to_string(),
+            "compare".to_string(),
+            "--base-inventory".to_string(),
+            inventory.to_string_lossy().into_owned(),
+            "--head-inventory".to_string(),
+            inventory.to_string_lossy().into_owned(),
+            "--diff-file".to_string(),
+            diff.clone(),
+            "--out".to_string(),
+            delta.to_string_lossy().into_owned(),
+            "--md".to_string(),
+            delta_md.to_string_lossy().into_owned(),
+        ];
+        assert_eq!(dispatch(parse(&compare_args)), ExitCode::from(0));
+        let delta_raw = std::fs::read_to_string(&delta).expect("read delta artifact");
+        let delta_json: serde_json::Value =
+            serde_json::from_str(&delta_raw).expect("parse delta artifact");
+        assert_eq!(delta_json["schema"], "lintdiff.delta.v1");
+        assert!(std::fs::read_to_string(&delta_md)
+            .expect("read delta markdown")
+            .contains("diagnostic delta"));
+
         let run_args = vec![
             "lintdiff".to_string(),
             "run".to_string(),
@@ -1407,6 +1520,8 @@ mod tests {
 
         let _ = std::fs::remove_file(report);
         let _ = std::fs::remove_file(inventory);
+        let _ = std::fs::remove_file(delta);
+        let _ = std::fs::remove_file(delta_md);
     }
 
     #[test]

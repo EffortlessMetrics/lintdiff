@@ -431,6 +431,213 @@ fn escape_github_command(s: &str) -> String {
         .replace('\n', "%0A")
 }
 
+/// Options for the bounded diagnostic-delta Markdown projection.
+#[derive(Clone, Debug)]
+pub struct DeltaMarkdownOptions {
+    pub max_items: usize,
+    pub receipt_path: String,
+}
+
+/// Render a lossy human projection while pointing to the complete delta artifact.
+pub fn render_delta_markdown(
+    receipt: &lintdiff_types::delta::DeltaReceipt,
+    opts: DeltaMarkdownOptions,
+) -> String {
+    use lintdiff_types::delta::{DeltaLabel, DeltaVerdictStatus};
+
+    let status = match receipt.verdict.status {
+        DeltaVerdictStatus::Accepted => "ACCEPTED",
+        DeltaVerdictStatus::Rejected => "REJECTED",
+        DeltaVerdictStatus::Incomparable => "INCOMPARABLE",
+    };
+    let mut out = format!(
+        "### lintdiff diagnostic delta\n\n**Status:** `{status}`  \n**Summary:** {} total · {} new · {} resolved · {} modified · {} ambiguous\n\n",
+        receipt.summary.total,
+        receipt.summary.new,
+        receipt.summary.resolved,
+        receipt.summary.modified,
+        receipt.summary.ambiguous,
+    );
+    if receipt.provenance.comparability.status
+        == lintdiff_types::delta::ComparabilityStatus::Incomparable
+    {
+        out.push_str("> Comparison is incomparable; no confident delta claim was made.\n\n");
+    }
+    if !receipt.verdict.reasons.is_empty() {
+        out.push_str("Reasons: ");
+        out.push_str(&receipt.verdict.reasons.join(", "));
+        out.push_str("\n\n");
+    }
+    out.push_str(&format!(
+        "Full receipt: `{}`\n\n| Result | Scope | Basis | Movement | Diagnostic |\n| --- | --- | --- | --- | --- |\n",
+        opts.receipt_path
+    ));
+    for item in receipt
+        .items
+        .iter()
+        .filter(|item| !matches!(item.label, Some(DeltaLabel::ExistingUntouched)))
+        .take(opts.max_items)
+    {
+        let label = item
+            .label
+            .map(delta_label)
+            .unwrap_or("ambiguous/incomparable");
+        let diagnostic = delta_message(item);
+        out.push_str(&format!(
+            "| {} | {} | {} | {} | {} |\n",
+            label,
+            delta_scope(item.diff_scope),
+            delta_basis(item.match_basis),
+            delta_movement(item.movement),
+            escape_table(&diagnostic),
+        ));
+    }
+    let visible = receipt
+        .items
+        .iter()
+        .filter(|item| !matches!(item.label, Some(DeltaLabel::ExistingUntouched)))
+        .count();
+    if visible > opts.max_items {
+        out.push_str(&format!(
+            "\n_And {} more… See full receipt: `{}`_\n",
+            visible - opts.max_items,
+            opts.receipt_path
+        ));
+    }
+    out
+}
+
+/// Render native GitHub annotations for head-side diagnostics in the delta.
+pub fn render_delta_annotations(
+    receipt: &lintdiff_types::delta::DeltaReceipt,
+    max: usize,
+) -> String {
+    use lintdiff_types::delta::{DeltaLabel, PairingEvidence};
+
+    let mut out = String::new();
+    for item in receipt
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.label,
+                Some(DeltaLabel::NewOnDiff | DeltaLabel::Modified | DeltaLabel::Ambiguous)
+            )
+        })
+        .take(max)
+    {
+        let (diagnostic, message) = match &item.pairing {
+            PairingEvidence::HeadOnly { head } => {
+                (head.as_ref(), format!("[{}] {}", head.code, head.message))
+            }
+            PairingEvidence::Matched { head, .. } => {
+                (head.as_ref(), format!("[{}] {}", head.code, head.message))
+            }
+            PairingEvidence::Ambiguous {
+                head_candidates, ..
+            } => {
+                let Some(head) = head_candidates.first() else {
+                    continue;
+                };
+                (
+                    head,
+                    format!("ambiguous pairing: [{}] {}", head.code, head.message),
+                )
+            }
+            PairingEvidence::BaseOnly { .. } => continue,
+        };
+        let Some(span) = diagnostic
+            .primary_span
+            .and_then(|index| diagnostic.spans.get(index))
+            .or_else(|| diagnostic.spans.iter().find(|span| span.path.is_some()))
+        else {
+            continue;
+        };
+        let Some(path) = span.path.as_deref() else {
+            continue;
+        };
+        let severity = if diagnostic.level == "error" {
+            "error"
+        } else if diagnostic.level == "warning" {
+            "warning"
+        } else {
+            "notice"
+        };
+        let line = span.line_start.unwrap_or(1);
+        out.push_str(&format!(
+            "::{} file={},line={}::{}\n",
+            severity,
+            escape_github_command(path),
+            line,
+            escape_github_command(&message)
+        ));
+    }
+    out
+}
+
+fn delta_label(label: lintdiff_types::delta::DeltaLabel) -> &'static str {
+    match label {
+        lintdiff_types::delta::DeltaLabel::NewOnDiff => "new_on_diff",
+        lintdiff_types::delta::DeltaLabel::NewOffDiff => "new_off_diff",
+        lintdiff_types::delta::DeltaLabel::ExistingTouched => "existing_touched",
+        lintdiff_types::delta::DeltaLabel::ExistingUntouched => "existing_untouched",
+        lintdiff_types::delta::DeltaLabel::Resolved => "resolved",
+        lintdiff_types::delta::DeltaLabel::Modified => "modified",
+        lintdiff_types::delta::DeltaLabel::Ambiguous => "ambiguous",
+    }
+}
+
+fn delta_scope(scope: lintdiff_types::delta::DiffScope) -> &'static str {
+    match scope {
+        lintdiff_types::delta::DiffScope::Touched => "touched",
+        lintdiff_types::delta::DiffScope::Untouched => "untouched",
+        lintdiff_types::delta::DiffScope::NoLocation => "no_location",
+        lintdiff_types::delta::DiffScope::Unknown => "unknown",
+    }
+}
+
+fn delta_basis(basis: lintdiff_types::delta::MatchBasis) -> &'static str {
+    match basis {
+        lintdiff_types::delta::MatchBasis::Exact => "exact",
+        lintdiff_types::delta::MatchBasis::LineMapped => "line_mapped",
+        lintdiff_types::delta::MatchBasis::RenameMapped => "rename_mapped",
+        lintdiff_types::delta::MatchBasis::Semantic => "semantic",
+        lintdiff_types::delta::MatchBasis::Context => "context",
+        lintdiff_types::delta::MatchBasis::ModifiedContext => "modified_context",
+        lintdiff_types::delta::MatchBasis::None => "none",
+        lintdiff_types::delta::MatchBasis::Ambiguous => "ambiguous",
+    }
+}
+
+fn delta_movement(movement: lintdiff_types::delta::Movement) -> &'static str {
+    match movement {
+        lintdiff_types::delta::Movement::Same => "same",
+        lintdiff_types::delta::Movement::Shifted => "shifted",
+        lintdiff_types::delta::Movement::Renamed => "renamed",
+        lintdiff_types::delta::Movement::ShiftedAndRenamed => "shifted_and_renamed",
+        lintdiff_types::delta::Movement::Unknown => "unknown",
+    }
+}
+
+fn delta_message(item: &lintdiff_types::delta::DeltaItem) -> String {
+    use lintdiff_types::delta::PairingEvidence;
+    let diagnostic = match &item.pairing {
+        PairingEvidence::Matched { head, .. } => head.as_ref(),
+        PairingEvidence::BaseOnly { base } => base.as_ref(),
+        PairingEvidence::HeadOnly { head } => head.as_ref(),
+        PairingEvidence::Ambiguous {
+            head_candidates, ..
+        } => {
+            if let Some(head) = head_candidates.first() {
+                head
+            } else {
+                return "candidate set has no head diagnostic".to_string();
+            }
+        }
+    };
+    format!("{}: {}", diagnostic.code, diagnostic.message)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

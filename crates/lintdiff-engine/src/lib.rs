@@ -28,11 +28,11 @@ pub use identity::fingerprint;
 pub use inventory::inventory_from_analysis;
 pub use matching::{compile_filters, path_allowed, relativize_span_path, select_spans, Filters};
 pub use policy::{
-    compute_verdict, counts_from_findings, format_level, is_code_allowed, map_level_to_severity,
-    normalize_diagnostic_code,
+    compute_verdict, counts_from_findings, evaluate_delta_policy, format_level, is_code_allowed,
+    map_level_to_severity, normalize_diagnostic_code,
 };
-pub use receipt::{ingest_on_diff, IngestOnDiffParams};
+pub use receipt::{build_delta_receipt, ingest_on_diff, IngestOnDiffParams};
 pub use source::{
-    parse_source_change_set, parse_unified_diff, DiffMap, DiffParseError, DiffStats, FileDelta,
-    HunkDelta, LineMapSegment, LineOffset, LocationMapping, SourceChangeSet,
+    parse_source_change_set, parse_unified_diff, source_diff_id, DiffMap, DiffParseError,
+    DiffStats, FileDelta, HunkDelta, LineMapSegment, LineOffset, LocationMapping, SourceChangeSet,
 };

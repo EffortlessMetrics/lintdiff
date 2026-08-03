@@ -37,6 +37,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use lintdiff_types::{LineRange, NormPath};
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 /// Statistics about a parsed diff.
@@ -164,6 +165,7 @@ struct FileState {
     new_line: u32,
     changed_lines: BTreeSet<u32>,
     deleted_lines: BTreeSet<u32>,
+    unchanged_lines: Vec<(u32, u32)>,
     hunk_deltas: Vec<HunkDelta>,
     hunks: u32,
     added_lines: u32,
@@ -210,14 +212,15 @@ impl SourceChangeSet {
             };
         }
 
-        for hunk in &file.hunks {
-            let old_end = hunk.old_start.saturating_add(hunk.old_len);
-            if hunk.old_len > 0 && old_line >= hunk.old_start && old_line < old_end {
-                return LocationMapping::UnmappableChangedRegion {
-                    path: old_path.clone(),
-                    line: old_line,
-                };
-            }
+        if file
+            .deleted
+            .iter()
+            .any(|range| range.contains_line(old_line))
+        {
+            return LocationMapping::UnmappableChangedRegion {
+                path: old_path.clone(),
+                line: old_line,
+            };
         }
 
         let offset = file
@@ -418,6 +421,9 @@ pub fn parse_source_change_set(input: &str) -> Result<SourceChangeSet, DiffParse
                 continue;
             }
             if line.starts_with(' ') {
+                if st.old_line >= 1 && st.new_line >= 1 {
+                    st.unchanged_lines.push((st.old_line, st.new_line));
+                }
                 st.old_line = st.old_line.saturating_add(1);
                 st.new_line = st.new_line.saturating_add(1);
                 continue;
@@ -437,6 +443,12 @@ pub fn parse_source_change_set(input: &str) -> Result<SourceChangeSet, DiffParse
     flush_file_state(&mut out, &mut source, current.take());
     source.stats = out.stats;
     Ok(source)
+}
+
+/// Return the stable identity of the exact source-diff bytes consumed by comparison.
+pub fn source_diff_id(input: &str) -> String {
+    let digest = Sha256::digest(input.as_bytes());
+    format!("source_diff_id_v1:{}", hex::encode(digest))
 }
 
 fn flush_file_state(out: &mut DiffMap, source: &mut SourceChangeSet, st: Option<FileState>) {
@@ -467,7 +479,7 @@ fn flush_file_state(out: &mut DiffMap, source: &mut SourceChangeSet, st: Option<
         hunks: st.hunk_deltas.clone(),
         added,
         deleted,
-        unchanged_segments: unchanged_segments(&st.hunk_deltas),
+        unchanged_segments: unchanged_segments(&st.hunk_deltas, &st.unchanged_lines),
         tail_mapping: tail_mapping(&st.hunk_deltas),
     };
     if let Some(key) = new_path.or(old_path) {
@@ -479,7 +491,7 @@ fn flush_file_state(out: &mut DiffMap, source: &mut SourceChangeSet, st: Option<
     out.stats.added_lines += st.added_lines;
 }
 
-fn unchanged_segments(hunks: &[HunkDelta]) -> Vec<LineMapSegment> {
+fn unchanged_segments(hunks: &[HunkDelta], unchanged_lines: &[(u32, u32)]) -> Vec<LineMapSegment> {
     if hunks.is_empty() {
         return Vec::new();
     }
@@ -513,6 +525,47 @@ fn unchanged_segments(hunks: &[HunkDelta]) -> Vec<LineMapSegment> {
         previous_old_end = old_end;
         previous_new_end = new_end;
     }
+    segments.extend(context_segments(unchanged_lines));
+    segments.sort_by_key(|segment| (segment.old.start, segment.new.start));
+    segments
+}
+
+fn context_segments(lines: &[(u32, u32)]) -> Vec<LineMapSegment> {
+    let mut segments = Vec::new();
+    let Some(&(first_old, first_new)) = lines.first() else {
+        return segments;
+    };
+    let mut old_start = first_old;
+    let mut old_end = first_old;
+    let mut new_start = first_new;
+    let mut new_end = first_new;
+    let mut offset = i64::from(first_new) - i64::from(first_old);
+    for &(old, new) in &lines[1..] {
+        let next_offset = i64::from(new) - i64::from(old);
+        if old == old_end.saturating_add(1)
+            && new == new_end.saturating_add(1)
+            && next_offset == offset
+        {
+            old_end = old;
+            new_end = new;
+            continue;
+        }
+        segments.push(LineMapSegment {
+            old: LineRange::new(old_start, old_end),
+            new: LineRange::new(new_start, new_end),
+            offset: LineOffset { value: offset },
+        });
+        old_start = old;
+        old_end = old;
+        new_start = new;
+        new_end = new;
+        offset = next_offset;
+    }
+    segments.push(LineMapSegment {
+        old: LineRange::new(old_start, old_end),
+        new: LineRange::new(new_start, new_end),
+        offset: LineOffset { value: offset },
+    });
     segments
 }
 

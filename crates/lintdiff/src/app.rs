@@ -9,7 +9,7 @@ pub use crate::io::AppIoError;
 use crate::git::{acquire_diff, current_revision, determine_repo_root, gather_git_info};
 use crate::io::{
     acquire_cargo_analysis, acquire_diagnostics_with_status, load_config, now_rfc3339,
-    write_inventory_json, write_report_json, write_text,
+    write_delta_json, write_inventory_json, write_report_json, write_text,
 };
 use lintdiff_engine::{ingest_on_diff, CargoAnalysis, IngestOnDiffParams};
 use lintdiff_engine::{parse_cargo_messages_with_status, parse_unified_diff, Diagnostic};
@@ -17,6 +17,7 @@ use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,
 };
 use lintdiff_types::{
+    delta::{DeltaPolicy, DeltaProfile, DeltaReceipt, DeltaVerdictStatus},
     inventory::{ContextualProvenance, Inventory},
     FailOn, HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo,
 };
@@ -43,6 +44,167 @@ pub enum AppError {
     Io(#[from] AppIoError),
     #[error("git failure: {0}")]
     Git(#[from] AppGitError),
+}
+
+#[derive(Clone, Debug)]
+pub struct CompareOptions {
+    pub base_inventory_path: PathBuf,
+    pub head_inventory_path: PathBuf,
+    pub diff_path: PathBuf,
+    pub out_path: PathBuf,
+    pub md_path: Option<PathBuf>,
+    pub annotations: AnnotationFormat,
+    pub config_path: Option<PathBuf>,
+    pub profile_override: Option<DeltaProfile>,
+}
+
+pub struct CompareOutcome {
+    pub receipt: DeltaReceipt,
+    pub markdown: Option<String>,
+    pub annotations: Option<String>,
+    pub exit_code: i32,
+}
+
+pub fn run_compare(opts: CompareOptions) -> Result<CompareOutcome, AppError> {
+    let base = read_inventory_for_compare(&opts.base_inventory_path)?;
+    let head = read_inventory_for_compare(&opts.head_inventory_path)?;
+    let diff = std::fs::read_to_string(&opts.diff_path).map_err(|source| AppError::Inventory {
+        msg: format!(
+            "failed to read source diff '{}': {source}",
+            opts.diff_path.display()
+        ),
+    })?;
+    let source =
+        lintdiff_engine::parse_source_change_set(&diff).map_err(|error| AppError::DiffParse {
+            msg: error.to_string(),
+        })?;
+    let policy = load_delta_policy(opts.config_path.as_deref(), opts.profile_override)?;
+    let receipt = lintdiff_engine::build_delta_receipt(
+        &base,
+        &head,
+        &source,
+        lintdiff_engine::source_diff_id(&diff),
+        policy,
+    );
+    write_delta_json(&receipt, &opts.out_path)?;
+
+    let markdown = if let Some(path) = opts.md_path.as_ref() {
+        let markdown = lintdiff_render::render_delta_markdown(
+            &receipt,
+            lintdiff_render::DeltaMarkdownOptions {
+                max_items: 20,
+                receipt_path: opts.out_path.to_string_lossy().into_owned(),
+            },
+        );
+        write_text(path, &markdown)?;
+        Some(markdown)
+    } else {
+        None
+    };
+    let annotations = match opts.annotations {
+        AnnotationFormat::Github => Some(lintdiff_render::render_delta_annotations(&receipt, 50)),
+        AnnotationFormat::None => None,
+    };
+    if let Some(annotations) = &annotations {
+        print!("{annotations}");
+    }
+    let exit_code = match receipt.verdict.status {
+        DeltaVerdictStatus::Accepted => 0,
+        DeltaVerdictStatus::Rejected | DeltaVerdictStatus::Incomparable => 2,
+    };
+    Ok(CompareOutcome {
+        receipt,
+        markdown,
+        annotations,
+        exit_code,
+    })
+}
+
+fn read_inventory_for_compare(path: &std::path::Path) -> Result<Inventory, AppError> {
+    let raw = std::fs::read_to_string(path).map_err(|source| AppError::Inventory {
+        msg: format!("failed to read inventory '{}': {source}", path.display()),
+    })?;
+    let inventory: Inventory = serde_json::from_str(&raw).map_err(|error| AppError::Inventory {
+        msg: format!("invalid inventory '{}': {error}", path.display()),
+    })?;
+    if inventory.schema != lintdiff_types::inventory::INVENTORY_SCHEMA_ID {
+        return Err(AppError::Inventory {
+            msg: format!(
+                "inventory '{}' has unsupported schema '{}', expected {}",
+                path.display(),
+                inventory.schema,
+                lintdiff_types::inventory::INVENTORY_SCHEMA_ID
+            ),
+        });
+    }
+    Ok(inventory)
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct DeltaConfigFile {
+    profile: Option<DeltaProfile>,
+    block_new_errors: Option<bool>,
+    block_new_warnings: Option<bool>,
+    block_ambiguous: Option<bool>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct DeltaConfigDocument {
+    delta: Option<DeltaConfigFile>,
+}
+
+fn load_delta_policy(
+    config_path: Option<&std::path::Path>,
+    profile_override: Option<DeltaProfile>,
+) -> Result<DeltaPolicy, AppError> {
+    let mut policy = DeltaPolicy::default();
+    let path = config_path.map(PathBuf::from);
+    if let Some(path) = path.as_ref().filter(|path| !path.is_file()) {
+        return Err(AppError::Config {
+            msg: format!("delta config '{}' does not exist", path.display()),
+        });
+    }
+    let Some(path) = path else {
+        if let Some(profile) = profile_override {
+            apply_delta_profile(&mut policy, profile);
+        }
+        return Ok(policy);
+    };
+    let raw = std::fs::read_to_string(&path).map_err(|source| AppError::Config {
+        msg: format!("failed to read delta config '{}': {source}", path.display()),
+    })?;
+    let document: DeltaConfigDocument = toml::from_str(&raw).map_err(|error| AppError::Config {
+        msg: format!("failed to parse delta config '{}': {error}", path.display()),
+    })?;
+    if let Some(config) = document.delta {
+        if let Some(profile) = config.profile {
+            apply_delta_profile(&mut policy, profile);
+        }
+        if let Some(value) = config.block_new_errors {
+            policy.block_new_errors = value;
+        }
+        if let Some(value) = config.block_new_warnings {
+            policy.block_new_warnings = value;
+        }
+        if let Some(value) = config.block_ambiguous {
+            policy.block_ambiguous = value;
+        }
+    }
+    if let Some(profile) = profile_override {
+        apply_delta_profile(&mut policy, profile);
+    }
+    Ok(policy)
+}
+
+fn apply_delta_profile(policy: &mut DeltaPolicy, profile: DeltaProfile) {
+    policy.profile = profile;
+    if profile == DeltaProfile::Strict {
+        policy.block_new_errors = true;
+        policy.block_new_warnings = true;
+    } else {
+        policy.block_new_errors = false;
+        policy.block_new_warnings = false;
+    }
 }
 
 #[derive(Clone, Debug)]
