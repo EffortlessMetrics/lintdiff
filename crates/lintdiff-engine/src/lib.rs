@@ -27,4 +27,7 @@ pub use policy::{
     normalize_diagnostic_code,
 };
 pub use receipt::{ingest_on_diff, IngestOnDiffParams};
-pub use source::{parse_unified_diff, DiffMap, DiffParseError, DiffStats};
+pub use source::{
+    parse_source_change_set, parse_unified_diff, DiffMap, DiffParseError, DiffStats, FileDelta,
+    HunkDelta, LineMapSegment, LineOffset, LocationMapping, SourceChangeSet,
+};
