@@ -152,7 +152,7 @@ pub fn fingerprint(code: &str, loc: Option<&Location>, msg: &str) -> String {
     hex::encode(h.finalize())
 }
 
-fn normalize_message(msg: &str) -> String {
+pub(crate) fn normalize_message(msg: &str) -> String {
     let mut out = String::new();
     let mut prev_ws = false;
     for ch in msg.trim().chars() {

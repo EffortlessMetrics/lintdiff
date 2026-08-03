@@ -2,9 +2,10 @@ use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
 use lintdiff_engine::{
-    parse_cargo_messages, parse_cargo_messages_with_status, CargoDiagnosticStream, Diagnostic,
+    parse_cargo_analysis_with_repo_root, parse_cargo_messages, parse_cargo_messages_with_status,
+    CargoAnalysis, CargoDiagnosticStream, Diagnostic,
 };
-use lintdiff_types::{LintdiffConfig, Report};
+use lintdiff_types::{inventory::Inventory, LintdiffConfig, Report};
 use serde_json::to_vec_pretty;
 use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
@@ -111,6 +112,32 @@ pub fn acquire_diagnostics_with_status(
     Ok(Some(stream))
 }
 
+pub fn acquire_cargo_analysis(
+    path: Option<&Path>,
+    repo_root: &Path,
+) -> Result<CargoAnalysis, AppIoError> {
+    let mut buf = String::new();
+    if let Some(path) = path {
+        buf = std::fs::read_to_string(path).map_err(|source| AppIoError::ReadFile {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    } else {
+        io::stdin()
+            .read_to_string(&mut buf)
+            .map_err(|source| AppIoError::ReadFile {
+                path: PathBuf::from("<stdin>"),
+                source,
+            })?;
+    }
+
+    parse_cargo_analysis_with_repo_root(BufReader::new(buf.as_bytes()), Some(repo_root)).map_err(
+        |error| AppIoError::DiagnosticsParse {
+            msg: error.to_string(),
+        },
+    )
+}
+
 pub fn write_report_json(report: &Report, path: &Path) -> Result<(), AppIoError> {
     let bytes = to_vec_pretty(report).map_err(|e| AppIoError::Serialize { source: e })?;
     if let Some(parent) = path.parent() {
@@ -122,6 +149,20 @@ pub fn write_report_json(report: &Report, path: &Path) -> Result<(), AppIoError>
     std::fs::write(path, bytes).map_err(|e| AppIoError::WriteFile {
         path: path.to_path_buf(),
         source: e,
+    })
+}
+
+pub fn write_inventory_json(inventory: &Inventory, path: &Path) -> Result<(), AppIoError> {
+    let bytes = to_vec_pretty(inventory).map_err(|source| AppIoError::Serialize { source })?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|source| AppIoError::WriteFile {
+            path: parent.to_path_buf(),
+            source,
+        })?;
+    }
+    std::fs::write(path, bytes).map_err(|source| AppIoError::WriteFile {
+        path: path.to_path_buf(),
+        source,
     })
 }
 
@@ -142,4 +183,40 @@ pub fn now_rfc3339() -> String {
     OffsetDateTime::now_utc()
         .format(&Rfc3339)
         .unwrap_or_else(|_| "1970-01-01T00:00:00Z".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn inventory_io_reads_cargo_jsonl_and_creates_parent_directories(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| io::Error::other("missing workspace root"))?
+            .to_path_buf();
+        let prefix = root
+            .join("target")
+            .join(format!("inventory-io-test-{}", std::process::id()));
+        let diagnostics = prefix.join("diagnostics.jsonl");
+        let output = prefix.join("nested").join("inventory.json");
+        std::fs::create_dir_all(&prefix)?;
+        std::fs::write(
+            &diagnostics,
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}
+{"reason":"build-finished","success":true}"#,
+        )?;
+
+        let analysis = acquire_cargo_analysis(Some(&diagnostics), &root)?;
+        assert_eq!(analysis.observations.len(), 1);
+        let inventory: Inventory = serde_json::from_str(include_str!(
+            "../../lintdiff-types/tests/fixtures/sample.inventory.json"
+        ))?;
+        write_inventory_json(&inventory, &output)?;
+        assert!(output.is_file());
+
+        let _ = std::fs::remove_dir_all(prefix);
+        Ok(())
+    }
 }

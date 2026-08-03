@@ -98,6 +98,27 @@ pub fn gather_git_info(
     })
 }
 
+pub fn current_revision(repo_root: &Path) -> Result<String, AppGitError> {
+    let out = Command::new("git")
+        .current_dir(repo_root)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .map_err(|e| AppGitError::Command {
+            msg: format!("failed to run git rev-parse: {e}"),
+        })?;
+
+    if !out.status.success() {
+        return Err(AppGitError::Command {
+            msg: format!(
+                "git rev-parse failed: {}",
+                String::from_utf8_lossy(&out.stderr)
+            ),
+        });
+    }
+
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
 fn git_merge_base(repo_root: &Path, base: &str, head: &str) -> Result<String, AppGitError> {
     let out = Command::new("git")
         .current_dir(repo_root)
@@ -142,4 +163,33 @@ where
     }
 
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn current_revision_reads_repository_head() -> Result<(), AppGitError> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| AppGitError::RepoRoot {
+                msg: "missing workspace root".to_string(),
+            })?
+            .to_path_buf();
+        let revision = current_revision(&root)?;
+        if revision.is_empty() {
+            return Err(AppGitError::Command {
+                msg: "git revision was empty".to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn current_revision_reports_invalid_repository() {
+        let error = current_revision(Path::new("C:/this/path/does/not/exist"))
+            .expect_err("invalid repository should fail");
+        assert!(error.to_string().contains("git"));
+    }
 }

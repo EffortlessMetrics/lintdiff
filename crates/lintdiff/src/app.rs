@@ -6,16 +6,20 @@ use std::time::Instant;
 pub use crate::git::AppGitError;
 pub use crate::io::AppIoError;
 
-use crate::git::{acquire_diff, determine_repo_root, gather_git_info};
+use crate::git::{acquire_diff, current_revision, determine_repo_root, gather_git_info};
 use crate::io::{
-    acquire_diagnostics_with_status, load_config, now_rfc3339, write_report_json, write_text,
+    acquire_cargo_analysis, acquire_diagnostics_with_status, load_config, now_rfc3339,
+    write_inventory_json, write_report_json, write_text,
 };
 use lintdiff_engine::{ingest_on_diff, CargoAnalysis, IngestOnDiffParams};
 use lintdiff_engine::{parse_cargo_messages_with_status, parse_unified_diff, Diagnostic};
 use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,
 };
-use lintdiff_types::{FailOn, HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo};
+use lintdiff_types::{
+    inventory::{ContextualProvenance, Inventory},
+    FailOn, HostInfo, LintdiffConfig, NormPath, Report, RunInfo, ToolInfo,
+};
 
 use crate::config::feature_flags::set_feature_flags_from_assignments;
 use serde_json::json;
@@ -33,10 +37,85 @@ pub enum AppError {
     CiDetection { msg: String },
     #[error("config error: {msg}")]
     Config { msg: String },
+    #[error("inventory error: {msg}")]
+    Inventory { msg: String },
     #[error("I/O failure: {0}")]
     Io(#[from] AppIoError),
     #[error("git failure: {0}")]
     Git(#[from] AppGitError),
+}
+
+#[derive(Clone, Debug)]
+pub struct InventoryOptions {
+    pub diagnostics_path: Option<PathBuf>,
+    pub root: Option<PathBuf>,
+    pub analysis_command_file: Option<PathBuf>,
+    pub upstream: UpstreamInput,
+    pub contextual: ContextualProvenance,
+    pub tool: ToolInfo,
+    pub out_path: PathBuf,
+}
+
+pub fn run_inventory(opts: InventoryOptions) -> Result<Inventory, AppError> {
+    let root = determine_repo_root(opts.root.as_deref())?;
+    let mut analysis = acquire_cargo_analysis(opts.diagnostics_path.as_deref(), &root)?;
+
+    if analysis.scope.repository.is_none() {
+        analysis.scope.repository = gather_git_info(&root, None, None)
+            .ok()
+            .and_then(|info| info.repo);
+    }
+    if analysis.scope.revision.is_none() {
+        analysis.scope.revision = current_revision(&root).ok();
+    }
+    if let Some(path) = opts.analysis_command_file.as_deref() {
+        let command = std::fs::read_to_string(path).map_err(|source| AppError::Inventory {
+            msg: format!(
+                "failed to read analysis command file '{}': {source}",
+                path.display()
+            ),
+        })?;
+        analysis.execution.command =
+            serde_json::from_str(&command).map_err(|error| AppError::Inventory {
+                msg: format!(
+                    "analysis command file '{}' must contain a JSON string array: {error}",
+                    path.display()
+                ),
+            })?;
+    }
+    apply_upstream_overrides(&mut analysis, &opts.upstream);
+
+    let inventory = lintdiff_engine::inventory_from_analysis(&analysis, opts.tool, opts.contextual)
+        .map_err(|error| AppError::Inventory {
+            msg: format!("failed to serialize inventory evidence: {error}"),
+        })?;
+    write_inventory_json(&inventory, &opts.out_path)?;
+    Ok(inventory)
+}
+
+fn apply_upstream_overrides(analysis: &mut CargoAnalysis, upstream: &UpstreamInput) {
+    if !upstream.command.is_empty() {
+        analysis.execution.command = upstream.command.clone();
+    }
+    if let Some(exit_code) = upstream.exit_code {
+        analysis.execution.exit_code = Some(exit_code);
+    }
+    if let Some(build_finished) = upstream.build_finished {
+        analysis.execution.build_finished_seen = build_finished;
+    }
+    if let Some(build_success) = upstream.build_success {
+        analysis.execution.build_success = Some(build_success);
+    }
+    analysis.execution.completion = Some(
+        match (
+            analysis.execution.build_finished_seen,
+            analysis.execution.build_success,
+        ) {
+            (true, Some(true)) => lintdiff_engine::AnalysisCompletion::SuccessfulComplete,
+            (true, Some(false)) => lintdiff_engine::AnalysisCompletion::FailedComplete,
+            _ => lintdiff_engine::AnalysisCompletion::IncompleteStream,
+        },
+    );
 }
 
 #[derive(Clone, Debug)]
@@ -420,6 +499,7 @@ fn classify_exit_code(report: &Report) -> i32 {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::io::Cursor;
 
     fn empty_report() -> Result<Report, serde_json::Error> {
         serde_json::from_value(json!({
@@ -509,6 +589,80 @@ mod tests {
         assert_eq!(merged.exit_code, Some(101));
         assert_eq!(merged.build_finished, Some(false));
         assert_eq!(merged.build_success, Some(true));
+        Ok(())
+    }
+
+    #[test]
+    fn inventory_upstream_overrides_cover_completion_states(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut analysis = lintdiff_engine::parse_cargo_analysis(Cursor::new(
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}"#,
+        ))?;
+        apply_upstream_overrides(
+            &mut analysis,
+            &UpstreamInput {
+                command: vec!["cargo".to_string(), "clippy".to_string()],
+                exit_code: Some(101),
+                build_finished: Some(true),
+                build_success: Some(false),
+            },
+        );
+        assert_eq!(analysis.execution.command, ["cargo", "clippy"]);
+        assert_eq!(analysis.execution.exit_code, Some(101));
+        assert_eq!(
+            analysis.execution.completion,
+            Some(lintdiff_engine::AnalysisCompletion::FailedComplete)
+        );
+
+        apply_upstream_overrides(&mut analysis, &UpstreamInput::default());
+        assert_eq!(
+            analysis.execution.completion,
+            Some(lintdiff_engine::AnalysisCompletion::FailedComplete)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn inventory_command_file_and_nested_output_are_supported(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| std::io::Error::other("missing workspace root"))?
+            .to_path_buf();
+        let prefix = root
+            .join("target")
+            .join(format!("inventory-app-test-{}", std::process::id()));
+        let diagnostics = prefix.join("diagnostics.jsonl");
+        let command = prefix.join("command.json");
+        let output = prefix.join("nested").join("inventory.json");
+        std::fs::create_dir_all(&prefix)?;
+        std::fs::write(
+            &diagnostics,
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}
+{"reason":"build-finished","success":true}"#,
+        )?;
+        std::fs::write(&command, r#"["cargo","clippy","--workspace"]"#)?;
+
+        let inventory = run_inventory(InventoryOptions {
+            diagnostics_path: Some(diagnostics.clone()),
+            root: Some(root),
+            analysis_command_file: Some(command.clone()),
+            upstream: UpstreamInput::default(),
+            contextual: ContextualProvenance::default(),
+            tool: ToolInfo {
+                name: "lintdiff".to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            out_path: output.clone(),
+        })?;
+
+        assert_eq!(
+            inventory.analysis.hard.command,
+            ["cargo", "clippy", "--workspace"]
+        );
+        assert!(output.is_file());
+        let _ = std::fs::remove_dir_all(prefix);
         Ok(())
     }
 }
