@@ -1,0 +1,115 @@
+name: release-post-canary
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-tag-canary:
+    name: Exact v0.1.1 Action canary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release source and schema
+        uses: actions/checkout@v4
+
+      - name: Create path and diagnostic fixture
+        id: fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="$RUNNER_TEMP/lintdiff-post-canary"
+          mkdir -p "$fixture/src" "$fixture/a/src" "$fixture/b/src"
+          git init --initial-branch=main "$fixture"
+          git -C "$fixture" config user.name lintdiff-post-canary
+          git -C "$fixture" config user.email lintdiff-post-canary@example.invalid
+          : > "$fixture/src/lib.rs"
+          : > "$fixture/a/src/lib.rs"
+          : > "$fixture/b/src/lib.rs"
+          git -C "$fixture" add .
+          git -C "$fixture" commit -m baseline
+          printf 'fn main() { let x = (); }\n' > "$fixture/src/lib.rs"
+          printf 'fn main() { let x = (); }\n' > "$fixture/a/src/lib.rs"
+          printf 'fn main() { let x = (); }\n' > "$fixture/b/src/lib.rs"
+          git -C "$fixture" add .
+          git -C "$fixture" commit -m change
+
+          diagnostics="$fixture/diagnostics.jsonl"
+          : > "$diagnostics"
+          for relative in src/lib.rs a/src/lib.rs b/src/lib.rs; do
+            path="$fixture/$relative"
+            jq -cn --arg path "$path" '{reason:"compiler-message",message:{level:"warning",message:"this expression has type `()`",code:{code:"clippy::let_unit_value"},spans:[{file_name:$path,line_start:1,line_end:1,column_start:1,column_end:10,is_primary:true}]}}' >> "$diagnostics"
+          done
+
+          {
+            echo "root=$fixture"
+            echo "base=$(git -C "$fixture" rev-parse HEAD~1)"
+            echo "head=$(git -C "$fixture" rev-parse HEAD)"
+            echo "diagnostics=$diagnostics"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run exact remote Action tag
+        id: normal
+        uses: EffortlessMetrics/lintdiff@v0.1.1
+        with:
+          root: ${{ steps.fixture.outputs.root }}
+          working_directory: ${{ steps.fixture.outputs.root }}
+          base: ${{ steps.fixture.outputs.base }}
+          head: ${{ steps.fixture.outputs.head }}
+          diagnostics: ${{ steps.fixture.outputs.diagnostics }}
+          fail_on: error
+          artifact_name: release-post-canary-normal
+
+      - name: Validate exact-tag normal receipt
+        shell: bash
+        env:
+          REPORT: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json
+        run: |
+          set -euo pipefail
+          test '${{ steps.normal.outputs.resolved_version }}' = v0.1.1
+          jq -e '.schema == "lintdiff.report.v1"' "$REPORT" >/dev/null
+          for path in src/lib.rs a/src/lib.rs b/src/lib.rs; do
+            jq -e --arg path "$path" '([.findings[]?.location.path] | index($path)) != null' "$REPORT" >/dev/null
+          done
+          cp "$REPORT" "${REPORT%.json}-normal.json"
+
+      - name: Run exact-tag failed-upstream Action
+        id: failed
+        if: always()
+        continue-on-error: true
+        uses: EffortlessMetrics/lintdiff@v0.1.1
+        with:
+          root: ${{ steps.fixture.outputs.root }}
+          working_directory: ${{ steps.fixture.outputs.root }}
+          base: ${{ steps.fixture.outputs.base }}
+          head: ${{ steps.fixture.outputs.head }}
+          diagnostics: ${{ steps.fixture.outputs.diagnostics }}
+          upstream_command: '["cargo","clippy","--all-features","--message-format=json"]'
+          upstream_exit_code: '101'
+          upstream_build_finished: 'true'
+          upstream_build_success: 'false'
+          fail_on: error
+          artifact_name: release-post-canary-failed
+
+      - name: Validate failed-upstream receipt
+        if: always()
+        shell: bash
+        env:
+          REPORT: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json
+        run: |
+          set -euo pipefail
+          test '${{ steps.failed.outputs.resolved_version }}' = v0.1.1
+          jq -e '.schema == "lintdiff.report.v1" and .data.upstream.exit_code == 101 and .data.upstream.build_finished == true and .data.upstream.build_success == false and .data.upstream.complete == true' "$REPORT" >/dev/null
+          jq -e '([.findings[]?.location.path] | index("a/src/lib.rs")) != null and ([.findings[]?.location.path] | index("b/src/lib.rs")) != null' "$REPORT" >/dev/null
+
+      - name: Validate receipts against the live schema
+        if: always()
+        shell: bash
+        env:
+          NORMAL_REPORT: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report-normal.json
+          FAILED_REPORT: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json
+        run: |
+          set -euo pipefail
+          cargo run --quiet -p xtask -- schema-check-report "$NORMAL_REPORT"
+          cargo run --quiet -p xtask -- schema-check-report "$FAILED_REPORT"
