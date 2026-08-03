@@ -3,7 +3,9 @@ use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use crate::app::{run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions};
+use crate::app::{
+    run_and_ingest, run_ci_github, run_ingest, AnnotationFormat, IngestOptions, UpstreamInput,
+};
 use clap::{Parser, Subcommand, ValueEnum};
 use lintdiff_render::{render_github_annotations, render_markdown, MarkdownOptions};
 use lintdiff_types::{Report, ToolInfo};
@@ -335,6 +337,22 @@ enum Commands {
         #[arg(long)]
         fail_on: Option<String>,
 
+        /// Exact exit code from the upstream diagnostics command.
+        #[arg(long)]
+        upstream_exit_code: Option<i32>,
+
+        /// Whether the upstream Cargo stream contained build-finished.
+        #[arg(long)]
+        upstream_build_finished: Option<bool>,
+
+        /// Success value from the upstream Cargo build-finished message.
+        #[arg(long)]
+        upstream_build_success: Option<bool>,
+
+        /// Upstream command as a JSON string array.
+        #[arg(long)]
+        upstream_command: Option<String>,
+
         /// Override feature flags (name=value). Repeat for multiple flags.
         #[arg(long, value_name = "FLAG=VALUE")]
         feature_flags: Vec<String>,
@@ -453,6 +471,22 @@ enum CiProvider {
         #[arg(long)]
         diagnostics: Option<PathBuf>,
 
+        /// Exact exit code from the upstream diagnostics command.
+        #[arg(long)]
+        upstream_exit_code: Option<i32>,
+
+        /// Whether the upstream Cargo stream contained build-finished.
+        #[arg(long)]
+        upstream_build_finished: Option<bool>,
+
+        /// Success value from the upstream Cargo build-finished message.
+        #[arg(long)]
+        upstream_build_success: Option<bool>,
+
+        /// Upstream command as a JSON string array.
+        #[arg(long)]
+        upstream_command: Option<String>,
+
         /// Override feature flags (name=value).
         #[arg(long, value_name = "FLAG=VALUE")]
         feature_flags: Vec<String>,
@@ -501,6 +535,10 @@ fn dispatch(cmd: Commands) -> ExitCode {
             root,
             config,
             fail_on,
+            upstream_exit_code,
+            upstream_build_finished,
+            upstream_build_success,
+            upstream_command,
             feature_flags,
             out,
             md,
@@ -513,6 +551,18 @@ fn dispatch(cmd: Commands) -> ExitCode {
             };
 
             let repro = repro_string_ingest(&diagnostics, &diff_file, &base, &head);
+            let upstream = match parse_upstream_input(
+                upstream_command,
+                upstream_exit_code,
+                upstream_build_finished,
+                upstream_build_success,
+            ) {
+                Ok(value) => value,
+                Err(error) => {
+                    print_error(&ErrorGuidance::new(error));
+                    return ExitCode::from(1);
+                }
+            };
 
             let res = run_ingest(IngestOptions {
                 diagnostics_path: diagnostics,
@@ -528,6 +578,7 @@ fn dispatch(cmd: Commands) -> ExitCode {
                 tool,
                 repro: Some(repro),
                 fail_on_override: fail_on,
+                upstream,
             });
 
             match res {
@@ -576,6 +627,7 @@ fn dispatch(cmd: Commands) -> ExitCode {
                     tool,
                     repro,
                     fail_on_override: fail_on,
+                    upstream: None,
                 },
                 command,
             );
@@ -643,6 +695,10 @@ fn dispatch(cmd: Commands) -> ExitCode {
                 config,
                 fail_on,
                 diagnostics,
+                upstream_exit_code,
+                upstream_build_finished,
+                upstream_build_success,
+                upstream_command,
                 feature_flags,
                 out,
                 md,
@@ -652,6 +708,19 @@ fn dispatch(cmd: Commands) -> ExitCode {
                     name: "lintdiff".to_string(),
                     version: env!("CARGO_PKG_VERSION").to_string(),
                     commit: option_env!("GIT_SHA").map(|s| s.to_string()),
+                };
+
+                let upstream = match parse_upstream_input(
+                    upstream_command,
+                    upstream_exit_code,
+                    upstream_build_finished,
+                    upstream_build_success,
+                ) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        print_error(&ErrorGuidance::new(error));
+                        return ExitCode::from(1);
+                    }
                 };
 
                 let res = run_ci_github(
@@ -666,6 +735,7 @@ fn dispatch(cmd: Commands) -> ExitCode {
                     out,
                     md,
                     annotations.into(),
+                    upstream,
                 );
 
                 match res {
@@ -679,6 +749,34 @@ fn dispatch(cmd: Commands) -> ExitCode {
             }
         },
     }
+}
+
+fn parse_upstream_input(
+    command: Option<String>,
+    exit_code: Option<i32>,
+    build_finished: Option<bool>,
+    build_success: Option<bool>,
+) -> Result<Option<UpstreamInput>, String> {
+    if command.is_none()
+        && exit_code.is_none()
+        && build_finished.is_none()
+        && build_success.is_none()
+    {
+        return Ok(None);
+    }
+
+    let command = match command {
+        Some(raw) => serde_json::from_str(&raw)
+            .map_err(|e| format!("invalid --upstream-command JSON array: {e}"))?,
+        None => Vec::new(),
+    };
+
+    Ok(Some(UpstreamInput {
+        command,
+        exit_code,
+        build_finished,
+        build_success,
+    }))
 }
 
 fn load_report(path: &PathBuf) -> Result<Report, String> {

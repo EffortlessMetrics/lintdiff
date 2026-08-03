@@ -1,7 +1,9 @@
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
-use lintdiff_engine::{parse_cargo_messages, Diagnostic};
+use lintdiff_engine::{
+    parse_cargo_messages, parse_cargo_messages_with_status, CargoDiagnosticStream, Diagnostic,
+};
 use lintdiff_types::{LintdiffConfig, Report};
 use serde_json::to_vec_pretty;
 use thiserror::Error;
@@ -68,15 +70,28 @@ pub fn parse_diagnostics<R: BufRead>(reader: R) -> Result<Vec<Diagnostic>, AppIo
     parse_cargo_messages(reader).map_err(|e| AppIoError::DiagnosticsParse { msg: e.to_string() })
 }
 
+pub fn parse_diagnostics_with_status<R: BufRead>(
+    reader: R,
+) -> Result<CargoDiagnosticStream, AppIoError> {
+    parse_cargo_messages_with_status(reader)
+        .map_err(|e| AppIoError::DiagnosticsParse { msg: e.to_string() })
+}
+
 pub fn acquire_diagnostics(path: Option<&Path>) -> Result<Option<Vec<Diagnostic>>, AppIoError> {
+    Ok(acquire_diagnostics_with_status(path)?.map(|stream| stream.diagnostics))
+}
+
+pub fn acquire_diagnostics_with_status(
+    path: Option<&Path>,
+) -> Result<Option<CargoDiagnosticStream>, AppIoError> {
     if let Some(p) = path {
         let f = std::fs::File::open(p).map_err(|e| AppIoError::ReadFile {
             path: p.to_path_buf(),
             source: e,
         })?;
         let reader = BufReader::new(f);
-        let diags = parse_diagnostics(reader)?;
-        return Ok(Some(diags));
+        let stream = parse_diagnostics_with_status(reader)?;
+        return Ok(Some(stream));
     }
 
     let mut buf = String::new();
@@ -92,8 +107,8 @@ pub fn acquire_diagnostics(path: Option<&Path>) -> Result<Option<Vec<Diagnostic>
     }
 
     let reader = BufReader::new(buf.as_bytes());
-    let diags = parse_diagnostics(reader)?;
-    Ok(Some(diags))
+    let stream = parse_diagnostics_with_status(reader)?;
+    Ok(Some(stream))
 }
 
 pub fn write_report_json(report: &Report, path: &Path) -> Result<(), AppIoError> {

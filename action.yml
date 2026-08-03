@@ -20,6 +20,18 @@ inputs:
   diagnostics:
     description: "Path to diagnostics JSONL file (cargo clippy --message-format=json output)"
     required: false
+  upstream_exit_code:
+    description: "Exact exit code from the upstream diagnostics command"
+    required: false
+  upstream_build_finished:
+    description: "Whether the upstream Cargo stream contained build-finished"
+    required: false
+  upstream_build_success:
+    description: "Success value from the upstream Cargo build-finished message"
+    required: false
+  upstream_command:
+    description: "Upstream command as a JSON string array"
+    required: false
   version:
     description: "Exact lintdiff release version; defaults to the invoked exact Action tag"
     required: false
@@ -123,6 +135,10 @@ runs:
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_FAIL_ON: ${{ inputs.fail_on }}
         INPUT_DIAGNOSTICS: ${{ inputs.diagnostics }}
+        INPUT_UPSTREAM_EXIT_CODE: ${{ inputs.upstream_exit_code }}
+        INPUT_UPSTREAM_BUILD_FINISHED: ${{ inputs.upstream_build_finished }}
+        INPUT_UPSTREAM_BUILD_SUCCESS: ${{ inputs.upstream_build_success }}
+        INPUT_UPSTREAM_COMMAND: ${{ inputs.upstream_command }}
         ACTION_PATH: ${{ github.action_path }}
         LINTDIFF_BIN: lintdiff
       run: |
@@ -142,6 +158,18 @@ runs:
         fi
         if [ -n "$INPUT_DIAGNOSTICS" ]; then
           ARGS+=(--diagnostics "$INPUT_DIAGNOSTICS")
+        fi
+        if [ -n "$INPUT_UPSTREAM_EXIT_CODE" ]; then
+          ARGS+=(--upstream-exit-code "$INPUT_UPSTREAM_EXIT_CODE")
+        fi
+        if [ -n "$INPUT_UPSTREAM_BUILD_FINISHED" ]; then
+          ARGS+=(--upstream-build-finished "$INPUT_UPSTREAM_BUILD_FINISHED")
+        fi
+        if [ -n "$INPUT_UPSTREAM_BUILD_SUCCESS" ]; then
+          ARGS+=(--upstream-build-success "$INPUT_UPSTREAM_BUILD_SUCCESS")
+        fi
+        if [ -n "$INPUT_UPSTREAM_COMMAND" ]; then
+          ARGS+=(--upstream-command "$INPUT_UPSTREAM_COMMAND")
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"
