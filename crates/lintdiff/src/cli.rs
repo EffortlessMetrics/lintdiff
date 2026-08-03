@@ -1296,7 +1296,7 @@ static ALL_LINTS: &[LintExplanation] = &[
 
 #[cfg(test)]
 mod tests {
-    use super::{dispatch, Cli};
+    use super::{dispatch, parse_upstream_input, Cli};
     use clap::Parser;
     use std::path::PathBuf;
     use std::process::ExitCode;
@@ -1407,5 +1407,29 @@ mod tests {
 
         let _ = std::fs::remove_file(report);
         let _ = std::fs::remove_file(inventory);
+    }
+
+    #[test]
+    fn inventory_upstream_arguments_parse_as_structured_evidence() {
+        assert!(parse_upstream_input(None, None, None, None)
+            .expect("missing arguments should be accepted")
+            .is_none());
+
+        let upstream = parse_upstream_input(
+            Some(r#"["cargo","clippy"]"#.to_string()),
+            Some(101),
+            Some(true),
+            Some(false),
+        )
+        .expect("valid arguments should parse")
+        .expect("supplied arguments should produce evidence");
+        assert_eq!(upstream.command, ["cargo", "clippy"]);
+        assert_eq!(upstream.exit_code, Some(101));
+        assert_eq!(upstream.build_finished, Some(true));
+        assert_eq!(upstream.build_success, Some(false));
+
+        let error = parse_upstream_input(Some("not-json".to_string()), None, None, None)
+            .expect_err("invalid command JSON should fail");
+        assert!(error.contains("invalid --upstream-command"));
     }
 }

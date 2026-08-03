@@ -184,3 +184,39 @@ pub fn now_rfc3339() -> String {
         .format(&Rfc3339)
         .unwrap_or_else(|_| "1970-01-01T00:00:00Z".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn inventory_io_reads_cargo_jsonl_and_creates_parent_directories(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| io::Error::other("missing workspace root"))?
+            .to_path_buf();
+        let prefix = root
+            .join("target")
+            .join(format!("inventory-io-test-{}", std::process::id()));
+        let diagnostics = prefix.join("diagnostics.jsonl");
+        let output = prefix.join("nested").join("inventory.json");
+        std::fs::create_dir_all(&prefix)?;
+        std::fs::write(
+            &diagnostics,
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}
+{"reason":"build-finished","success":true}"#,
+        )?;
+
+        let analysis = acquire_cargo_analysis(Some(&diagnostics), &root)?;
+        assert_eq!(analysis.observations.len(), 1);
+        let inventory: Inventory = serde_json::from_str(include_str!(
+            "../../lintdiff-types/tests/fixtures/sample.inventory.json"
+        ))?;
+        write_inventory_json(&inventory, &output)?;
+        assert!(output.is_file());
+
+        let _ = std::fs::remove_dir_all(prefix);
+        Ok(())
+    }
+}

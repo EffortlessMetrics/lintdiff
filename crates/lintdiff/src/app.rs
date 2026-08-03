@@ -499,6 +499,7 @@ fn classify_exit_code(report: &Report) -> i32 {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::io::Cursor;
 
     fn empty_report() -> Result<Report, serde_json::Error> {
         serde_json::from_value(json!({
@@ -588,6 +589,80 @@ mod tests {
         assert_eq!(merged.exit_code, Some(101));
         assert_eq!(merged.build_finished, Some(false));
         assert_eq!(merged.build_success, Some(true));
+        Ok(())
+    }
+
+    #[test]
+    fn inventory_upstream_overrides_cover_completion_states(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut analysis = lintdiff_engine::parse_cargo_analysis(Cursor::new(
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}"#,
+        ))?;
+        apply_upstream_overrides(
+            &mut analysis,
+            &UpstreamInput {
+                command: vec!["cargo".to_string(), "clippy".to_string()],
+                exit_code: Some(101),
+                build_finished: Some(true),
+                build_success: Some(false),
+            },
+        );
+        assert_eq!(analysis.execution.command, ["cargo", "clippy"]);
+        assert_eq!(analysis.execution.exit_code, Some(101));
+        assert_eq!(
+            analysis.execution.completion,
+            Some(lintdiff_engine::AnalysisCompletion::FailedComplete)
+        );
+
+        apply_upstream_overrides(&mut analysis, &UpstreamInput::default());
+        assert_eq!(
+            analysis.execution.completion,
+            Some(lintdiff_engine::AnalysisCompletion::FailedComplete)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn inventory_command_file_and_nested_output_are_supported(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| std::io::Error::other("missing workspace root"))?
+            .to_path_buf();
+        let prefix = root
+            .join("target")
+            .join(format!("inventory-app-test-{}", std::process::id()));
+        let diagnostics = prefix.join("diagnostics.jsonl");
+        let command = prefix.join("command.json");
+        let output = prefix.join("nested").join("inventory.json");
+        std::fs::create_dir_all(&prefix)?;
+        std::fs::write(
+            &diagnostics,
+            r#"{"reason":"compiler-message","message":{"level":"warning","message":"warning"}}
+{"reason":"build-finished","success":true}"#,
+        )?;
+        std::fs::write(&command, r#"["cargo","clippy","--workspace"]"#)?;
+
+        let inventory = run_inventory(InventoryOptions {
+            diagnostics_path: Some(diagnostics.clone()),
+            root: Some(root),
+            analysis_command_file: Some(command.clone()),
+            upstream: UpstreamInput::default(),
+            contextual: ContextualProvenance::default(),
+            tool: ToolInfo {
+                name: "lintdiff".to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            out_path: output.clone(),
+        })?;
+
+        assert_eq!(
+            inventory.analysis.hard.command,
+            ["cargo", "clippy", "--workspace"]
+        );
+        assert!(output.is_file());
+        let _ = std::fs::remove_dir_all(prefix);
         Ok(())
     }
 }

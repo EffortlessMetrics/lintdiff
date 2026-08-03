@@ -164,3 +164,32 @@ where
 
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn current_revision_reads_repository_head() -> Result<(), AppGitError> {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| AppGitError::RepoRoot {
+                msg: "missing workspace root".to_string(),
+            })?
+            .to_path_buf();
+        let revision = current_revision(&root)?;
+        if revision.is_empty() {
+            return Err(AppGitError::Command {
+                msg: "git revision was empty".to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn current_revision_reports_invalid_repository() {
+        let error = current_revision(Path::new("C:/this/path/does/not/exist"))
+            .expect_err("invalid repository should fail");
+        assert!(error.to_string().contains("git"));
+    }
+}

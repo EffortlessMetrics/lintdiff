@@ -437,7 +437,7 @@ mod tests {
 
     #[test]
     fn public_inventory_preserves_unknown_locations_and_completion() {
-        let input = r#"{"reason":"compiler-message","package_id":"pkg-a","message":{"level":"warning","message":"unknown","spans":[{"file_name":"src/lib.rs","line_start":0,"is_primary":true}]}}
+        let input = r#"{"reason":"compiler-message","package_id":"pkg-a","manifest_path":"/repo/Cargo.toml","target":{"name":"demo","kind":["lib"],"crate_types":["lib"],"src_path":"/repo/src/lib.rs","edition":"2024"},"message":{"level":"warning","message":"unknown","spans":[{"file_name":"src/lib.rs","line_start":0,"is_primary":true}],"children":[{"level":"help","message":"replace it","spans":[{"file_name":"src/lib.rs","line_start":3,"line_end":3,"suggested_replacement":"new","suggestion_applicability":"MachineApplicable"}]}]}}
 {"reason":"build-finished","success":false}"#;
         let analysis = parse_cargo_analysis(Cursor::new(input)).expect("valid analysis");
         let inventory = inventory_from_analysis(
@@ -457,5 +457,64 @@ mod tests {
         );
         assert_eq!(inventory.diagnostics[0].spans[0].raw_line_start, Some(0));
         assert_eq!(inventory.diagnostics[0].spans[0].line_start, None);
+        assert_eq!(
+            inventory.diagnostics[0]
+                .producer
+                .target
+                .as_ref()
+                .and_then(|target| target.name.as_deref()),
+            Some("demo")
+        );
+        assert_eq!(
+            inventory.diagnostics[0].children[0].suggestions[0]
+                .replacement
+                .as_deref(),
+            Some("new")
+        );
+    }
+
+    #[test]
+    fn public_inventory_maps_runtime_failure_and_summary_levels() {
+        let input = r#"{"reason":"compiler-message","message":{"level":"error","message":"error"}}
+{"reason":"compiler-message","message":{"level":"note","message":"note"}}
+{"reason":"compiler-message","message":{"level":"help","message":"help"}}
+{"reason":"compiler-message","message":{"level":"custom","message":"other"}}"#;
+        let analysis = parse_cargo_analysis(Cursor::new(input)).expect("valid analysis");
+        let inventory = inventory_from_analysis(
+            &analysis,
+            ToolInfo {
+                name: "lintdiff".to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            ContextualProvenance::default(),
+        )
+        .expect("inventory conversion");
+
+        assert_eq!(
+            inventory.upstream.completion,
+            CompletionState::IncompleteStream
+        );
+        assert_eq!(inventory.summary.total, 4);
+        assert_eq!(inventory.summary.errors, 1);
+        assert_eq!(inventory.summary.notes, 1);
+        assert_eq!(inventory.summary.helps, 1);
+        assert_eq!(inventory.summary.other, 1);
+
+        let runtime_failure = CargoAnalysis::runtime_failure(vec!["cargo".to_string()], Some(12));
+        let inventory = inventory_from_analysis(
+            &runtime_failure,
+            ToolInfo {
+                name: "lintdiff".to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            ContextualProvenance::default(),
+        )
+        .expect("runtime failure conversion");
+        assert_eq!(
+            inventory.upstream.completion,
+            CompletionState::RuntimeFailure
+        );
     }
 }
