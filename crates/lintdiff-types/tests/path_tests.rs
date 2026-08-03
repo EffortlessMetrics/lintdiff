@@ -105,6 +105,22 @@ mod norm_path_tests {
         let debug = format!("{:?}", path);
         assert!(debug.contains("NormPath"));
     }
+
+    #[test]
+    fn repository_constructor_preserves_a_and_b_directories() {
+        assert_eq!(
+            NormPath::from_repo_path("a/src/lib.rs").as_str(),
+            "a/src/lib.rs"
+        );
+        assert_eq!(
+            NormPath::from_repo_path("b/src/lib.rs").as_str(),
+            "b/src/lib.rs"
+        );
+        assert_eq!(
+            NormPath::from_repo_path("a/a/src/lib.rs").as_str(),
+            "a/a/src/lib.rs"
+        );
+    }
 }
 
 // =============================================================================
@@ -118,6 +134,15 @@ mod normalize_path_tests {
     fn simple_path_unchanged() {
         let path = normalize_path("src/lib.rs");
         assert_eq!(path.as_str(), "src/lib.rs");
+    }
+
+    #[test]
+    fn repository_normalization_is_idempotent_without_diff_prefix_rules() {
+        let once = normalize_repo_path("./a//src/lib.rs");
+        let twice = normalize_repo_path(once.as_str());
+
+        assert_eq!(once.as_str(), "a/src/lib.rs");
+        assert_eq!(once, twice);
     }
 
     #[test]
