@@ -169,7 +169,10 @@ release commit and asset plan have been reviewed.
 #### 4. Create and Push the Tag after authorization
 
 ```bash
-git tag v0.1.1
+RELEASE_COMMIT="<approved squash merge commit SHA>"
+git fetch origin main
+test "$(git rev-parse origin/main)" = "$RELEASE_COMMIT"
+git tag v0.1.1 "$RELEASE_COMMIT"
 git push origin v0.1.1
 ```
 
@@ -183,15 +186,21 @@ git push origin v0.1.1
 
 Once the workflow completes:
 
-1. Go to [Releases](https://github.com/effortless-metrics/lintdiff/releases)
+1. Go to [Releases](https://github.com/EffortlessMetrics/lintdiff/releases)
 2. Verify the release appears with correct version
 3. Download and test binaries on at least one platform:
+
    ```bash
    # Linux/macOS
-   curl -fsSL https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
+   curl -fsSL -O https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz
+   curl -fsSL -O https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/checksums-0.1.1.txt
+   sha256sum -c --ignore-missing checksums-0.1.1.txt
+   tar xzf lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz
    ./lintdiff --version
    ```
+
 4. Verify checksums match:
+
    ```bash
    sha256sum lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz
    # Compare with checksums-0.1.1.txt
@@ -236,7 +245,7 @@ Pin to a specific version in your workflow:
 
 ```yaml
 - name: Run lintdiff
-  uses: effortless-metrics/lintdiff@v0.1.1
+  uses: EffortlessMetrics/lintdiff@v0.1.1
   with:
     base: main
     head: HEAD
@@ -248,7 +257,7 @@ The GitHub Action supports a `version` input:
 
 ```yaml
 - name: Run lintdiff
-  uses: effortless-metrics/lintdiff@main  # Development/ref testing only
+  uses: EffortlessMetrics/lintdiff@main  # Development/ref testing only
   with:
     version: v0.1.1  # Required when the Action ref is not an exact tag
     base: main
@@ -264,15 +273,15 @@ fail closed. There is no `latest` fallback or moving `v0` alias.
 
 Binaries can be downloaded directly from GitHub releases:
 
-```
-https://github.com/effortless-metrics/lintdiff/releases/download/{TAG}/lintdiff-{VERSION}-{TARGET}.{EXT}
+```text
+https://github.com/EffortlessMetrics/lintdiff/releases/download/{TAG}/lintdiff-{VERSION}-{TARGET}.{EXT}
 ```
 
 Examples:
-- Linux: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz`
-- macOS (Intel): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-apple-darwin.tar.gz`
-- macOS (ARM): `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-aarch64-apple-darwin.tar.gz`
-- Windows: `https://github.com/effortless-metrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-pc-windows-msvc.zip`
+- Linux: `https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz`
+- macOS (Intel): `https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-apple-darwin.tar.gz`
+- macOS (ARM): `https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-aarch64-apple-darwin.tar.gz`
+- Windows: `https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-pc-windows-msvc.zip`
 
 ### Checksum Verification
 
@@ -280,11 +289,11 @@ Always verify checksums when downloading binaries:
 
 ```bash
 # Download binary and checksum
-curl -fsSL -O https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-unknown-linux-gnu.tar.gz
-curl -fsSL -O https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/checksums-0.2.0.txt
+curl -fsSL -O https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/lintdiff-0.1.1-x86_64-unknown-linux-gnu.tar.gz
+curl -fsSL -O https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.1/checksums-0.1.1.txt
 
 # Verify checksum
-sha256sum -c --ignore-missing checksums-0.2.0.txt
+sha256sum -c --ignore-missing checksums-0.1.1.txt
 ```
 
 Example script for automated download with verification:
@@ -293,11 +302,11 @@ Example script for automated download with verification:
 #!/bin/bash
 set -euo pipefail
 
-VERSION="v0.2.0"
+VERSION="v0.1.1"
 TARGET="x86_64-unknown-linux-gnu"
 EXT="tar.gz"
 
-BASE_URL="https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}"
+BASE_URL="https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}"
 BINARY="lintdiff-${VERSION#v}-${TARGET}.${EXT}"
 CHECKSUMS="checksums-${VERSION#v}.txt"
 
@@ -325,9 +334,9 @@ fi
 5. **Document the version** in comments for clarity:
 
 ```yaml
-# lintdiff v0.2.0 - Pinned for stability
-# See: https://github.com/effortless-metrics/lintdiff/releases/tag/v0.2.0
-- uses: effortless-metrics/lintdiff@v0.2.0
+# lintdiff v0.1.1 - Pinned for stability
+# See: https://github.com/EffortlessMetrics/lintdiff/releases/tag/v0.1.1
+- uses: EffortlessMetrics/lintdiff@v0.1.1
 ```
 
 ---
@@ -348,7 +357,7 @@ fi
 
 To "yank" a problematic release:
 
-1. Go to [Releases](https://github.com/effortless-metrics/lintdiff/releases)
+1. Go to [Releases](https://github.com/EffortlessMetrics/lintdiff/releases)
 2. Find the problematic release
 3. Click "Edit"
 4. Check "Set as a pre-release" and uncheck "Set as the latest release"
@@ -503,14 +512,14 @@ git push --delete origin v0.2.0
 git tag -l
 
 # Download specific version
-curl -fsSL https://github.com/effortless-metrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -fsSL https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.2.0/lintdiff-x86_64-unknown-linux-gnu.tar.gz | tar xz
 ```
 
 ### Version Pinning Snippets
 
 **GitHub Action:**
 ```yaml
-- uses: effortless-metrics/lintdiff@v0.2.0
+- uses: EffortlessMetrics/lintdiff@v0.2.0
   with:
     base: main
 ```
@@ -518,11 +527,11 @@ curl -fsSL https://github.com/effortless-metrics/lintdiff/releases/download/v0.2
 **Direct Download:**
 ```bash
 VERSION="v0.2.0"
-curl -fsSL "https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/lintdiff-x86_64-unknown-linux-gnu.tar.gz" | tar xz
+curl -fsSL "https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}/lintdiff-x86_64-unknown-linux-gnu.tar.gz" | tar xz
 ```
 
 **With Checksum Verification:**
 ```bash
 VERSION="v0.2.0"
-curl -fsSL "https://github.com/effortless-metrics/lintdiff/releases/download/${VERSION}/checksums-${VERSION#v}.txt" | sha256sum -c --ignore-missing
+curl -fsSL "https://github.com/EffortlessMetrics/lintdiff/releases/download/${VERSION}/checksums-${VERSION#v}.txt" | sha256sum -c --ignore-missing
 ```

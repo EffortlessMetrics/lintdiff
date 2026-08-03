@@ -12,7 +12,8 @@ comparison with adjacent tools.
 ## Product Status
 
 The supported product is the release-binary CLI and the GitHub Action. The
-current published example uses the exact `v0.1.1` Action tag.
+release target is the exact `v0.1.1` Action tag; use it only after the tag and
+post-release canary gates pass.
 
 ### Infrastructure Highlights
 
