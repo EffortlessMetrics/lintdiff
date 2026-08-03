@@ -124,6 +124,11 @@ runs:
             ;;
         esac
 
+        if command -v cygpath >/dev/null 2>&1; then
+          RUNNER_TEMP="$(cygpath -u "$RUNNER_TEMP")"
+          export RUNNER_TEMP
+        fi
+
         BINARY_PATH=$(LINTDIFF_TARGET="$TARGET" LINTDIFF_EXTENSION="$EXT" \
           "$ACTION_PATH/scripts/action/install.sh" --version "$VERSION")
         echo "$(dirname "$BINARY_PATH")" >> "$GITHUB_PATH"
