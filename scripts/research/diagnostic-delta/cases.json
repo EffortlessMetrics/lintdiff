@@ -1,0 +1,22 @@
+[
+  {"repo":"cargo-allow","pr":3068,"base":"45017590c23cd2dd02fcba2482af4d4b43ee4034","head":"e54df21b4c408cc34edac06dc6945586e56d8a34","focus":"policy diff reclassification"},
+  {"repo":"cargo-allow","pr":3060,"base":"5b8987c3a4fab617bea76b45c2d8b0365c4b3847","head":"6fb79be085e361efb7c0639cc28fc292b7a6c04d","focus":"legacy source locations"},
+  {"repo":"cargo-allow","pr":3058,"base":"1e32a849a462ecbcfe3c9e2d15a7e2aca587d6d6","head":"9f0ea3fb9e43a624f7b255026b9a378d24c9c6c4","focus":"policy and config schema"},
+  {"repo":"cargo-allow","pr":3054,"base":"3c82d812cab9cfffe991482e694ee1ac104a5092","head":"3842b08664e56a89fe45073bece77d59386244e1","focus":"release scripts"},
+  {"repo":"cargo-allow","pr":3051,"base":"691447de03cef27ec8f05592acf25bba66ae0937","head":"a7c09a4a08f0039f11344f6cebbd7004201eebe6","focus":"CI and performance policy"},
+  {"repo":"pst-rs","pr":1316,"base":"3e69c050e38d6032171de4be8c8b365222eff7e2","head":"816237e5222e17098a29dc5d8c857e558c31687b","focus":"CLI output and snapshots"},
+  {"repo":"pst-rs","pr":1315,"base":"501c4b4ab8a102a9081fcd3111a295d93b63d061","head":"c0a47b8640c3c9750cc9455838deab8e3fa9d3b9","focus":"CLI summary refactor"},
+  {"repo":"pst-rs","pr":1314,"base":"a9fbef4b064c36150bc011021d1ce9bf288f75d4","head":"38d9721bbafad3b0079e9d3c3aa1c978cfc71835","focus":"FFI test arithmetic"},
+  {"repo":"pst-rs","pr":1313,"base":"3c6fed8e6997f5927505fdd80977a67564557e6b","head":"009d7f8b203e44219b82ff905b554ef304fdd384","focus":"CLI glob errors"},
+  {"repo":"pst-rs","pr":1311,"base":"32014c6ffa1e70e35a3f1e6f6521f0a60bae10","head":"18f25fd073610f68c87c0ab42a2a57b81acfeb9b","focus":"benchmark arithmetic"},
+  {"repo":"serde","pr":3038,"base":"5fd91333c7dc942a2f54539b17982f0c5bbc0790","head":"ea04847eef1683aea818f2b6382b29b07cc1344b","focus":"derive codegen refactor"},
+  {"repo":"serde","pr":3037,"base":"5fd91333c7dc942a2f54539b17982f0c5bbc0790","head":"1229fc8a6dbdb91c32398ee2673de8ec3e878eca","focus":"AST iteration refactor"},
+  {"repo":"serde","pr":3035,"base":"681270e4f096288afb3f57a35d440f4103b45c24","head":"bfc9ccf68697588b1f31504049e9b67ff025ba8c","focus":"bound generation refactor"},
+  {"repo":"serde","pr":3034,"base":"681270e4f096288afb3f57a35d440f4103b45c24","head":"2c6d0d2e0969173e0292666426c8286ac68daf1d","focus":"filter-map refactor"},
+  {"repo":"serde","pr":3001,"base":"4e278703c62428b0a72e4ecec434a99c0e8576a3","head":"086353c581742d64790ff41ee1134430e794dd90","focus":"attribute nesting refactor"},
+  {"repo":"ripgrep","pr":3496,"base":"dffd776a737dc19a48b758dd6a621de113794121","head":"5467965ad5824ca0d859a1b59dda9044c826c6e8","focus":"ignore-file reachability"},
+  {"repo":"ripgrep","pr":3475,"base":"5e16a5c9e57e81f6031a23faa2ace52205fa8242","head":"db6b8cd36618c4eec7dd1e922bcc3abfc23cd342","focus":"visitor panic deadlock"},
+  {"repo":"ripgrep","pr":3472,"base":"fc3dd04b7ca18ec8be97704dc098bbd062bad244","head":"250fe3603946430aa034cd63426da916db4af431","focus":"incremental checking"},
+  {"repo":"ripgrep","pr":3482,"base":"227381db0ee83dfa4341f1e27ff9617c0f5ad992","head":"b0d8f7c9cb31050b86d36d5d493bc60130d5cb8c","focus":"unstable index feature"},
+  {"repo":"ripgrep","pr":3487,"base":"59e318f5ace48db54f37bb67c152535bc17fa153","head":"b6f2d1ca68e0bd0eee00b820c299b844ec6eb6fa","focus":"index scaffolding"}
+]
