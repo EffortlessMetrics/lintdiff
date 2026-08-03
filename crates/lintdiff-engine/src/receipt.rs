@@ -598,7 +598,17 @@ fn children_semantically_equal(
             base.raw_level == head.raw_level
                 && base.level == head.level
                 && base.message == head.message
-                && base.suggestions == head.suggestions
+                && suggestions_semantically_equal(&base.suggestions, &head.suggestions)
+        })
+}
+
+fn suggestions_semantically_equal(
+    base: &[lintdiff_types::inventory::DiagnosticSuggestion],
+    head: &[lintdiff_types::inventory::DiagnosticSuggestion],
+) -> bool {
+    base.len() == head.len()
+        && base.iter().zip(head).all(|(base, head)| {
+            base.replacement == head.replacement && base.applicability == head.applicability
         })
 }
 
