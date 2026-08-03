@@ -18,8 +18,13 @@
 //! let path = NormPath::new("src\\lib.rs");
 //! assert_eq!(path.as_str(), "src/lib.rs");
 //!
+//! // The compatibility constructor retains historical diff-prefix behavior.
 //! let path = NormPath::new("a/src/lib.rs");
 //! assert_eq!(path.as_str(), "src/lib.rs");
+//!
+//! // Repository paths use an explicit constructor so `a/` remains identity.
+//! let path = NormPath::from_repo_path("a/src/lib.rs");
+//! assert_eq!(path.as_str(), "a/src/lib.rs");
 //!
 //! let path = NormPath::new("./src//lib.rs");
 //! assert_eq!(path.as_str(), "src/lib.rs");

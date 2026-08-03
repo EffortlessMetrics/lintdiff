@@ -332,7 +332,7 @@ pub fn parse_cargo_messages_with_status<R: BufRead>(
             let le = line_end.max(ls);
 
             spans.push(Span {
-                file: NormPath::new(file_name),
+                file: NormPath::from_repo_path(file_name),
                 line_start: ls,
                 line_end: le,
                 col_start,
@@ -374,6 +374,14 @@ mod tests {
             Some("clippy::needless_borrow")
         );
         assert_eq!(diags[0].spans[0].file.as_str(), "src/lib.rs");
+    }
+
+    #[test]
+    fn cargo_paths_preserve_repository_directories_named_a_or_b() {
+        let input = r#"{"reason":"compiler-message","message":{"level":"warning","message":"hi","spans":[{"file_name":"a/src/lib.rs","line_start":3,"line_end":3,"is_primary":true}]}}"#;
+
+        let diagnostics = parse_cargo_messages(Cursor::new(input)).unwrap();
+        assert_eq!(diagnostics[0].spans[0].file.as_str(), "a/src/lib.rs");
     }
 
     #[test]

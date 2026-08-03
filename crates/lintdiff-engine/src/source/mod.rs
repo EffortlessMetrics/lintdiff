@@ -36,7 +36,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use lintdiff_types::{normalize_path, LineRange, NormPath};
+use lintdiff_types::{LineRange, NormPath};
 use thiserror::Error;
 
 /// Statistics about a parsed diff.
@@ -78,6 +78,7 @@ pub enum DiffParseError {
 struct FileState {
     old_path: Option<NormPath>,
     new_path: Option<NormPath>,
+    has_diff_transport_prefixes: bool,
     rename_from: Option<NormPath>,
     rename_to: Option<NormPath>,
     in_hunk: bool,
@@ -109,9 +110,10 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
             // best-effort path capture from the diff header:
             // diff --git a/foo b/foo
             if let Some(st) = current.as_mut() {
-                if let Some((a, b)) = parse_diff_git_paths(line) {
-                    st.old_path = Some(NormPath::new(a));
-                    st.new_path = Some(NormPath::new(b));
+                if let Some((a, b, has_transport_prefixes)) = parse_diff_git_paths(line) {
+                    st.has_diff_transport_prefixes = has_transport_prefixes;
+                    st.old_path = Some(repo_path_from_diff_path(&a, has_transport_prefixes));
+                    st.new_path = Some(repo_path_from_diff_path(&b, has_transport_prefixes));
                 }
             }
             continue;
@@ -123,13 +125,15 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
         };
 
         if line.starts_with("rename from ") {
-            st.rename_from = Some(NormPath::new(
+            st.rename_from = Some(repo_path_from_repository_path(
                 line.trim_start_matches("rename from ").trim(),
             ));
             continue;
         }
         if line.starts_with("rename to ") {
-            st.rename_to = Some(NormPath::new(line.trim_start_matches("rename to ").trim()));
+            st.rename_to = Some(repo_path_from_repository_path(
+                line.trim_start_matches("rename to ").trim(),
+            ));
             continue;
         }
 
@@ -138,7 +142,7 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
             if p == "/dev/null" {
                 st.old_path = None;
             } else {
-                st.old_path = Some(NormPath::new(extract_diff_path(p)));
+                st.old_path = Some(repo_path_from_diff_path(p, st.has_diff_transport_prefixes));
             }
             continue;
         }
@@ -148,7 +152,7 @@ pub fn parse_unified_diff(input: &str) -> Result<DiffMap, DiffParseError> {
             if p == "/dev/null" {
                 st.new_path = None;
             } else {
-                st.new_path = Some(NormPath::new(extract_diff_path(p)));
+                st.new_path = Some(repo_path_from_diff_path(p, st.has_diff_transport_prefixes));
             }
             continue;
         }
@@ -203,16 +207,8 @@ fn flush_file_state(out: &mut DiffMap, st: Option<FileState>) {
         return;
     };
 
-    let old_path = st
-        .rename_from
-        .clone()
-        .or_else(|| st.old_path.clone())
-        .map(|p| normalize_path(p.as_str()));
-    let new_path = st
-        .rename_to
-        .clone()
-        .or_else(|| st.new_path.clone())
-        .map(|p| normalize_path(p.as_str()));
+    let old_path = st.rename_from.clone().or_else(|| st.old_path.clone());
+    let new_path = st.rename_to.clone().or_else(|| st.new_path.clone());
 
     if let (Some(old), Some(new)) = (old_path.clone(), new_path.clone()) {
         if old != new {
@@ -233,24 +229,110 @@ fn flush_file_state(out: &mut DiffMap, st: Option<FileState>) {
     out.stats.added_lines += st.added_lines;
 }
 
-fn parse_diff_git_paths(line: &str) -> Option<(String, String)> {
-    // diff --git a/foo b/foo
-    let mut parts = line.split_whitespace();
-    let _diff = parts.next()?;
-    let _git = parts.next()?;
-    let a = parts.next()?;
-    let b = parts.next()?;
-    Some((
-        extract_diff_path(a).to_string(),
-        extract_diff_path(b).to_string(),
-    ))
+fn parse_diff_git_paths(line: &str) -> Option<(String, String, bool)> {
+    let rest = line.strip_prefix("diff --git ")?;
+    let (a, rest) = take_git_path_token(rest)?;
+    let (b, _) = take_git_path_token(rest)?;
+    // The header parser retains compatibility with historical unquoted paths
+    // containing whitespace. In that form the token split is not reliable,
+    // but the second transport path is still identifiable by its `b/` marker.
+    let has_transport_prefixes = (a.starts_with("a/") && b.starts_with("b/"))
+        || rest.contains(" b/")
+        || rest.contains("\"b/");
+    Some((a, b, has_transport_prefixes))
 }
 
-fn extract_diff_path(p: &str) -> &str {
-    // strip a/ or b/ prefixes but do not normalize further here
-    p.strip_prefix("a/")
-        .or_else(|| p.strip_prefix("b/"))
-        .unwrap_or(p)
+fn repo_path_from_diff_path(raw: &str, has_transport_prefix: bool) -> NormPath {
+    let decoded = decode_git_path(raw);
+    let path = if has_transport_prefix {
+        decoded
+            .strip_prefix("a/")
+            .or_else(|| decoded.strip_prefix("b/"))
+            .unwrap_or(&decoded)
+    } else {
+        &decoded
+    };
+    NormPath::from_repo_path(path)
+}
+
+fn repo_path_from_repository_path(raw: &str) -> NormPath {
+    NormPath::from_repo_path(decode_git_path(raw))
+}
+
+fn take_git_path_token(input: &str) -> Option<(String, &str)> {
+    let input = input.trim_start();
+    if input.starts_with('"') {
+        let bytes = input.as_bytes();
+        let mut escaped = false;
+        for (index, byte) in bytes.iter().enumerate().skip(1) {
+            if escaped {
+                escaped = false;
+            } else if *byte == b'\\' {
+                escaped = true;
+            } else if *byte == b'"' {
+                return Some((decode_git_path(&input[..=index]), &input[index + 1..]));
+            }
+        }
+        None
+    } else {
+        let end = input.find(char::is_whitespace).unwrap_or(input.len());
+        Some((input[..end].to_string(), &input[end..]))
+    }
+}
+
+fn decode_git_path(raw: &str) -> String {
+    let raw = raw.trim();
+    if !(raw.starts_with('"') && raw.ends_with('"') && raw.len() >= 2) {
+        return raw.to_string();
+    }
+
+    let bytes = raw.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len().saturating_sub(2));
+    let mut index = 1;
+    while index + 1 < bytes.len() {
+        if bytes[index] != b'\\' {
+            decoded.push(bytes[index]);
+            index += 1;
+            continue;
+        }
+
+        index += 1;
+        let Some(&escaped) = bytes.get(index) else {
+            break;
+        };
+        let decoded_byte = match escaped {
+            b'a' => 0x07,
+            b'b' => 0x08,
+            b't' => b'\t',
+            b'n' => b'\n',
+            b'v' => 0x0b,
+            b'f' => 0x0c,
+            b'r' => b'\r',
+            b'\\' => b'\\',
+            b'"' => b'"',
+            b'0'..=b'7' => {
+                let mut value: u16 = u16::from(escaped - b'0');
+                let mut digits = 1;
+                while digits < 3 {
+                    let Some(&next) = bytes.get(index + 1) else {
+                        break;
+                    };
+                    if !(b'0'..=b'7').contains(&next) {
+                        break;
+                    }
+                    value = value * 8 + u16::from(next - b'0');
+                    index += 1;
+                    digits += 1;
+                }
+                u8::try_from(value).unwrap_or(b'?')
+            }
+            other => other,
+        };
+        decoded.push(decoded_byte);
+        index += 1;
+    }
+
+    String::from_utf8_lossy(&decoded).into_owned()
 }
 
 fn parse_hunk_header(line: &str) -> Result<(u32, u32), String> {
@@ -345,6 +427,82 @@ diff --git a/src/lib.rs b/src/lib.rs
         assert_eq!(ranges, &vec![LineRange::new(1, 3)]);
         assert_eq!(map.stats.hunks, 1);
         assert_eq!(map.stats.added_lines, 3);
+    }
+
+    #[test]
+    fn strips_only_the_diff_transport_prefix_for_a_directory() {
+        let diff = r#"
+diff --git a/a/src/lib.rs b/a/src/lib.rs
+--- a/a/src/lib.rs
++++ b/a/src/lib.rs
+@@ -1,0 +1,1 @@
++fn a() {}
+"#;
+
+        let map = parse_unified_diff(diff).unwrap();
+        assert!(map
+            .changed
+            .contains_key(&NormPath::from_repo_path("a/src/lib.rs")));
+    }
+
+    #[test]
+    fn decodes_quoted_paths_with_spaces() {
+        let diff = r#"
+diff --git "a/src/my file.rs" "b/src/my file.rs"
+--- "a/src/my file.rs"
++++ "b/src/my file.rs"
+@@ -1,0 +1,1 @@
++content
+"#;
+
+        let map = parse_unified_diff(diff).unwrap();
+        assert!(map
+            .changed
+            .contains_key(&NormPath::from_repo_path("src/my file.rs")));
+    }
+
+    #[test]
+    fn preserves_repository_path_in_prefixless_diff_input() {
+        let diff = r#"
+diff --git a/src/lib.rs a/src/lib.rs
+--- a/src/lib.rs
++++ a/src/lib.rs
+@@ -1,0 +1,1 @@
++content
+"#;
+
+        let map = parse_unified_diff(diff).unwrap();
+        assert!(map
+            .changed
+            .contains_key(&NormPath::from_repo_path("a/src/lib.rs")));
+    }
+
+    #[test]
+    fn decodes_escaped_and_out_of_range_octal_path_bytes_deterministically() {
+        assert_eq!(
+            decode_git_path(r#""a/space\040name.rs""#),
+            "a/space name.rs"
+        );
+        assert_eq!(
+            decode_git_path(r#""a/invalid\400name.rs""#),
+            "a/invalid?name.rs"
+        );
+    }
+
+    #[test]
+    fn preserves_repository_a_directory_in_rename_records() {
+        let diff = r#"
+diff --git a/a/old.rs b/a/new.rs
+similarity index 100%
+rename from a/old.rs
+rename to a/new.rs
+"#;
+
+        let map = parse_unified_diff(diff).unwrap();
+        assert_eq!(
+            map.renames.get(&NormPath::from_repo_path("a/old.rs")),
+            Some(&NormPath::from_repo_path("a/new.rs"))
+        );
     }
 
     use proptest::prelude::*;

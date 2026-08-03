@@ -110,7 +110,7 @@ fn ingest_with_diagnostics(
     timer: Instant,
 ) -> Result<IngestOutcome, AppError> {
     let root = determine_repo_root(opts.root.as_deref())?;
-    let repo_root = NormPath::new(root.to_string_lossy());
+    let repo_root = NormPath::from_repo_path(root.to_string_lossy());
 
     let mut cfg = load_config(&root, opts.config_path.as_deref())?;
     apply_feature_flag_overrides(&mut cfg, &opts.feature_flags)?;

@@ -10,8 +10,19 @@ use serde::{Deserialize, Serialize};
 pub struct NormPath(String);
 
 impl NormPath {
+    /// Construct a path using the historical normalization rules.
+    ///
+    /// This constructor remains compatibility-preserving for existing callers. New
+    /// product code should use [`Self::from_repo_path`] when the input is already a
+    /// repository path rather than Git diff transport syntax.
     pub fn new(raw: impl AsRef<str>) -> Self {
         normalize_path(raw.as_ref())
+    }
+
+    /// Construct a path from repository identity without interpreting `a/` or `b/`
+    /// as Git diff prefixes.
+    pub fn from_repo_path(raw: impl AsRef<str>) -> Self {
+        normalize_repo_path(raw.as_ref())
     }
 
     pub fn as_str(&self) -> &str {
@@ -41,11 +52,12 @@ impl From<&str> for NormPath {
     }
 }
 
-/// Normalize an incoming path-like string into repo-relative forward-slash form.
+/// Normalize an incoming path-like string using the historical `NormPath::new`
+/// behavior.
 ///
 /// - Converts Windows `\` to `/`
 /// - Strips leading `./`
-/// - Strips leading `a/` or `b/` (diff prefixes)
+/// - Strips leading `a/` or `b/` (legacy diff-prefix behavior)
 /// - Collapses repeated slashes
 pub fn normalize_path(raw: &str) -> NormPath {
     let mut s = raw.trim().replace('\\', "/");
@@ -56,7 +68,7 @@ pub fn normalize_path(raw: &str) -> NormPath {
         s = stripped.to_string();
     }
 
-    // strip diff prefixes
+    // Retain the historical behavior of removing repeated diff prefixes.
     while let Some(stripped) = s.strip_prefix("a/") {
         s = stripped.to_string();
         had_diff_prefix = true;
@@ -66,7 +78,7 @@ pub fn normalize_path(raw: &str) -> NormPath {
         had_diff_prefix = true;
     }
 
-    // strip leading ./ again (handles cases like a/./path)
+    // Handle cases such as `a/./path` after removing a legacy prefix.
     while let Some(stripped) = s.strip_prefix("./") {
         s = stripped.to_string();
     }
@@ -76,12 +88,26 @@ pub fn normalize_path(raw: &str) -> NormPath {
         s = s.replace("//", "/");
     }
 
-    // For diff-prefixed paths, normalize away a trailing separator so double-normalization
-    // is idempotent (e.g., `a/a/` becomes `a`).
     if had_diff_prefix {
         while s.ends_with('/') {
             s.pop();
         }
+    }
+
+    NormPath(s)
+}
+
+/// Normalize a repository path without interpreting its first directory as Git
+/// diff transport syntax.
+pub fn normalize_repo_path(raw: &str) -> NormPath {
+    let mut s = raw.trim().replace('\\', "/");
+
+    while let Some(stripped) = s.strip_prefix("./") {
+        s = stripped.to_string();
+    }
+
+    while s.contains("//") {
+        s = s.replace("//", "/");
     }
 
     NormPath(s)

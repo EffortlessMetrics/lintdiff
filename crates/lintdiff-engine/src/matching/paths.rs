@@ -9,14 +9,14 @@ pub fn relativize_span_path(
 
     // Already repo-relative (best effort): doesn't look absolute.
     if !looks_absolute(s) {
-        return Some(NormPath::new(normalize_separators(s)));
+        return Some(NormPath::from_repo_path(normalize_separators(s)));
     }
 
     let Some(root) = repo_root else {
         return if workspace_only {
             None
         } else {
-            Some(NormPath::new(normalize_separators(s)))
+            Some(NormPath::from_repo_path(normalize_separators(s)))
         };
     };
 
@@ -27,16 +27,16 @@ pub fn relativize_span_path(
             return if workspace_only {
                 None
             } else {
-                Some(NormPath::new(normalize_separators(s)))
+                Some(NormPath::from_repo_path(normalize_separators(s)))
             };
         }
-        return Some(NormPath::new(normalize_separators(stripped)));
+        return Some(NormPath::from_repo_path(normalize_separators(stripped)));
     }
 
     if workspace_only {
         None
     } else {
-        Some(NormPath::new(normalize_separators(s)))
+        Some(NormPath::from_repo_path(normalize_separators(s)))
     }
 }
 
@@ -58,6 +58,12 @@ mod tests {
     fn relative_path_passes_through() {
         let result = relativize_span_path(&NormPath::new("src/lib.rs"), None, true);
         assert_eq!(result.unwrap().as_str(), "src/lib.rs");
+    }
+
+    #[test]
+    fn relative_repository_path_named_a_is_preserved() {
+        let result = relativize_span_path(&NormPath::from_repo_path("a/src/lib.rs"), None, true);
+        assert_eq!(result.unwrap().as_str(), "a/src/lib.rs");
     }
 
     // Absolute path stripped to relative when matching repo_root
