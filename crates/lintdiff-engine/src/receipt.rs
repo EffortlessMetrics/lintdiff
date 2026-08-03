@@ -586,8 +586,20 @@ fn materially_equal(base: &DiagnosticRef, head: &DiagnosticRef) -> bool {
         && base.diagnostic.code == head.diagnostic.code
         && base.diagnostic.message == head.diagnostic.message
         && base.diagnostic.normalized_message == head.diagnostic.normalized_message
-        && base.diagnostic.rendered == head.diagnostic.rendered
-        && base.diagnostic.children == head.diagnostic.children
+        && children_semantically_equal(&base.diagnostic.children, &head.diagnostic.children)
+}
+
+fn children_semantically_equal(
+    base: &[lintdiff_types::inventory::DiagnosticChild],
+    head: &[lintdiff_types::inventory::DiagnosticChild],
+) -> bool {
+    base.len() == head.len()
+        && base.iter().zip(head).all(|(base, head)| {
+            base.raw_level == head.raw_level
+                && base.level == head.level
+                && base.message == head.message
+                && base.suggestions == head.suggestions
+        })
 }
 
 fn scope_for_diagnostic(
@@ -1178,6 +1190,37 @@ diff --git a/src/lib.rs b/src/lib.rs
         assert!(receipt.items.iter().any(|item| {
             item.change_kind == Some(DeltaKind::New) && item.label == Some(DeltaLabel::NewOnDiff)
         }));
+    }
+
+    #[test]
+    fn moved_diagnostic_rendering_does_not_create_a_modified_delta() {
+        use lintdiff_types::delta::{DeltaKind, Movement};
+
+        let mut base_diagnostic =
+            delta_diagnostic("base", "same-code", "same warning", "src/lib.rs", 2);
+        base_diagnostic.rendered = Some("warning at src/lib.rs:2".to_string());
+        let mut head_diagnostic =
+            delta_diagnostic("head", "same-code", "same warning", "src/lib.rs", 3);
+        head_diagnostic.rendered = Some("warning at src/lib.rs:3".to_string());
+
+        let source = parse_source_change_set(
+            "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,1 @@\n+inserted\n",
+        )
+        .expect("valid diff");
+        let receipt = build_delta_receipt(
+            &delta_inventory(vec![base_diagnostic]),
+            &delta_inventory(vec![head_diagnostic]),
+            &source,
+            "source_diff_id_v1:test".to_string(),
+            lintdiff_types::delta::DeltaPolicy::default(),
+        );
+
+        assert!(receipt.items.iter().any(|item| {
+            item.change_kind == Some(DeltaKind::Unchanged)
+                && item.movement == Movement::Shifted
+                && item.label.is_some()
+        }));
+        assert_eq!(receipt.summary.modified, 0);
     }
 
     #[test]
