@@ -34,12 +34,20 @@ jobs:
         include:
           - name: ubuntu-x86_64
             os: ubuntu-latest
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-0.1.0-x86_64-unknown-linux-musl.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-0.1.0-x86_64-unknown-linux-musl.tar.gz.sha256
           - name: macos-x86_64
             os: macos-15-intel
+            archive_url: ''
+            checksum_url: ''
           - name: macos-arm64
             os: macos-14
+            archive_url: ''
+            checksum_url: ''
           - name: windows-x86_64
             os: windows-latest
+            archive_url: ''
+            checksum_url: ''
 
     steps:
       - name: Check out candidate Action
@@ -91,6 +99,11 @@ jobs:
       - name: Execute local composite Action
         id: lintdiff
         uses: ./
+        env:
+          # v0.1.0 predates the current release matrix and published only a Linux musl asset.
+          # v0.1.1 must publish the gnu asset selected by the Action's normal mapping.
+          LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
+          LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
         with:
           version: v0.1.0
           root: ${{ steps.fixture.outputs.root }}
@@ -128,6 +141,9 @@ jobs:
         if: always()
         continue-on-error: true
         uses: ./
+        env:
+          LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
+          LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
         with:
           version: v0.1.0
           root: ${{ steps.fixture.outputs.root }}
