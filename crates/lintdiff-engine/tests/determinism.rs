@@ -117,6 +117,7 @@ diff --git a/src/lib.rs b/src/lib.rs
         git: None,
         diff_map: Some(diff_map),
         diagnostics: Some(diagnostics),
+        analysis: None,
         repo_root: Some(NormPath::new("/repo")),
         config: cfg,
         repro: None,
@@ -154,6 +155,7 @@ diff --git a/src/lib.rs b/src/lib.rs
         git: None,
         diff_map: Some(diff_map),
         diagnostics: Some(diagnostics),
+        analysis: None,
         repo_root: Some(NormPath::new("/repo")),
         config: cfg,
         repro: None,
@@ -194,6 +196,7 @@ diff --git a/src/lib.rs b/src/lib.rs
         git: None,
         diff_map: Some(diff_map),
         diagnostics: Some(diagnostics),
+        analysis: None,
         repo_root: Some(NormPath::new("/repo")),
         config: cfg,
         repro: None,
@@ -201,4 +204,35 @@ diff --git a/src/lib.rs b/src/lib.rs
 
     let json = serde_json::to_string_pretty(&report).expect("serialize report");
     assert_snapshot("fail_verdict", &json);
+}
+
+#[test]
+fn permuted_diagnostic_input_produces_identical_report_bytes() {
+    let diff = "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,2 @@\n+fn a() { let x = 1; }\n+fn b() { let y = 2; }\n";
+    let diff_map = parse_unified_diff(diff).expect("valid diff");
+    let jsonl = r#"{"reason":"compiler-message","package_id":"pkg-a","target":{"name":"a"},"message":{"level":"warning","message":"first","code":{"code":"clippy::first"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":1,"line_end":1,"is_primary":true}]}}
+{"reason":"compiler-message","package_id":"pkg-b","target":{"name":"b"},"message":{"level":"warning","message":"second","code":{"code":"clippy::second"},"spans":[{"file_name":"/repo/src/lib.rs","line_start":2,"line_end":2,"is_primary":true}]}}"#;
+    let diagnostics = parse_cargo_messages(Cursor::new(jsonl)).expect("valid diagnostics");
+    let mut reversed = diagnostics.clone();
+    reversed.reverse();
+    let cfg = LintdiffConfig::default().effective();
+
+    let report = |diagnostics| {
+        ingest_on_diff(IngestOnDiffParams {
+            tool: deterministic_tool(),
+            run: deterministic_run(),
+            host: None,
+            git: None,
+            diff_map: Some(diff_map.clone()),
+            diagnostics: Some(diagnostics),
+            analysis: None,
+            repo_root: Some(NormPath::new("/repo")),
+            config: cfg.clone(),
+            repro: None,
+        })
+    };
+
+    let first = serde_json::to_vec(&report(diagnostics)).expect("serialize first report");
+    let second = serde_json::to_vec(&report(reversed)).expect("serialize second report");
+    assert_eq!(first, second);
 }

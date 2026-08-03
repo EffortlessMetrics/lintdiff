@@ -324,6 +324,7 @@ impl CargoAnalysis {
 pub struct CargoDiagnosticStream {
     pub diagnostics: Vec<Diagnostic>,
     pub observations: Vec<DiagnosticObservation>,
+    pub scope: AnalysisScope,
     pub build_finished: bool,
     pub build_success: Option<bool>,
     pub completion: AnalysisCompletion,
@@ -470,6 +471,7 @@ pub fn parse_cargo_messages_with_status<R: BufRead>(
     Ok(CargoDiagnosticStream {
         diagnostics,
         observations: analysis.observations,
+        scope: analysis.scope,
         build_finished: execution.build_finished_seen,
         build_success: execution.build_success,
         completion,

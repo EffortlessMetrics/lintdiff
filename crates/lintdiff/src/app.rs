@@ -10,7 +10,7 @@ use crate::git::{acquire_diff, determine_repo_root, gather_git_info};
 use crate::io::{
     acquire_diagnostics_with_status, load_config, now_rfc3339, write_report_json, write_text,
 };
-use lintdiff_engine::{ingest_on_diff, IngestOnDiffParams};
+use lintdiff_engine::{ingest_on_diff, CargoAnalysis, IngestOnDiffParams};
 use lintdiff_engine::{parse_cargo_messages_with_status, parse_unified_diff, Diagnostic};
 use lintdiff_render::{
     render_github_annotations, render_markdown, MarkdownOptions, DEFAULT_REPORT_PATH,
@@ -97,14 +97,20 @@ pub fn run_ingest(opts: IngestOptions) -> Result<IngestOutcome, AppError> {
         })
     });
     let upstream = merge_upstream(parsed_upstream, opts.upstream.take());
+    let analysis = stream.as_ref().map(|stream| CargoAnalysis {
+        scope: stream.scope.clone(),
+        observations: stream.observations.clone(),
+        execution: stream.execution.clone(),
+    });
     let diagnostics = stream.map(|stream| stream.diagnostics);
 
-    ingest_with_diagnostics(opts, diagnostics, upstream, started, timer)
+    ingest_with_diagnostics(opts, diagnostics, analysis, upstream, started, timer)
 }
 
 fn ingest_with_diagnostics(
     opts: IngestOptions,
     diagnostics: Option<Vec<Diagnostic>>,
+    analysis: Option<CargoAnalysis>,
     upstream: Option<UpstreamInput>,
     started: String,
     timer: Instant,
@@ -152,6 +158,7 @@ fn ingest_with_diagnostics(
         git,
         diff_map: Some(diff_map),
         diagnostics,
+        analysis,
         repo_root: Some(repo_root),
         config: eff.clone(),
         repro: opts.repro.clone(),
@@ -238,7 +245,25 @@ pub fn run_and_ingest(
         build_success: stream.build_success,
     });
 
-    ingest_with_diagnostics(opts, Some(stream.diagnostics), None, started, timer)
+    let analysis = CargoAnalysis {
+        scope: stream.scope,
+        observations: stream.observations,
+        execution: stream.execution,
+    }
+    .with_process_evidence(
+        command,
+        status.code(),
+        Some(timer.elapsed().as_millis() as u64),
+    );
+
+    ingest_with_diagnostics(
+        opts,
+        Some(stream.diagnostics),
+        Some(analysis),
+        None,
+        started,
+        timer,
+    )
 }
 
 /// Run lintdiff in GitHub Actions mode, auto-detecting base/head from environment.

@@ -116,6 +116,7 @@ pub fn run_ingest_from_fixtures(
         git: None,
         diff_map,
         diagnostics,
+        analysis: None,
         repo_root: Some(NormPath::new(TEST_REPO_ROOT)),
         config: config.effective(),
         repro: None,

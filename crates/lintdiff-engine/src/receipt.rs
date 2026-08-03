@@ -3,12 +3,12 @@
 
 use std::collections::BTreeMap;
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{CargoAnalysis, Diagnostic, Span};
 use crate::identity::fingerprint;
+use crate::inventory::InternalInventory;
 use crate::matching::{compile_filters, path_allowed, relativize_span_path, select_spans};
 use crate::policy::{
     compute_verdict, counts_from_findings, format_level, is_code_allowed, map_level_to_severity,
-    normalize_diagnostic_code,
 };
 use crate::source::DiffMap;
 use lintdiff_types::{
@@ -27,6 +27,7 @@ pub struct IngestOnDiffParams {
 
     pub diff_map: Option<DiffMap>,
     pub diagnostics: Option<Vec<Diagnostic>>,
+    pub analysis: Option<CargoAnalysis>,
 
     pub repo_root: Option<NormPath>,
     pub config: EffectiveConfig,
@@ -78,7 +79,17 @@ pub fn ingest_on_diff(params: IngestOnDiffParams) -> Report {
         return finalize(report, &params.config);
     };
 
-    let Some(diagnostics) = params.diagnostics else {
+    let Some(inventory) = params
+        .analysis
+        .as_ref()
+        .map(InternalInventory::from_analysis)
+        .or_else(|| {
+            params
+                .diagnostics
+                .as_deref()
+                .map(InternalInventory::from_diagnostics)
+        })
+    else {
         report.verdict.status = VerdictStatus::Skip;
         report
             .verdict
@@ -112,8 +123,9 @@ pub fn ingest_on_diff(params: IngestOnDiffParams) -> Report {
         rename_inverse.insert(new.clone(), old.clone());
     }
 
-    for d in diagnostics.iter() {
-        let (code_for_explain, _) = normalize_diagnostic_code(d.code_raw.as_deref());
+    for observation in &inventory.observations {
+        let d = &observation.source.diagnostic;
+        let code_for_explain = observation.code.clone();
         let message_preview = truncate_message(&d.message, 120);
 
         if d.spans.is_empty() {
@@ -217,7 +229,8 @@ pub fn ingest_on_diff(params: IngestOnDiffParams) -> Report {
         };
         let path = matched_path.expect("matched_path set when matched_span is set");
 
-        let (code, url) = normalize_diagnostic_code(d.code_raw.as_deref());
+        let code = observation.code.clone();
+        let url = observation.url.clone();
 
         // Code policy
         if !is_code_allowed(&params.config, &code) {
@@ -349,7 +362,7 @@ pub fn ingest_on_diff(params: IngestOnDiffParams) -> Report {
     report.data = Some(json!({
         "repro": params.repro,
         "stats": {
-            "diagnostics_total": diagnostics.len(),
+            "diagnostics_total": inventory.observations.len(),
             "diagnostics_with_spans": diagnostics_with_spans,
             "diagnostics_with_path_in_diff": diagnostics_with_path_in_diff,
             "matched_findings_total": total_findings,
@@ -432,7 +445,7 @@ fn tool_error_finding(code: &str, msg: &str) -> Finding {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::diagnostics::parse_cargo_messages;
+    use crate::diagnostics::{parse_cargo_analysis, parse_cargo_messages};
     use crate::source::parse_unified_diff;
     use std::io::Cursor;
 
@@ -469,6 +482,7 @@ diff --git a/src/lib.rs b/src/lib.rs
             git: None,
             diff_map: Some(map),
             diagnostics: Some(diags),
+            analysis: None,
             repo_root: Some(NormPath::new("/repo")),
             config: cfg,
             repro: None,
@@ -516,6 +530,7 @@ diff --git a/src/lib.rs b/src/lib.rs
             git: None,
             diff_map: Some(map),
             diagnostics: Some(diags),
+            analysis: None,
             repo_root: Some(NormPath::new("/repo")),
             config: cfg,
             repro: None,
@@ -544,6 +559,46 @@ diff --git a/src/lib.rs b/src/lib.rs
     }
 
     #[test]
+    fn complete_analysis_projects_every_observation_before_policy() {
+        let diff = "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,1 @@\n+fn a() {}\n";
+        let map = parse_unified_diff(diff).expect("valid diff");
+        let jsonl = r#"{"reason":"compiler-message","package_id":"pkg-a","target":{"name":"a"},"message":{"level":"warning","message":"outside","spans":[{"file_name":"/repo/src/lib.rs","line_start":9,"line_end":9,"is_primary":true}]}}
+{"reason":"compiler-message","package_id":"pkg-b","target":{"name":"b"},"message":{"level":"warning","message":"no location","spans":[]}}
+{"reason":"build-finished","success":true}"#;
+        let analysis = parse_cargo_analysis(Cursor::new(jsonl)).expect("valid analysis");
+        let cfg = lintdiff_types::LintdiffConfig::default().effective();
+
+        let report = ingest_on_diff(IngestOnDiffParams {
+            tool: ToolInfo {
+                name: TOOL_NAME.to_string(),
+                version: "test".to_string(),
+                commit: None,
+            },
+            run: RunInfo {
+                started_at: "t0".to_string(),
+                ended_at: "t1".to_string(),
+                duration_ms: None,
+                host: None,
+                git: None,
+            },
+            host: None,
+            git: None,
+            diff_map: Some(map),
+            diagnostics: None,
+            analysis: Some(analysis),
+            repo_root: Some(NormPath::new("/repo")),
+            config: cfg,
+            repro: None,
+        });
+
+        let data = report.data.as_ref().expect("report data");
+        assert_eq!(data["stats"]["diagnostics_total"], 2);
+        assert_eq!(data["explain_summary"]["total"], 2);
+        assert_eq!(data["explain_summary"]["dropped_no_span"], 1);
+        assert_eq!(data["explain_summary"]["dropped_outside_diff"], 1);
+    }
+
+    #[test]
     fn explain_summary_matches_explain_entries() {
         let diff = "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,0 +1,1 @@\n+fn a() {}\n";
         let map = parse_unified_diff(diff).unwrap();
@@ -569,6 +624,7 @@ diff --git a/src/lib.rs b/src/lib.rs
             git: None,
             diff_map: Some(map),
             diagnostics: Some(diags),
+            analysis: None,
             repo_root: Some(NormPath::new("/repo")),
             config: cfg,
             repro: None,
@@ -680,6 +736,7 @@ diff --git a/src/lib.rs b/src/lib.rs
             git: None,
             diff_map: Some(map),
             diagnostics: Some(diags),
+            analysis: None,
             repo_root: Some(NormPath::new("/repo")),
             config: eff,
             repro: None,
