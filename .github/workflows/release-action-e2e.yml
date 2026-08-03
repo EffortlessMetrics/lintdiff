@@ -1,0 +1,206 @@
+name: release-action-e2e
+
+on:
+  push:
+    paths:
+      - ".github/workflows/release-action-e2e.yml"
+      - "action.yml"
+      - "scripts/action/**"
+      - "scripts/verify-release-action-contract.ps1"
+      - "scripts/action/tests/assert-e2e.ps1"
+      - "xtask/**"
+      - "schemas/lintdiff.report.v1.json"
+  pull_request:
+    paths:
+      - ".github/workflows/release-action-e2e.yml"
+      - "action.yml"
+      - "scripts/action/**"
+      - "scripts/verify-release-action-contract.ps1"
+      - "scripts/action/tests/assert-e2e.ps1"
+      - "xtask/**"
+      - "schemas/lintdiff.report.v1.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action-e2e:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu-x86_64
+            os: ubuntu-latest
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-unknown-linux-musl.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-unknown-linux-musl.tar.gz.sha256
+          - name: macos-x86_64
+            os: macos-15-intel
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-apple-darwin.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-apple-darwin.tar.gz.sha256
+          - name: macos-arm64
+            os: macos-14
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-aarch64-apple-darwin.tar.gz
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-aarch64-apple-darwin.tar.gz.sha256
+          - name: windows-x86_64
+            os: windows-latest
+            archive_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-pc-windows-msvc.zip
+            checksum_url: https://github.com/EffortlessMetrics/lintdiff/releases/download/v0.1.0/lintdiff-x86_64-pc-windows-msvc.zip.sha256
+
+    steps:
+      - name: Check out candidate Action
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create two-commit fixture repository
+        id: fixture
+        shell: pwsh
+        run: |
+          $fixture = Join-Path $env:RUNNER_TEMP 'lintdiff action fixture'
+          New-Item -ItemType Directory -Path (Join-Path $fixture 'src') -Force | Out-Null
+          git init --initial-branch=main $fixture
+          git -C $fixture config user.name 'lintdiff-action-e2e'
+          git -C $fixture config user.email 'lintdiff-action-e2e@example.invalid'
+          New-Item -ItemType File -Path (Join-Path $fixture 'src/lib.rs') -Force | Out-Null
+          git -C $fixture add src/lib.rs
+          git -C $fixture commit -m baseline
+          git -C $fixture switch -c change
+          Set-Content -Path (Join-Path $fixture 'src/lib.rs') -Value 'fn a() { let x = (); }'
+          git -C $fixture add src/lib.rs
+          git -C $fixture commit -m change
+
+          $diagnosticPath = ((Join-Path $fixture 'src/lib.rs') -replace '\\', '/')
+          $diagnostic = [ordered]@{
+            reason = 'compiler-message'
+            message = [ordered]@{
+              level = 'warning'
+              message = 'this expression has type `()`'
+              code = [ordered]@{ code = 'clippy::let_unit_value' }
+              spans = @([ordered]@{
+                file_name = $diagnosticPath
+                line_start = 1
+                line_end = 1
+                column_start = 1
+                column_end = 10
+                is_primary = $true
+              })
+            }
+          }
+          $diagnostic | ConvertTo-Json -Compress -Depth 10 | Set-Content (Join-Path $fixture 'diagnostics.jsonl')
+
+          "root=$fixture" >> $env:GITHUB_OUTPUT
+          "base=$(git -C $fixture rev-parse HEAD~1)" >> $env:GITHUB_OUTPUT
+          "head=$(git -C $fixture rev-parse HEAD)" >> $env:GITHUB_OUTPUT
+          "diagnostics=$(Join-Path $fixture 'diagnostics.jsonl')" >> $env:GITHUB_OUTPUT
+
+      - name: Build current binary for unreleased upstream evidence
+        id: current
+        shell: bash
+        run: |
+          cargo build --quiet -p lintdiff --bin lintdiff
+          binary="$(pwd)/target/debug/lintdiff"
+          if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
+            binary="${binary}.exe"
+          fi
+          echo "binary=$binary" >> "$GITHUB_OUTPUT"
+
+      - name: Execute local composite Action
+        id: lintdiff
+        uses: ./
+        env:
+          # v0.1.0 predates the current release matrix and uses unversioned asset names.
+          # v0.1.1 must publish the versioned assets selected by the Action's normal mapping.
+          LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
+          LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
+        with:
+          version: v0.1.0
+          root: ${{ steps.fixture.outputs.root }}
+          working_directory: ${{ steps.fixture.outputs.root }}
+          base: ${{ steps.fixture.outputs.base }}
+          head: ${{ steps.fixture.outputs.head }}
+          diagnostics: ${{ steps.fixture.outputs.diagnostics }}
+          fail_on: error
+          artifact_name: ${{ matrix.name }}-report
+
+      - name: Validate normal Action outputs and receipt
+        shell: pwsh
+        env:
+          REPORT_PATH: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json
+          EXPECTED_VERSION: v0.1.0
+          ACTION_RESOLVED_VERSION: ${{ steps.lintdiff.outputs.resolved_version }}
+          ACTION_REPORT_PATH: ${{ steps.lintdiff.outputs.report_path }}
+          ACTION_VERDICT: ${{ steps.lintdiff.outputs.verdict }}
+          ACTION_EXIT_CODE: ${{ steps.lintdiff.outputs.exit_code }}
+        run: pwsh -NoProfile -File scripts/action/tests/assert-e2e.ps1 -ReportPath "$env:REPORT_PATH" -ExpectedVersion "$env:EXPECTED_VERSION" -ActionResolvedVersion "$env:ACTION_RESOLVED_VERSION" -ActionReportPath "$env:ACTION_REPORT_PATH" -ActionVerdict "$env:ACTION_VERDICT" -ActionExitCode "$env:ACTION_EXIT_CODE"
+
+      - name: Validate normal report against live schema
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: cargo run --quiet -p xtask -- schema-check-report "${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json"
+
+      - name: Download normal report artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.name }}-report
+          path: downloaded/${{ matrix.name }}/normal
+
+      - name: Execute failed-upstream composite Action
+        id: failed
+        if: always()
+        continue-on-error: true
+        uses: ./
+        env:
+          LINTDIFF_ARCHIVE_URL: ${{ matrix.archive_url }}
+          LINTDIFF_CHECKSUM_URL: ${{ matrix.checksum_url }}
+          LINTDIFF_BIN: ${{ steps.current.outputs.binary }}
+        with:
+          version: v0.1.0
+          root: ${{ steps.fixture.outputs.root }}
+          working_directory: ${{ steps.fixture.outputs.root }}
+          base: ${{ steps.fixture.outputs.base }}
+          head: ${{ steps.fixture.outputs.head }}
+          diagnostics: ${{ steps.fixture.outputs.diagnostics }}
+          upstream_command: '["cargo","clippy","--all-features","--message-format=json"]'
+          upstream_exit_code: '101'
+          upstream_build_finished: 'true'
+          upstream_build_success: 'false'
+          fail_on: error
+          artifact_name: ${{ matrix.name }}-failed-report
+
+      - name: Validate failed-upstream report and receipt
+        if: always()
+        shell: pwsh
+        env:
+          REPORT_PATH: ${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json
+          EXPECTED_VERSION: v0.1.0
+          ACTION_RESOLVED_VERSION: ${{ steps.failed.outputs.resolved_version }}
+          ACTION_REPORT_PATH: ${{ steps.failed.outputs.report_path }}
+          ACTION_VERDICT: ${{ steps.failed.outputs.verdict }}
+          ACTION_EXIT_CODE: ${{ steps.failed.outputs.exit_code }}
+        run: pwsh -NoProfile -File scripts/action/tests/assert-e2e.ps1 -ReportPath "$env:REPORT_PATH" -ExpectedVersion "$env:EXPECTED_VERSION" -ActionResolvedVersion "$env:ACTION_RESOLVED_VERSION" -ActionReportPath "$env:ACTION_REPORT_PATH" -ActionVerdict "$env:ACTION_VERDICT" -ActionExitCode "$env:ACTION_EXIT_CODE" -ExpectUpstreamFailure
+
+      - name: Validate failed-upstream report against live schema
+        if: always()
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: cargo run --quiet -p xtask -- schema-check-report "${{ steps.fixture.outputs.root }}/artifacts/lintdiff/report.json"
+
+      - name: Download failed-upstream report artifact
+        if: always()
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.name }}-failed-report
+          path: downloaded/${{ matrix.name }}/failed
+
+      - name: Assert uploaded reports exist
+        if: always()
+        shell: pwsh
+        run: |
+          $normal = @(Get-ChildItem -Path "downloaded/${{ matrix.name }}/normal" -Filter report.json -Recurse)
+          $failed = @(Get-ChildItem -Path "downloaded/${{ matrix.name }}/failed" -Filter report.json -Recurse)
+          if ($normal.Count -lt 1 -or $failed.Count -lt 1) {
+            throw 'one or more Action report artifacts were not downloadable'
+          }

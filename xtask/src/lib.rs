@@ -103,10 +103,11 @@ pub fn run(root: &Path, args: &[String]) -> Result<(), String> {
         "fixture-check" => fixture_check(root),
         "docs-check" => docs_check(root),
         "release-contract-check" => release_contract_check(root),
+        "schema-check-report" => schema_check_report(root, args.get(1)),
         "architecture-receipt" => architecture_receipt(root, args.get(1)),
         "help" | "--help" | "-h" => {
             println!(
-                "commands: architecture-check, schema-check, fixture-check, docs-check, release-contract-check, architecture-receipt"
+                "commands: architecture-check, schema-check, schema-check-report <path>, fixture-check, docs-check, release-contract-check, architecture-receipt"
             );
             Ok(())
         }
@@ -504,6 +505,28 @@ fn schema_check(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+fn schema_check_report(root: &Path, report_path: Option<&String>) -> Result<(), String> {
+    let report_path = report_path
+        .map(PathBuf::from)
+        .ok_or_else(|| "schema-check-report requires a report path".to_string())?;
+    let schema: JsonValue =
+        serde_json::from_str(&read_text(root, "schemas/lintdiff.report.v1.json")?)
+            .map_err(|error| format!("parse live report schema: {error}"))?;
+    let report: JsonValue = serde_json::from_str(
+        &fs::read_to_string(&report_path)
+            .map_err(|error| format!("read {}: {error}", report_path.display()))?,
+    )
+    .map_err(|error| format!("parse {}: {error}", report_path.display()))?;
+    let validator = jsonschema::draft202012::options()
+        .build(&schema)
+        .map_err(|error| format!("compile live report schema: {error}"))?;
+    validator
+        .validate(&report)
+        .map_err(|error| format!("report does not validate against lintdiff.report.v1: {error}"))?;
+    println!("schema_check_report=pass schema_id=lintdiff.report.v1");
+    Ok(())
+}
+
 fn fixture_check(root: &Path) -> Result<(), String> {
     let fixture_dir = root.join("crates/lintdiff/tests/fixtures");
     let entries = fs::read_dir(&fixture_dir)
@@ -639,9 +662,9 @@ fn current_date() -> String {
 mod tests {
     use super::{
         architecture_check, architecture_receipt, docs_check, fixture_check, ledger_records,
-        package_publish, release_contract_check, run, runtime_packages, schema_check, string_array,
-        topology_entries, workspace_edges, DependencyKind, Metadata, MetadataPackage, Resolve,
-        ResolveDependency, ResolveNode,
+        package_publish, release_contract_check, run, runtime_packages, schema_check,
+        schema_check_report, string_array, topology_entries, workspace_edges, DependencyKind,
+        Metadata, MetadataPackage, Resolve, ResolveDependency, ResolveNode,
     };
     use std::fs;
     use std::path::Path;
@@ -654,6 +677,16 @@ mod tests {
         schema_check(root)?;
         fixture_check(root)?;
         docs_check(root)
+    }
+
+    #[test]
+    fn generated_report_schema_check_accepts_live_sample() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        let sample = root.join("crates/lintdiff-types/tests/fixtures/sample.report.json");
+        let sample_text = sample.to_string_lossy().to_string();
+        schema_check_report(root, Some(&sample_text))
     }
 
     #[test]

@@ -43,6 +43,9 @@ inputs:
     description: "Working directory for lintdiff"
     required: false
     default: "."
+  root:
+    description: "Repository root used for diff and Git metadata"
+    required: false
 
 outputs:
   verdict:
@@ -121,9 +124,18 @@ runs:
             ;;
         esac
 
+        if command -v cygpath >/dev/null 2>&1; then
+          RUNNER_TEMP="$(cygpath -u "$RUNNER_TEMP")"
+          export RUNNER_TEMP
+        fi
+
         BINARY_PATH=$(LINTDIFF_TARGET="$TARGET" LINTDIFF_EXTENSION="$EXT" \
           "$ACTION_PATH/scripts/action/install.sh" --version "$VERSION")
-        echo "$(dirname "$BINARY_PATH")" >> "$GITHUB_PATH"
+        path_entry="$(dirname "$BINARY_PATH")"
+        if command -v cygpath >/dev/null 2>&1; then
+          path_entry="$(cygpath -w "$path_entry")"
+        fi
+        echo "$path_entry" >> "$GITHUB_PATH"
 
     - name: Run lintdiff
       id: run
@@ -139,8 +151,8 @@ runs:
         INPUT_UPSTREAM_BUILD_FINISHED: ${{ inputs.upstream_build_finished }}
         INPUT_UPSTREAM_BUILD_SUCCESS: ${{ inputs.upstream_build_success }}
         INPUT_UPSTREAM_COMMAND: ${{ inputs.upstream_command }}
+        INPUT_ROOT: ${{ inputs.root }}
         ACTION_PATH: ${{ github.action_path }}
-        LINTDIFF_BIN: lintdiff
       run: |
         ARGS=(ci github)
 
@@ -170,6 +182,9 @@ runs:
         fi
         if [ -n "$INPUT_UPSTREAM_COMMAND" ]; then
           ARGS+=(--upstream-command "$INPUT_UPSTREAM_COMMAND")
+        fi
+        if [ -n "$INPUT_ROOT" ]; then
+          ARGS+=(--root "$INPUT_ROOT")
         fi
 
         REPORT_PATH="artifacts/lintdiff/report.json"

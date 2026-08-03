@@ -60,6 +60,7 @@ Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+upstream_exit_code:\s
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+upstream_build_finished:\s*$" -Name "input.upstream_build_finished"
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+upstream_build_success:\s*$" -Name "input.upstream_build_success"
 Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+upstream_command:\s*$" -Name "input.upstream_command"
+Assert-ContainsPattern -Text $actionText -Pattern "(?m)^\s+root:\s*$" -Name "input.root"
 Assert-ContainsLiteral -Text $actionText -Literal "jq -r '.verdict.status'" -Name "verdict.status extraction"
 Assert-ContainsLiteral -Text $actionText -Literal 'ACTION_REF: ${{ github.action_ref }}' -Name "Action ref input"
 Assert-ContainsLiteral -Text $actionText -Literal 'scripts/action/resolve-version.sh' -Name "version resolver script"
