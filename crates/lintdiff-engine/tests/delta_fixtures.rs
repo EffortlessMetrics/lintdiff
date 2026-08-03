@@ -22,6 +22,14 @@ fn complete_fixture_stream(raw: &str, expected_comparability: &str) -> String {
     }
 }
 
+fn platformize_fixture_paths(raw: &str) -> String {
+    if cfg!(windows) {
+        raw.to_string()
+    } else {
+        raw.replace("C:/repo", "/repo")
+    }
+}
+
 fn enum_name<T: serde::Serialize>(value: T) -> String {
     serde_json::to_value(value)
         .ok()
@@ -49,14 +57,18 @@ fn all_adjudicated_delta_cases_match_the_receipt_contract() -> Result<(), Box<dy
         let id = string_field(case, "id");
         let expected_comparability = string_field(case, "expected_comparability");
         let base_input = complete_fixture_stream(
-            string_field(case, "base_diagnostics"),
+            &platformize_fixture_paths(string_field(case, "base_diagnostics")),
             expected_comparability,
         );
         let head_input = complete_fixture_stream(
-            string_field(case, "head_diagnostics"),
+            &platformize_fixture_paths(string_field(case, "head_diagnostics")),
             expected_comparability,
         );
-        let repo_root = Path::new("C:/repo");
+        let repo_root = if cfg!(windows) {
+            Path::new("C:/repo")
+        } else {
+            Path::new("/repo")
+        };
         let base_analysis =
             parse_cargo_analysis_with_repo_root(std::io::Cursor::new(base_input), Some(repo_root))?;
         let head_analysis =
