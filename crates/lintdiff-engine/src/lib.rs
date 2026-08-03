@@ -4,6 +4,7 @@
 //! receipt projections. External process, filesystem, and renderer concerns
 //! remain outside this crate.
 
+mod compare;
 mod diagnostics;
 mod identity;
 mod inventory;
@@ -12,6 +13,10 @@ mod policy;
 mod receipt;
 mod source;
 
+pub use compare::{
+    compare_inventories, Comparability, ComparabilityStatus, ContextualChange,
+    DiagnosticComparison, DiagnosticRef, MatchBasis, PairingEvidence, ReasonCode,
+};
 pub use diagnostics::{
     parse_cargo_analysis, parse_cargo_analysis_with_repo_root, parse_cargo_messages,
     parse_cargo_messages_with_status, AnalysisCompletion, AnalysisScope, CargoAnalysis,
