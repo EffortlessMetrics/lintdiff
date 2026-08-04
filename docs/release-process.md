@@ -265,6 +265,18 @@ also resolve from crates.io in temporary consumers without path dependencies or
 patch overrides. This section is a preparation contract; it does not claim that
 the packages are already published.
 
+Before publication, the packaged-source and local consumer proof can be run with:
+
+```powershell
+pwsh -File scripts/verify-publication-consumers.ps1
+```
+
+That proof unpacks the four `.crate` archives, builds temporary consumers with
+local patch overrides, and installs the extracted `lintdiff` package locally.
+It does not prove crates.io-only resolution; that remains a post-publication
+gate using `cargo install lintdiff --version 0.1.2 --locked` from a clean
+consumer context.
+
 ### Manual Release via Workflow Dispatch
 
 If you need to trigger a release without pushing a tag:

@@ -90,9 +90,9 @@ The current enforced topology is five workspace members:
 | Package | Class | Responsibility | Publication |
 | --- | --- | --- | --- |
 | `lintdiff-types` | public protocol | wire primitives, report/inventory/delta DTOs, schema fixtures | publication target, current `publish = true` |
-| `lintdiff-engine` | public engine | Cargo diagnostics, source correspondence, matching, identity, policy, receipt construction | publication target, current `publish = false` |
-| `lintdiff-render` | registry-support projection | Markdown, GitHub annotations, and RDJSONL projections | publication target, current `publish = false` |
-| `lintdiff` | primary product | CLI/library shell, Git, filesystem, process, configuration, artifacts, exit behavior | publication target, current `publish = false` |
+| `lintdiff-engine` | public engine | Cargo diagnostics, source correspondence, matching, identity, policy, receipt construction | publication target, `publish = true` for the 0.1.2 closure |
+| `lintdiff-render` | registry-support projection | Markdown, GitHub annotations, and RDJSONL projections | publication target, `publish = true` for the 0.1.2 closure |
+| `lintdiff` | primary product | CLI/library shell, Git, filesystem, process, configuration, artifacts, exit behavior | primary registry product, `publish = true` for the 0.1.2 closure |
 | `xtask` | repository tooling | architecture, schema, fixture, docs, and release-contract checks | `publish = false` |
 
 The normal runtime graph is `lintdiff → lintdiff-engine`, `lintdiff-render`, and
