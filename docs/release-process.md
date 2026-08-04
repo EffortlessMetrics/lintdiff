@@ -265,6 +265,21 @@ also resolve from crates.io in temporary consumers without path dependencies or
 patch overrides. This section is a preparation contract; it does not claim that
 the packages are already published.
 
+The protected ordered publisher is prepared at
+`scripts/publish-crates.ps1`. Preflight is non-publishing:
+
+```powershell
+pwsh -File scripts/publish-crates.ps1 -ReleaseCommit <exact-main-sha>
+```
+
+Publication requires both `-Publish` and the explicit confirmation token
+`LINTDIFF_PUBLISH_CONFIRM=0.1.2:<exact-main-sha>`. It publishes
+`lintdiff-types`, `lintdiff-engine`, `lintdiff-render`, and `lintdiff` in that
+order, waits for each exact version to appear on crates.io, runs clean
+`cargo install lintdiff --version 0.1.2 --locked`, and validates a fixture
+`lintdiff.report.v1` receipt. Do not invoke publish mode without release
+authorization.
+
 Before publication, the packaged-source and local consumer proof can be run with:
 
 ```powershell
