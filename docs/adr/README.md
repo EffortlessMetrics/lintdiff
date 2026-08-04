@@ -77,4 +77,5 @@ When an ADR is superseded, it should reference the new ADR that replaces it.
 | [ADR-002](ADR-002-deterministic-output.md) | Ensure Deterministic Output | Accepted |
 | [ADR-003](ADR-003-schema-validated-receipts.md) | Use JSON Schema for Receipt Validation | Accepted |
 | [ADR-004](ADR-004-i18n-strategy.md) | Use Fluent for Internationalization Infrastructure | Accepted |
-| [ADR-005](ADR-005-publication-distribution-model.md) | Select publication distribution model before manifest hardening | Proposed |
+| [ADR-005](ADR-005-publication-distribution-model.md) | Select publication distribution model before manifest hardening | Superseded |
+| [ADR-006](ADR-006-canonical-package-topology.md) | Canonical package topology and publication closure | Accepted |

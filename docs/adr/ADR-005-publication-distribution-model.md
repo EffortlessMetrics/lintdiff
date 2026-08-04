@@ -6,8 +6,9 @@ Superseded by the completed collapse decision in [ADR-006](ADR-006-canonical-pac
 
 > The package names and Gate D wording below are historical recovery context. The
 > current publication intent is enforced in `contracts/package-topology.toml`:
-> only `lintdiff-types` is publishable, and no package has been published by the
-> collapse campaign.
+> the four runtime packages are the intended registry closure, while `xtask`
+> remains private. The publication amendment is recorded in ADR-006; this ADR
+> does not claim that the `0.1.2` closure has already been published.
 
 ## Context
 
