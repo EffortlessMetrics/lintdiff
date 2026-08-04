@@ -17,6 +17,19 @@ This document describes the automated release process for lintdiff, including ve
 
 lintdiff uses an automated release workflow defined in [`.github/workflows/release.yml`](../.github/workflows/release.yml) that builds and publishes binaries for multiple platforms.
 
+## Current v0.1.1 support boundary
+
+`v0.1.1` is released and its exact-tag Action canary passed. The maintained
+product is the changed-line receipt workflow (`ingest`, `run`, `ci github`,
+the exact-tag Action, and `lintdiff.report.v1`).
+
+The same binary ships `inventory` and `compare` as experimental, advisory
+research commands. They emit `lintdiff.inventory.v1` and `lintdiff.delta.v1`
+from caller-supplied evidence, but do not build base/head revisions and do not
+provide an externally validated strict blocking or causal-detection promise.
+See [the product contract](../PRODUCT.md) and the
+[external-verdict memo](../plans/diagnostic-delta-external-verdict-2026-08.md).
+
 ### Trigger Conditions
 
 The release workflow is triggered by:
@@ -220,6 +233,10 @@ After the exact-tag Action canary confirms the installed executable reports
   completion evidence, and schema-valid output;
 - each downloaded archive matches its companion checksum, and the root-level
   Unix archive extracts the executable without stripping its only path entry.
+
+The release also contains the experimental `inventory` and `compare` commands.
+Their evidence protocols remain advisory research surfaces; do not represent
+their `new` or `resolved` results as generally reliable blocking decisions.
 
 ### Manual Release via Workflow Dispatch
 

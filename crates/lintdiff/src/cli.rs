@@ -375,7 +375,7 @@ enum Commands {
         annotations: AnnotationsArg,
     },
 
-    /// Emit a complete normalized diagnostic inventory before diff filtering or policy.
+    /// Experimental: emit a complete normalized diagnostic inventory before diff filtering or policy.
     Inventory {
         /// Path to diagnostics jsonl. If omitted, read Cargo JSONL from stdin.
         #[arg(long)]
@@ -410,7 +410,7 @@ enum Commands {
         out: PathBuf,
     },
 
-    /// Compare two complete diagnostic inventories and emit a delta receipt.
+    /// Experimental: compare two complete diagnostic inventories and emit a delta receipt.
     Compare {
         /// Base inventory produced by `lintdiff inventory`.
         #[arg(long)]

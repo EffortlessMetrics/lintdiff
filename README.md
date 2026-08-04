@@ -12,8 +12,8 @@ comparison with adjacent tools.
 ## Product Status
 
 The supported product is the release-binary CLI and the GitHub Action. The
-release target is the exact `v0.1.1` Action tag; use it only after the tag and
-post-release canary gates pass.
+`v0.1.1` is released, and its exact-tag Action canary passed. Use the exact
+`v0.1.1` Action tag for the maintained changed-line receipt product.
 
 ### Infrastructure Highlights
 
@@ -23,6 +23,10 @@ post-release canary gates pass.
   support maintenance; their counts are not product readiness claims.
 - **Narrow scope**: the current mode locates diagnostics on changed lines. It
   does not establish diagnostic newness relative to a base analysis.
+- **Experimental evidence**: `lintdiff inventory` and `lintdiff compare` ship
+  in `v0.1.1` as advisory research surfaces. Their `lintdiff.inventory.v1` and
+  `lintdiff.delta.v1` artifacts are not a promise of generally reliable
+  `new`/`resolved` detection or strict blocking.
 
 ## Design constraints (non-negotiable)
 
@@ -75,11 +79,19 @@ jobs:
 
 See [action.yml](action.yml) for all available inputs and outputs.
 
+The released binary also includes the experimental `inventory` and `compare`
+commands. They require complete evidence supplied by the caller; lintdiff does
+not build base and head revisions automatically. See
+[docs/inventory.md](docs/inventory.md) and
+[docs/diagnostic-delta.md](docs/diagnostic-delta.md) for their research
+contracts and limitations.
+
 ## Repo docs
 
 - `docs/architecture.md` – role, boundaries, IO contracts, failure modes
 - `docs/requirements.md` – requirements and invariants
 - `PRODUCT.md` – supported product contract and limitations
+- `docs/release-process.md` – exact-tag release and support boundary
 - `docs/design.md` – internal layered engine/application design
 - `docs/implementation-plan.md` – phased plan + test strategy
 
