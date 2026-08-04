@@ -1,6 +1,6 @@
 [package]
 name = "lintdiff-render"
-publish = false
+publish = true
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -18,5 +18,5 @@ documentation = "https://docs.rs/lintdiff-render"
 all-features = true
 
 [dependencies]
-lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-types.workspace = true
 serde_json.workspace = true

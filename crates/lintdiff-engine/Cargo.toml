@@ -1,6 +1,6 @@
 [package]
 name = "lintdiff-engine"
-publish = false
+publish = true
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -18,7 +18,7 @@ documentation = "https://docs.rs/lintdiff-engine"
 all-features = true
 
 [dependencies]
-lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-types.workspace = true
 
 globset.workspace = true
 hex.workspace = true

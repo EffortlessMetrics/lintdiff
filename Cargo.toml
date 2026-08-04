@@ -10,7 +10,7 @@ members = [
 exclude = ["fuzz"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
@@ -43,7 +43,9 @@ jsonschema = "0.46"
 fluent = "0.17"
 fluent-bundle = "0.16"
 unic-langid = "0.9"
-lintdiff-types = { path = "crates/lintdiff-types" }
+lintdiff-types = { version = "0.1.2", path = "crates/lintdiff-types" }
+lintdiff-engine = { version = "0.1.2", path = "crates/lintdiff-engine" }
+lintdiff-render = { version = "0.1.2", path = "crates/lintdiff-render" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -1,6 +1,6 @@
 [package]
 name = "lintdiff"
-publish = false
+publish = true
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -18,9 +18,9 @@ documentation = "https://docs.rs/lintdiff"
 all-features = true
 
 [dependencies]
-lintdiff-engine = { path = "../lintdiff-engine" }
-lintdiff-render = { path = "../lintdiff-render" }
-lintdiff-types = { path = "../lintdiff-types" }
+lintdiff-engine.workspace = true
+lintdiff-render.workspace = true
+lintdiff-types.workspace = true
 
 clap.workspace = true
 serde.workspace = true

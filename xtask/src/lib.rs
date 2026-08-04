@@ -26,6 +26,7 @@ struct Metadata {
 struct MetadataPackage {
     id: String,
     name: String,
+    version: String,
     publish: Option<JsonValue>,
 }
 
@@ -77,6 +78,22 @@ struct LedgerPackage {
     final_disposition: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct PublicationContract {
+    schema_version: u32,
+    release_version: String,
+    publication_order: Vec<String>,
+    packages: Vec<PublicationPackage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PublicationPackage {
+    name: String,
+    required_paths: Vec<String>,
+    max_files: usize,
+    max_compressed_bytes: u64,
+}
+
 #[derive(Debug)]
 struct TopologyEntry {
     name: String,
@@ -103,11 +120,12 @@ pub fn run(root: &Path, args: &[String]) -> Result<(), String> {
         "fixture-check" => fixture_check(root),
         "docs-check" => docs_check(root),
         "release-contract-check" => release_contract_check(root),
+        "package-check" => package_check(root),
         "schema-check-report" => schema_check_report(root, args.get(1)),
         "architecture-receipt" => architecture_receipt(root, args.get(1)),
         "help" | "--help" | "-h" => {
             println!(
-                "commands: architecture-check, schema-check, schema-check-report <path>, fixture-check, docs-check, release-contract-check, architecture-receipt"
+                "commands: architecture-check, schema-check, schema-check-report <path>, fixture-check, docs-check, release-contract-check, package-check, architecture-receipt"
             );
             Ok(())
         }
@@ -465,6 +483,187 @@ fn architecture_check(root: &Path) -> Result<usize, String> {
     Ok(packages.len())
 }
 
+fn package_check(root: &Path) -> Result<(), String> {
+    architecture_check(root)?;
+    let contract: PublicationContract = read_toml(root, "contracts/package-publication.toml")?
+        .try_into()
+        .map_err(|error| format!("parse package publication contract: {error}"))?;
+    validate_publication_contract(&contract)?;
+
+    let metadata = cargo_metadata(root)?;
+    let workspace = workspace_packages(&metadata);
+    let target_dir = std::env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .map(|path| {
+            if path.is_absolute() {
+                path
+            } else {
+                root.join(path)
+            }
+        })
+        .unwrap_or_else(|| root.join("target"));
+
+    for package in &contract.packages {
+        let metadata_package = workspace
+            .get(&package.name)
+            .ok_or_else(|| format!("publication package is not in workspace: {}", package.name))?;
+        if metadata_package.version != contract.release_version {
+            return Err(format!(
+                "{} has version {}, expected {}",
+                package.name, metadata_package.version, contract.release_version
+            ));
+        }
+        if !package_publish(metadata_package) {
+            return Err(format!("{} is not publishable", package.name));
+        }
+
+        let list = Command::new("cargo")
+            .args([
+                "package",
+                "-p",
+                package.name.as_str(),
+                "--list",
+                "--allow-dirty",
+            ])
+            .current_dir(root)
+            .output()
+            .map_err(|error| format!("list package {}: {error}", package.name))?;
+        if !list.status.success() {
+            return Err(format!(
+                "cargo package --list failed for {}: {}",
+                package.name,
+                String::from_utf8_lossy(&list.stderr).trim()
+            ));
+        }
+        let files = String::from_utf8_lossy(&list.stdout)
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(normalize_package_path)
+            .collect::<Result<BTreeSet<_>, _>>()
+            .map_err(|error| format!("normalize package {} path: {error}", package.name))?;
+        if files.len() > package.max_files {
+            return Err(format!(
+                "{} contains {} files, maximum is {}",
+                package.name,
+                files.len(),
+                package.max_files
+            ));
+        }
+        for required in &package.required_paths {
+            if !files.contains(required) {
+                return Err(format!(
+                    "{} package is missing required path {}",
+                    package.name, required
+                ));
+            }
+        }
+
+        let mut package_command = Command::new("cargo");
+        package_command
+            .args([
+                "package",
+                "-p",
+                package.name.as_str(),
+                "--allow-dirty",
+                "--no-verify",
+                "--target-dir",
+            ])
+            .arg(&target_dir);
+        for dependency in local_publication_dependencies(&package.name) {
+            package_command.arg("--config").arg(format!(
+                "patch.crates-io.{dependency}.path=\"crates/{dependency}\""
+            ));
+        }
+        let packaged = package_command
+            .current_dir(root)
+            .output()
+            .map_err(|error| format!("package {}: {error}", package.name))?;
+        if !packaged.status.success() {
+            return Err(format!(
+                "cargo package failed for {}: {}",
+                package.name,
+                String::from_utf8_lossy(&packaged.stderr).trim()
+            ));
+        }
+        let archive = target_dir.join("package").join(format!(
+            "{}-{}.crate",
+            package.name, contract.release_version
+        ));
+        let bytes = fs::metadata(&archive)
+            .map_err(|error| format!("read packaged archive {}: {error}", archive.display()))?
+            .len();
+        if bytes > package.max_compressed_bytes {
+            return Err(format!(
+                "{} archive is {} bytes, maximum is {}",
+                package.name, bytes, package.max_compressed_bytes
+            ));
+        }
+        println!(
+            "package={} files={} compressed_bytes={}",
+            package.name,
+            files.len(),
+            bytes
+        );
+    }
+    println!(
+        "publication_package_check=pass version={} packages={}",
+        contract.release_version,
+        contract.packages.len()
+    );
+    Ok(())
+}
+
+fn validate_publication_contract(contract: &PublicationContract) -> Result<(), String> {
+    if contract.schema_version != 1 {
+        return Err(format!(
+            "unsupported package publication contract schema version {}",
+            contract.schema_version
+        ));
+    }
+    validate_publication_order(contract)
+}
+
+fn validate_publication_order(contract: &PublicationContract) -> Result<(), String> {
+    let package_names = contract
+        .packages
+        .iter()
+        .map(|package| package.name.clone())
+        .collect::<Vec<_>>();
+    if package_names == contract.publication_order {
+        Ok(())
+    } else {
+        Err(format!(
+            "publication order does not match package records: order={:?} records={:?}",
+            contract.publication_order, package_names
+        ))
+    }
+}
+
+fn normalize_package_path(path: &str) -> Result<String, String> {
+    let mut normalized = path.replace('\\', "/");
+    while let Some(stripped) = normalized.strip_prefix("./") {
+        normalized = stripped.to_string();
+    }
+    if normalized.is_empty()
+        || normalized.starts_with('/')
+        || normalized.split('/').any(|component| component == "..")
+    {
+        return Err(format!("path is not repository-relative: {path}"));
+    }
+    Ok(normalized)
+}
+
+fn local_publication_dependencies(package: &str) -> &'static [&'static str] {
+    match package {
+        "lintdiff-engine" => &["lintdiff-types"],
+        "lintdiff-render" => &["lintdiff-types"],
+        "lintdiff" => &["lintdiff-types", "lintdiff-engine", "lintdiff-render"],
+        "lintdiff-types" => &[],
+        _ => &[],
+    }
+}
+
 fn schema_check(root: &Path) -> Result<(), String> {
     let schema_path = root.join("schemas/lintdiff.report.v1.json");
     let fixture_path = root.join("crates/lintdiff-types/tests/fixtures/sample.report.json");
@@ -748,9 +947,11 @@ fn current_date() -> String {
 mod tests {
     use super::{
         architecture_check, architecture_receipt, docs_check, fixture_check, ledger_records,
-        package_publish, release_contract_check, run, runtime_packages, schema_check,
-        schema_check_report, string_array, topology_entries, workspace_edges, DependencyKind,
-        Metadata, MetadataPackage, Resolve, ResolveDependency, ResolveNode,
+        local_publication_dependencies, normalize_package_path, package_check, package_publish,
+        release_contract_check, run, runtime_packages, schema_check, schema_check_report,
+        string_array, topology_entries, validate_publication_contract, validate_publication_order,
+        workspace_edges, DependencyKind, Metadata, MetadataPackage, PublicationContract,
+        PublicationPackage, Resolve, ResolveDependency, ResolveNode,
     };
     use std::fs;
     use std::path::Path;
@@ -859,6 +1060,70 @@ mod tests {
     }
 
     #[test]
+    fn package_check_passes_for_the_registry_closure() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        package_check(root)
+    }
+
+    #[test]
+    fn publication_order_validation_rejects_drift() -> Result<(), String> {
+        let package = |name: &str| PublicationPackage {
+            name: name.to_string(),
+            required_paths: Vec::new(),
+            max_files: 1,
+            max_compressed_bytes: 1,
+        };
+        let contract = PublicationContract {
+            schema_version: 1,
+            release_version: "0.1.2".to_string(),
+            publication_order: vec!["types".to_string(), "engine".to_string()],
+            packages: vec![package("types"), package("engine")],
+        };
+        validate_publication_order(&contract)?;
+
+        let drifted = PublicationContract {
+            publication_order: vec!["engine".to_string(), "types".to_string()],
+            ..contract
+        };
+        if validate_publication_order(&drifted).is_ok() {
+            return Err("publication order drift was accepted".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn publication_contract_schema_and_paths_fail_closed() -> Result<(), String> {
+        let contract = PublicationContract {
+            schema_version: 2,
+            release_version: "0.1.2".to_string(),
+            publication_order: Vec::new(),
+            packages: Vec::new(),
+        };
+        if validate_publication_contract(&contract).is_ok() {
+            return Err("unsupported publication schema was accepted".to_string());
+        }
+        if normalize_package_path("./src\\lib.rs")? != "src/lib.rs" {
+            return Err("package path was not normalized".to_string());
+        }
+        for invalid in ["", "/Cargo.toml", "../Cargo.toml"] {
+            if normalize_package_path(invalid).is_ok() {
+                return Err(format!("invalid package path was accepted: {invalid}"));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn unknown_publication_package_has_no_local_dependencies() -> Result<(), String> {
+        if !local_publication_dependencies("unknown").is_empty() {
+            return Err("unknown package unexpectedly had local dependencies".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
     fn checks_fail_closed_for_missing_repository_root() -> Result<(), String> {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/xtask-missing-root");
         for command in [
@@ -867,6 +1132,7 @@ mod tests {
             "fixture-check",
             "docs-check",
             "release-contract-check",
+            "package-check",
         ] {
             if run(&root, &[String::from(command)]).is_ok() {
                 return Err(format!("{command} unexpectedly accepted a missing root"));
@@ -912,6 +1178,7 @@ mod tests {
         let package = |publish| MetadataPackage {
             id: String::new(),
             name: String::new(),
+            version: String::new(),
             publish,
         };
         if package_publish(&package(Some(serde_json::json!(false)))) {
@@ -930,16 +1197,19 @@ mod tests {
                 MetadataPackage {
                     id: "root".to_string(),
                     name: "lintdiff".to_string(),
+                    version: "0.1.1".to_string(),
                     publish: None,
                 },
                 MetadataPackage {
                     id: "types".to_string(),
                     name: "lintdiff-types".to_string(),
+                    version: "0.1.1".to_string(),
                     publish: Some(serde_json::json!(false)),
                 },
                 MetadataPackage {
                     id: "external".to_string(),
                     name: "external".to_string(),
+                    version: "0.1.1".to_string(),
                     publish: None,
                 },
             ],
@@ -993,6 +1263,7 @@ mod tests {
         if !package_publish(&MetadataPackage {
             id: String::new(),
             name: String::new(),
+            version: String::new(),
             publish: None,
         }) {
             return Err("missing publication metadata was rejected".to_string());
@@ -1000,6 +1271,7 @@ mod tests {
         if !package_publish(&MetadataPackage {
             id: String::new(),
             name: String::new(),
+            version: String::new(),
             publish: Some(serde_json::json!(["registry"])),
         }) {
             return Err("non-empty registry publication metadata was rejected".to_string());
@@ -1007,6 +1279,7 @@ mod tests {
         if package_publish(&MetadataPackage {
             id: String::new(),
             name: String::new(),
+            version: String::new(),
             publish: Some(serde_json::json!([])),
         }) {
             return Err("empty registry publication metadata was accepted".to_string());
