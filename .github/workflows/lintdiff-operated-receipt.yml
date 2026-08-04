@@ -35,8 +35,9 @@ jobs:
         id: clippy
         shell: bash
         run: |
-          set -u
+          set -uo pipefail
           mkdir -p artifacts
+          set +e
           cargo clippy --workspace --all-targets --all-features \
             --message-format=json -- -D warnings \
             > artifacts/clippy.jsonl 2> artifacts/clippy.stderr.log
