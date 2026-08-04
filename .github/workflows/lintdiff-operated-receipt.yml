@@ -61,6 +61,8 @@ jobs:
         continue-on-error: true
         uses: EffortlessMetrics/lintdiff@v0.1.1
         with:
+          base: origin/main
+          head: HEAD
           diagnostics: artifacts/clippy.jsonl
           fail_on: never
           upstream_exit_code: ${{ steps.clippy.outputs.exit_code }}
@@ -101,11 +103,11 @@ jobs:
           {
             echo "### lintdiff v0.1.1 advisory receipt"
             echo ""
-            echo "- exact-tag Action: `EffortlessMetrics/lintdiff@v0.1.1`"
-            echo "- mode: `fail_on: never`"
-            echo "- upstream exit: `${CLIPPY_EXIT_CODE:-unknown}`"
-            echo "- upstream build-finished: `${BUILD_FINISHED:-unknown}`"
-            echo "- report artifact: `${REPORT_PATH:-missing}`"
+            echo "- exact-tag Action: EffortlessMetrics/lintdiff@v0.1.1"
+            echo "- mode: fail_on: never"
+            echo "- upstream exit: ${CLIPPY_EXIT_CODE:-unknown}"
+            echo "- upstream build-finished: ${BUILD_FINISHED:-unknown}"
+            echo "- report artifact: ${REPORT_PATH:-missing}"
             echo ""
             echo "This run records operational evidence only; it does not claim diagnostic newness or resolution."
           } >> "$GITHUB_STEP_SUMMARY"
