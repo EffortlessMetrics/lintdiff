@@ -255,7 +255,7 @@ Publish each package only after the preceding package is visible in the
 registry index. The final product proof must run from a clean consumer context:
 
 ```bash
-cargo install lintdiff --version 0.1.2 --locked
+cargo install lintdiff --registry crates-io --version 0.1.2 --locked
 lintdiff --version
 ```
 
@@ -265,20 +265,28 @@ also resolve from crates.io in temporary consumers without path dependencies or
 patch overrides. This section is a preparation contract; it does not claim that
 the packages are already published.
 
-The protected ordered publisher is prepared at
-`scripts/publish-crates.ps1`. Preflight is non-publishing:
+Create and push an annotated `v0.1.2` tag at the approved release commit
+before invoking the publisher. The publisher requires that remote tag to peel
+to the exact commit and treats the tag as the release authority. It also
+records the local archive file count, size, and SHA-256 before any publication.
+
+The protected ordered publisher is prepared at `scripts/publish-crates.ps1`.
+Preflight is non-publishing:
 
 ```powershell
 pwsh -File scripts/publish-crates.ps1 -ReleaseCommit <exact-main-sha>
 ```
 
 Publication requires both `-Publish` and the explicit confirmation token
-`LINTDIFF_PUBLISH_CONFIRM=0.1.2:<exact-main-sha>`. It publishes
-`lintdiff-types`, `lintdiff-engine`, `lintdiff-render`, and `lintdiff` in that
-order, waits for each exact version to appear on crates.io, runs clean
-`cargo install lintdiff --version 0.1.2 --locked`, and validates a fixture
-`lintdiff.report.v1` receipt. Do not invoke publish mode without release
-authorization.
+`LINTDIFF_PUBLISH_CONFIRM=0.1.2:<exact-release-sha>`. It uses
+`--registry crates-io` for every publish and install operation. For each
+package, an existing exact version is accepted only when its crates.io
+checksum matches the prepared archive; otherwise the package is published,
+waited for, checksum-verified, and resolved by a clean Cargo consumer before
+the next package proceeds. This makes reruns safe after partial publication.
+The final install is `cargo install lintdiff --registry crates-io --version
+0.1.2 --locked`, followed by fixture receipt validation. Do not invoke publish
+mode without release authorization.
 
 Before publication, the packaged-source and local consumer proof can be run with:
 
@@ -289,7 +297,7 @@ pwsh -File scripts/verify-publication-consumers.ps1
 That proof unpacks the four `.crate` archives, builds temporary consumers with
 local patch overrides, and installs the extracted `lintdiff` package locally.
 It does not prove crates.io-only resolution; that remains a post-publication
-gate using `cargo install lintdiff --version 0.1.2 --locked` from a clean
+gate using `cargo install lintdiff --registry crates-io --version 0.1.2 --locked` from a clean
 consumer context.
 
 ### Manual Release via Workflow Dispatch
