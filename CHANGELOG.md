@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.1] - 2026-08-02
+## [0.1.1] - 2026-08-03
+
+### Added
+
+- Shipped experimental `lintdiff inventory` and `lintdiff compare` commands
+  with the `lintdiff.inventory.v1` and `lintdiff.delta.v1` evidence protocols.
+  These commands are advisory research surfaces and are not part of the
+  maintained blocking contract.
 
 ### Changed
 
@@ -29,8 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Clarified the narrow changed-line receipt product and its exact-tag support
   boundary.
-- Documented that diagnostic delta, `cargo install`, and public engine-crate
-  support are not part of this release.
+- Documented that diagnostic delta is shipped as an experimental, advisory
+  surface; `cargo install` and public engine-crate support remain unsupported.
 
 ## [1.0.0] - 2026-03-25
 

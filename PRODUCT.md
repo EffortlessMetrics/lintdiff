@@ -15,8 +15,11 @@ The current product answers:
 > Which diagnostics from the head analysis are located on PR-touched lines, and
 > why were other diagnostics excluded, suppressed, or truncated?
 
-It does not yet answer whether a diagnostic is new relative to a base analysis.
-That diagnostic-delta capability is experimental future scope.
+The maintained changed-line workflow does not answer whether a diagnostic is
+new relative to a base analysis.
+The released binary also contains experimental `inventory` and `compare`
+commands for research on that question. They are advisory surfaces, not an
+earned claim that general `new` or `resolved` detection is reliable.
 
 ## Supported workflow
 
@@ -43,8 +46,20 @@ exact published Action tag:
 ```
 
 The exact-tag installer contract makes ref resolution, checksums, and execution
-fail closed. The `v0.1.1` example is gated on the exact tag and its post-release
-Action canary; no moving default is a trustworthy release contract.
+fail closed. `v0.1.1` is released and its exact-tag Action canary passed; no
+moving default is a trustworthy release contract.
+
+`v0.1.1` also ships two experimental evidence commands:
+
+- `lintdiff inventory` emits `lintdiff.inventory.v1` before diff filtering or
+  policy;
+- `lintdiff compare` emits `lintdiff.delta.v1` from caller-supplied base/head
+  inventories and a source diff.
+
+These commands do not build base and head revisions, and their comparison
+results are not authorized for strict blocking or causal claims. The external
+verdict and its limitations are recorded in the
+[diagnostic-delta verdict memo](plans/diagnostic-delta-external-verdict-2026-08.md).
 
 ## Canonical receipt
 
@@ -62,8 +77,8 @@ claim that a finding was caused by the change.
 
 - The supported distribution surfaces are the release-binary CLI and the
   GitHub Action at an exact release tag.
-- The planned `v0.1.1` example is supported only after the exact-tag release and
-  post-release Action canary gates pass.
+- `v0.1.1` is the current released exact-tag example; its post-release Action
+  canary passed.
 - The current release-asset matrix is Linux x86_64, macOS x86_64, macOS
   arm64, and Windows x86_64. Other host/platform combinations are unsupported.
 - There is no supported `cargo install lintdiff` workflow.
@@ -72,11 +87,15 @@ claim that a finding was caused by the change.
 - `lintdiff-types` contains public evidence protocols, but any future breaking
   protocol narrowing is a separate compatibility decision and release action.
 - No moving `v0` Action alias is supported or implied.
+- `inventory` and `compare` are shipped experimental commands. Their schemas
+  are research contracts, not a supported blocking policy or public engine API.
 
 ## Known limitations and non-goals
 
 - The current mode is changed-line location filtering, not causal analysis.
-- No baseline diagnostic inventory or delta receipt is implemented yet.
+- Inventory and delta receipts exist as experimental surfaces, but the external
+  evaluation did not establish sufficiently conservative general `new` or
+  `resolved` classifications.
 - The tool relies on a structured upstream diagnostics stream; it does not run a
   base and head build or orchestrate those analyses.
 - Human output is budgeted. The canonical receipt is the complete evidence
@@ -91,7 +110,7 @@ claim that a finding was caused by the change.
 | --- | --- | --- |
 | reviewdog | Generic diff-filtered review presentation | lintdiff preserves a Rust-aware deterministic receipt and explain evidence. |
 | SARIF / code scanning | GitHub alert lifecycle and code-scanning integration | lintdiff emits its own `lintdiff.report.v1`; SARIF is not the current product protocol. |
-| Diagnostic delta | Future base/head diagnostic comparison | Experimental scope; not implemented by the current location-scoped mode. |
+| Diagnostic delta | Base/head comparison from caller-supplied inventories | Shipped experimental scope; advisory only and not generally validated for strict blocking. |
 
 The product remains intentionally narrow until an external evaluation shows
 that diagnostic delta changes decisions or earns continued adoption.
