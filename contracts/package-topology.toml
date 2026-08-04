@@ -1,9 +1,8 @@
-# Canonical topology declaration for the microcrate-collapse campaign.
-# This is a declaration of the target shape, not permission to delete a package.
-# Registry and external-consumer gates remain mandatory before every move.
+# Canonical topology declaration for the lintdiff workspace and registry closure.
+# Registry and external-consumer gates remain mandatory before publication.
 
 schema_version = 1
-campaign = "microcrate-collapse"
+campaign = "microcrate-collapse-and-publication-closure"
 phase = "enforced"
 baseline = "origin/main@ea68d869d3cd224698d4c55f6659ceb4ae5eefdb"
 historical_snapshot_packages = 69
@@ -13,6 +12,19 @@ external_consumer_gate = "crates.io-version-and-reverse-dependencies-plus-github
 line_ending_policy = "future-text-only-no-renormalization"
 
 canonical_runtime = [
+  "lintdiff-types",
+  "lintdiff-engine",
+  "lintdiff-render",
+  "lintdiff",
+]
+
+publication_closure = [
+  "lintdiff-types",
+  "lintdiff-engine",
+  "lintdiff-render",
+  "lintdiff",
+]
+publication_order = [
   "lintdiff-types",
   "lintdiff-engine",
   "lintdiff-render",
@@ -29,24 +41,28 @@ allowed_actions = ["keep", "fold", "mine_delete", "temporary_wrapper", "defer"]
 name = "lintdiff-types"
 class = "public_protocol"
 publish = true
+publication_intent = true
 allowed_lintdiff_dependencies = []
 
 [[topology]]
 name = "lintdiff-engine"
-class = "internal_engine"
+class = "public_engine"
 publish = false
+publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-types"]
 
 [[topology]]
 name = "lintdiff-render"
-class = "internal_projection"
+class = "registry_support_projection"
 publish = false
+publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-types"]
 
 [[topology]]
 name = "lintdiff"
-class = "application"
+class = "primary_product"
 publish = false
+publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-engine", "lintdiff-render", "lintdiff-types"]
 
 [[topology]]
