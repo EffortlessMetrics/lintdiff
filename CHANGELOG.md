@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-04
+
 ### Added
 
-- Prepared crate-specific consumer documentation and registry metadata for the
-  coordinated `0.1.2` publication closure. The target includes the primary
-  `lintdiff` crate for `cargo install`, the embeddable `lintdiff-engine`, the
+- Prepared the coordinated `0.1.2` publication closure: the primary `lintdiff`
+  crate for `cargo install`, the embeddable `lintdiff-engine`, the
   `lintdiff-types` protocol crate, and the `lintdiff-render` registry-support
-  crate. Publication and clean-install proof remain pending.
+  crate. The packages are release candidates until ordered registry publication
+  and clean-install proof complete.
 
 ## [0.1.1] - 2026-08-03
 

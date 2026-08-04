@@ -1,0 +1,32 @@
+schema_version = 1
+release_version = "0.1.2"
+publication_order = [
+  "lintdiff-types",
+  "lintdiff-engine",
+  "lintdiff-render",
+  "lintdiff",
+]
+
+[[packages]]
+name = "lintdiff-types"
+required_paths = ["Cargo.toml", "README.md", "src/lib.rs"]
+max_files = 100
+max_compressed_bytes = 1048576
+
+[[packages]]
+name = "lintdiff-engine"
+required_paths = ["Cargo.toml", "README.md", "src/lib.rs"]
+max_files = 100
+max_compressed_bytes = 1048576
+
+[[packages]]
+name = "lintdiff-render"
+required_paths = ["Cargo.toml", "README.md", "src/lib.rs"]
+max_files = 100
+max_compressed_bytes = 1048576
+
+[[packages]]
+name = "lintdiff"
+required_paths = ["Cargo.toml", "README.md", "src/lib.rs", "src/main.rs"]
+max_files = 100
+max_compressed_bytes = 1048576

@@ -128,6 +128,9 @@ Before creating a release, ensure:
 - [ ] Documentation is updated for any new features
 - [ ] Breaking changes are clearly documented
 - [ ] Any new dependencies are properly licensed
+- [ ] `cargo run -p xtask -- package-check` passes for all four registry packages
+- [ ] `cargo semver-checks -p lintdiff-types` passes against the published baseline
+- [ ] The ordered publication plan and clean `cargo install lintdiff` proof are ready
 
 ### Step-by-Step Guide
 
@@ -137,7 +140,7 @@ Update the version in the workspace `Cargo.toml`:
 
 ```toml
 [workspace.package]
-version = "0.1.1"  # Update this for the trustworthy narrow release
+version = "0.1.2"  # Update this for the coordinated registry closure
 ```
 
 The workspace version is inherited by all crates. Verify individual crate `Cargo.toml` files use workspace inheritance:
@@ -171,8 +174,8 @@ Move any unreleased items from the `[Unreleased]` section to the new version sec
 
 ```bash
 git add -A
-git commit -m "chore(release): prepare v0.1.1"
-git push origin release/v0.1.1
+git commit -m "chore(release): prepare v0.1.2"
+git push origin release/v0.1.2
 ```
 
 Open a release PR from the prepared branch and run the full release gates. Tagging,
@@ -185,8 +188,8 @@ release commit and asset plan have been reviewed.
 RELEASE_COMMIT="<approved squash merge commit SHA>"
 git fetch origin main
 test "$(git rev-parse origin/main)" = "$RELEASE_COMMIT"
-git tag v0.1.1 "$RELEASE_COMMIT"
-git push origin v0.1.1
+git tag v0.1.2 "$RELEASE_COMMIT"
+git push origin v0.1.2
 ```
 
 #### 5. Monitor the Workflow

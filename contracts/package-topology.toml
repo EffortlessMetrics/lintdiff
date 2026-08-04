@@ -47,21 +47,21 @@ allowed_lintdiff_dependencies = []
 [[topology]]
 name = "lintdiff-engine"
 class = "public_engine"
-publish = false
+publish = true
 publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-types"]
 
 [[topology]]
 name = "lintdiff-render"
 class = "registry_support_projection"
-publish = false
+publish = true
 publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-types"]
 
 [[topology]]
 name = "lintdiff"
 class = "primary_product"
-publish = false
+publish = true
 publication_intent = true
 allowed_lintdiff_dependencies = ["lintdiff-engine", "lintdiff-render", "lintdiff-types"]
 
