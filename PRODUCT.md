@@ -81,9 +81,16 @@ claim that a finding was caused by the change.
   canary passed.
 - The current release-asset matrix is Linux x86_64, macOS x86_64, macOS
   arm64, and Windows x86_64. Other host/platform combinations are unsupported.
-- There is no supported `cargo install lintdiff` workflow.
-- `lintdiff-engine` is an internal implementation seam, not a supported public
-  crates.io contract.
+- A coordinated `0.1.2` crates.io publication is being prepared for the four
+  runtime packages. Its intended order is `lintdiff-types`, `lintdiff-engine`,
+  `lintdiff-render`, then `lintdiff`.
+- The `lintdiff` package is the primary registry product and will support
+  `cargo install lintdiff` only after the exact publication and clean install
+  proof complete. The current `v0.1.1` release does not make that claim yet.
+- `lintdiff-engine` is being prepared as a public embeddable analysis surface;
+  `lintdiff-render` is a public registry-support projection surface. Their
+  `0.1.x` support boundary is established by the publication release notes and
+  docs.rs output, not by the internal package boundary alone.
 - `lintdiff-types` contains public evidence protocols, but any future breaking
   protocol narrowing is a separate compatibility decision and release action.
 - No moving `v0` Action alias is supported or implied.

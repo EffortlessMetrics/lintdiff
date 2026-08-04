@@ -238,6 +238,30 @@ The release also contains the experimental `inventory` and `compare` commands.
 Their evidence protocols remain advisory research surfaces; do not represent
 their `new` or `resolved` results as generally reliable blocking decisions.
 
+### v0.1.2 crates.io publication closure
+
+The `0.1.2` publication target includes the four runtime packages. `xtask` is
+repository tooling and remains private:
+
+1. `lintdiff-types`
+2. `lintdiff-engine`
+3. `lintdiff-render`
+4. `lintdiff`
+
+Publish each package only after the preceding package is visible in the
+registry index. The final product proof must run from a clean consumer context:
+
+```bash
+cargo install lintdiff --version 0.1.2 --locked
+lintdiff --version
+```
+
+Then run a real changed-line receipt using the installed executable and validate
+the resulting `lintdiff.report.v1` artifact. The engine, types, and renderer must
+also resolve from crates.io in temporary consumers without path dependencies or
+patch overrides. This section is a preparation contract; it does not claim that
+the packages are already published.
+
 ### Manual Release via Workflow Dispatch
 
 If you need to trigger a release without pushing a tag:

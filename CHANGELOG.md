@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Prepared crate-specific consumer documentation and registry metadata for the
+  coordinated `0.1.2` publication closure. The target includes the primary
+  `lintdiff` crate for `cargo install`, the embeddable `lintdiff-engine`, the
+  `lintdiff-types` protocol crate, and the `lintdiff-render` registry-support
+  crate. Publication and clean-install proof remain pending.
+
 ## [0.1.1] - 2026-08-03
 
 ### Added
@@ -37,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarified the narrow changed-line receipt product and its exact-tag support
   boundary.
 - Documented that diagnostic delta is shipped as an experimental, advisory
-  surface; `cargo install` and public engine-crate support remain unsupported.
+  surface; registry publication is a separate `0.1.2` release operation.
 
 ## [1.0.0] - 2026-03-25
 
