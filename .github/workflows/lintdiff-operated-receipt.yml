@@ -1,0 +1,121 @@
+name: lintdiff-operated-receipt
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: lintdiff-operated-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changed-line-receipt:
+    name: Advisory changed-line receipt
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Capture Clippy diagnostics
+        id: clippy
+        shell: bash
+        run: |
+          set -u
+          mkdir -p artifacts
+          cargo clippy --workspace --all-targets --all-features \
+            --message-format=json -- -D warnings \
+            > artifacts/clippy.jsonl 2> artifacts/clippy.stderr.log
+          exit_code=$?
+          set -e
+
+          build_finished=$(jq -rs '
+            map(select(.reason == "build-finished")) | last
+            | if . == null then "" else "true" end
+          ' artifacts/clippy.jsonl 2>/dev/null || true)
+          build_success=$(jq -rs '
+            map(select(.reason == "build-finished")) | last.success // empty
+          ' artifacts/clippy.jsonl 2>/dev/null || true)
+
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          echo "build_finished=$build_finished" >> "$GITHUB_OUTPUT"
+          echo "build_success=$build_success" >> "$GITHUB_OUTPUT"
+
+      - name: Run lintdiff v0.1.1
+        id: lintdiff
+        continue-on-error: true
+        uses: EffortlessMetrics/lintdiff@v0.1.1
+        with:
+          diagnostics: artifacts/clippy.jsonl
+          fail_on: never
+          upstream_exit_code: ${{ steps.clippy.outputs.exit_code }}
+          upstream_build_finished: ${{ steps.clippy.outputs.build_finished }}
+          upstream_build_success: ${{ steps.clippy.outputs.build_success }}
+          upstream_command: '["cargo","clippy","--workspace","--all-targets","--all-features","--message-format=json","--","-D","warnings"]'
+          artifact_name: lintdiff-operated-report
+
+      - name: Record operated evidence
+        if: always()
+        shell: bash
+        env:
+          CLIPPY_EXIT_CODE: ${{ steps.clippy.outputs.exit_code }}
+          BUILD_FINISHED: ${{ steps.clippy.outputs.build_finished }}
+          BUILD_SUCCESS: ${{ steps.clippy.outputs.build_success }}
+          LINTDIFF_OUTCOME: ${{ steps.lintdiff.outcome }}
+          LINTDIFF_EXIT_CODE: ${{ steps.lintdiff.outputs.exit_code }}
+          LINTDIFF_VERDICT: ${{ steps.lintdiff.outputs.verdict }}
+          REPORT_PATH: ${{ steps.lintdiff.outputs.report_path }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/lintdiff
+          jq -cn \
+            --arg event "${GITHUB_EVENT_NAME}" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --arg sha "${GITHUB_SHA}" \
+            --arg pr "${{ github.event.pull_request.number || '' }}" \
+            --arg clippy_exit_code "${CLIPPY_EXIT_CODE:-}" \
+            --arg build_finished "${BUILD_FINISHED:-}" \
+            --arg build_success "${BUILD_SUCCESS:-}" \
+            --arg action_outcome "${LINTDIFF_OUTCOME:-}" \
+            --arg action_exit_code "${LINTDIFF_EXIT_CODE:-}" \
+            --arg verdict "${LINTDIFF_VERDICT:-}" \
+            --arg report_path "${REPORT_PATH:-}" \
+            '{schema:"lintdiff.operated.v1",event:$event,run_id:$run_id,sha:$sha,pr:$pr,upstream:{exit_code:$clippy_exit_code,build_finished:$build_finished,build_success:$build_success},action:{outcome:$action_outcome,exit_code:$action_exit_code,verdict:$verdict,report_path:$report_path}}' \
+            > artifacts/lintdiff/operation-ledger.jsonl
+
+          {
+            echo "### lintdiff v0.1.1 advisory receipt"
+            echo ""
+            echo "- exact-tag Action: `EffortlessMetrics/lintdiff@v0.1.1`"
+            echo "- mode: `fail_on: never`"
+            echo "- upstream exit: `${CLIPPY_EXIT_CODE:-unknown}`"
+            echo "- upstream build-finished: `${BUILD_FINISHED:-unknown}`"
+            echo "- report artifact: `${REPORT_PATH:-missing}`"
+            echo ""
+            echo "This run records operational evidence only; it does not claim diagnostic newness or resolution."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload operated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lintdiff-operated-evidence
+          path: |
+            artifacts/clippy.jsonl
+            artifacts/clippy.stderr.log
+            artifacts/lintdiff/operation-ledger.jsonl
+          if-no-files-found: warn
