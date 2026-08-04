@@ -7,12 +7,15 @@ license.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
-readme.workspace = true
+readme = "README.md"
 description = "CLI for lintdiff - diff-scoped filter for rustc/Clippy diagnostics."
-keywords.workspace = true
-categories.workspace = true
-homepage.workspace = true
-documentation.workspace = true
+keywords = ["lint", "diff", "clippy", "github-actions", "rust"]
+categories = ["command-line-utilities", "development-tools"]
+homepage = "https://crates.io/crates/lintdiff"
+documentation = "https://docs.rs/lintdiff"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 lintdiff-engine = { path = "../lintdiff-engine" }

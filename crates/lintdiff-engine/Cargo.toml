@@ -7,12 +7,15 @@ license.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
-readme.workspace = true
-description = "Pure diagnostic analysis and comparison engine for lintdiff."
-keywords.workspace = true
-categories.workspace = true
-homepage.workspace = true
-documentation.workspace = true
+readme = "README.md"
+description = "Embeddable pure diagnostic analysis and comparison engine for lintdiff."
+keywords = ["diagnostics", "clippy", "analysis", "diff", "rust"]
+categories = ["development-tools", "parser-implementations"]
+homepage = "https://crates.io/crates/lintdiff-engine"
+documentation = "https://docs.rs/lintdiff-engine"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 lintdiff-types = { path = "../lintdiff-types" }

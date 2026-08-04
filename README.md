@@ -102,9 +102,12 @@ the repository-only `xtask` control plane. `fuzz/` remains excluded. The normal
 runtime graph is `lintdiff → {lintdiff-engine, lintdiff-render, lintdiff-types}`;
 the engine and renderer depend on `lintdiff-types` only among lintdiff packages.
 
-`lintdiff-types` is the only package with publication intent. The engine, renderer,
-application, and xtask remain `publish = false`; no public engine crate is implied
-by the internal package boundary. The dated disposition ledger at
+All four runtime packages have publication intent for the coordinated `0.1.2`
+registry closure: `lintdiff-types`, `lintdiff-engine`, `lintdiff-render`, and the
+primary product package `lintdiff`. The repository-only `xtask` remains private.
+The current `0.1.1` release is still distributed through its exact-tag Action and
+release binaries until the registry publication sequence completes. The dated
+disposition ledger at
 [plans/microcrate-collapse-ledger.toml](plans/microcrate-collapse-ledger.toml) is
 the migration record, and `cargo run -p xtask -- architecture-check` is the
 enforcement surface.

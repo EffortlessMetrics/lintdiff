@@ -7,12 +7,15 @@ license.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
-readme.workspace = true
-description = "Renderers (Markdown, annotations) for lintdiff."
-keywords.workspace = true
-categories.workspace = true
-homepage.workspace = true
-documentation.workspace = true
+readme = "README.md"
+description = "Registry-support projections for lintdiff receipts."
+keywords = ["lint", "diagnostics", "markdown", "github-actions", "rust"]
+categories = ["development-tools", "command-line-utilities"]
+homepage = "https://crates.io/crates/lintdiff-render"
+documentation = "https://docs.rs/lintdiff-render"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 lintdiff-types = { path = "../lintdiff-types" }
