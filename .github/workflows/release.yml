@@ -26,6 +26,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -214,6 +215,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'rehearse' }}
     needs: prepare
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v7
         with:
@@ -253,6 +255,22 @@ jobs:
           cargo run -p xtask -- publication-plan-check .shipper/plan.json \
             | tee .shipper/plan-validation.txt
 
+      - name: Attempt Trusted Publishing authentication
+        id: crates_auth
+        continue-on-error: true
+        uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Select crates.io credential and write redacted evidence
+        id: auth
+        env:
+          TRUSTED_TOKEN: ${{ steps.crates_auth.outputs.token }}
+          FALLBACK_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          AUTH_ACTION_OUTCOME: ${{ steps.crates_auth.outcome }}
+          RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_ENVIRONMENT: release
+        run: bash scripts/release/select-crates-auth.sh .shipper/auth-evidence.json
+
       - name: Upload Shipper plan evidence
         id: upload_plan
         if: ${{ always() }}
@@ -266,7 +284,9 @@ jobs:
 
       - name: Run Shipper preflight
         id: preflight
-        if: ${{ always() && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        if: ${{ always() && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.auth.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -o pipefail
           shipper preflight \
@@ -309,6 +329,7 @@ jobs:
     if: ${{ github.event_name == 'push' || inputs.mode == 'resume' }}
     needs: prepare
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v7
         with:
@@ -372,6 +393,24 @@ jobs:
           cargo run -p xtask -- publication-plan-check .shipper/plan.json \
             | tee .shipper/plan-validation.txt
 
+      - name: Attempt Trusted Publishing authentication
+        id: crates_auth
+        continue-on-error: true
+        if: ${{ github.event_name == 'push' || (inputs.mode == 'resume' && steps.validate_state.outcome == 'success') }}
+        uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Select crates.io credential and write redacted evidence
+        id: auth
+        if: ${{ github.event_name == 'push' || (inputs.mode == 'resume' && steps.validate_state.outcome == 'success') }}
+        env:
+          TRUSTED_TOKEN: ${{ steps.crates_auth.outputs.token }}
+          FALLBACK_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          AUTH_ACTION_OUTCOME: ${{ steps.crates_auth.outcome }}
+          RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_ENVIRONMENT: release
+        run: bash scripts/release/select-crates-auth.sh .shipper/auth-evidence.json
+
       - name: Upload Shipper plan evidence
         id: upload_plan
         if: ${{ always() }}
@@ -385,7 +424,9 @@ jobs:
 
       - name: Run Shipper preflight
         id: preflight
-        if: ${{ github.event_name == 'push' && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        if: ${{ github.event_name == 'push' && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.auth.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -o pipefail
           shipper preflight \
@@ -407,7 +448,9 @@ jobs:
 
       - name: Publish through Shipper
         id: publish
-        if: ${{ github.event_name == 'push' && steps.preflight.outcome == 'success' && steps.upload_preflight.outcome == 'success' }}
+        if: ${{ github.event_name == 'push' && steps.preflight.outcome == 'success' && steps.upload_preflight.outcome == 'success' && steps.auth.outcome == 'success' }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -o pipefail
           shipper publish \
@@ -426,7 +469,9 @@ jobs:
 
       - name: Resume through Shipper
         id: resume
-        if: ${{ inputs.mode == 'resume' && steps.validate_state.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        if: ${{ inputs.mode == 'resume' && steps.validate_state.outcome == 'success' && steps.auth.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -o pipefail
           shipper resume \

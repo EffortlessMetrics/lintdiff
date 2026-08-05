@@ -311,6 +311,31 @@ same readiness and retry posture as the tag train. It never regenerates or
 hand-edits Shipper state. All three state artifacts upload under `always()` so
 an interruption leaves an operator-readable recovery trail.
 
+### crates.io authentication boundary
+
+The rehearsal, publish, and resume jobs use the protected `release` environment
+and request `id-token: write`. Each attempts
+`rust-lang/crates-io-auth-action@v1` first, then explicitly selects the
+pre-existing `CARGO_REGISTRY_TOKEN` repository secret only when Trusted
+Publishing does not provide a token. The selected credential is passed to
+Shipper for preflight and publication/resume through the same
+`CARGO_REGISTRY_TOKEN` environment variable.
+
+The workflow writes `.shipper/auth-evidence.json` before preflight. It records
+only the auth outcome, selected source, boolean availability flags, release
+identity, and limits. It never records token values, prefixes, lengths, hashes,
+or authorization headers. Missing both sources fails before preflight. A
+Trusted Publishing success is not evidence that all four crates are registered;
+mixed registration is a stop condition until the operator confirms the entire
+closure.
+
+The first-publish operator must confirm that the `release` environment and its
+reviewers exist, the fallback secret can publish all four names, `lintdiff-types`
+ownership is confirmed, the three new names remain available, and Trusted
+Publishing is configured consistently for every crate or is treated as
+unproven. Codex does not create secrets, change environment protection, or
+configure crates.io owners/publishers.
+
 Before publication, the packaged-source and local consumer proof can be run with:
 
 ```powershell
