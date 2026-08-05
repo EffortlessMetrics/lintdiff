@@ -184,7 +184,13 @@ jobs:
             --state-dir .shipper \
             --format json | tee .shipper/plan.json
 
-      - name: Upload Shipper plan evidence
+      - name: Validate Shipper plan
+        run: |
+          set -o pipefail
+          cargo run -p xtask -- publication-plan-check .shipper/plan.json \
+            | tee .shipper/plan-validation.txt
+
+      - name: Upload Shipper plan and validation evidence
         uses: actions/upload-artifact@v7
         with:
           name: shipper-plan-${{ needs.prepare.outputs.version }}

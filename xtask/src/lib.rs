@@ -82,16 +82,39 @@ struct LedgerPackage {
 struct PublicationContract {
     schema_version: u32,
     release_version: String,
-    publication_order: Vec<String>,
     packages: Vec<PublicationPackage>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct PublicationPackage {
     name: String,
     required_paths: Vec<String>,
     max_files: usize,
     max_compressed_bytes: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct ShipperPlan {
+    schema_version: String,
+    plan_id: String,
+    registry: ShipperRegistry,
+    workspace_root: String,
+    publishable_count: usize,
+    packages: Vec<ShipperPackage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ShipperRegistry {
+    name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ShipperPackage {
+    order: usize,
+    name: String,
+    version: String,
+    level: usize,
+    dependencies: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -121,11 +144,12 @@ pub fn run(root: &Path, args: &[String]) -> Result<(), String> {
         "docs-check" => docs_check(root),
         "release-contract-check" => release_contract_check(root),
         "package-check" => package_check(root),
+        "publication-plan-check" => publication_plan_check(root, args.get(1)),
         "schema-check-report" => schema_check_report(root, args.get(1)),
         "architecture-receipt" => architecture_receipt(root, args.get(1)),
         "help" | "--help" | "-h" => {
             println!(
-                "commands: architecture-check, schema-check, schema-check-report <path>, fixture-check, docs-check, release-contract-check, package-check, architecture-receipt"
+                "commands: architecture-check, schema-check, schema-check-report <path>, fixture-check, docs-check, release-contract-check, package-check, publication-plan-check <path>, architecture-receipt"
             );
             Ok(())
         }
@@ -621,23 +645,177 @@ fn validate_publication_contract(contract: &PublicationContract) -> Result<(), S
             contract.schema_version
         ));
     }
-    validate_publication_order(contract)
-}
-
-fn validate_publication_order(contract: &PublicationContract) -> Result<(), String> {
     let package_names = contract
         .packages
         .iter()
         .map(|package| package.name.clone())
-        .collect::<Vec<_>>();
-    if package_names == contract.publication_order {
-        Ok(())
-    } else {
-        Err(format!(
-            "publication order does not match package records: order={:?} records={:?}",
-            contract.publication_order, package_names
-        ))
+        .collect::<BTreeSet<_>>();
+    let expected_names = [
+        "lintdiff-types",
+        "lintdiff-engine",
+        "lintdiff-render",
+        "lintdiff",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect::<BTreeSet<_>>();
+    if package_names != expected_names {
+        return Err(format!(
+            "publication contract package set must be exactly {:?}, found {:?}",
+            expected_names, package_names
+        ));
     }
+    if contract.packages.len() != expected_names.len() {
+        return Err("publication contract contains duplicate package records".to_string());
+    }
+    Ok(())
+}
+
+fn publication_plan_check(root: &Path, plan_path: Option<&String>) -> Result<(), String> {
+    let plan_path = plan_path
+        .map(PathBuf::from)
+        .ok_or_else(|| "publication-plan-check requires a Shipper plan path".to_string())?;
+    let plan_path = if plan_path.is_absolute() {
+        plan_path
+    } else {
+        root.join(plan_path)
+    };
+    let plan_text = fs::read_to_string(&plan_path)
+        .map_err(|error| format!("read Shipper plan {}: {error}", plan_path.display()))?;
+    let plan = serde_json::from_str::<ShipperPlan>(&plan_text)
+        .map_err(|error| format!("parse Shipper plan {}: {error}", plan_path.display()))?;
+    let contract: PublicationContract = read_toml(root, "contracts/package-publication.toml")?
+        .try_into()
+        .map_err(|error| format!("parse package publication contract: {error}"))?;
+    validate_publication_contract(&contract)?;
+    validate_shipper_plan(root, &contract, &plan)?;
+    println!(
+        "publication_plan_check=pass plan_id={} registry={} packages={} levels={}",
+        plan.plan_id,
+        plan.registry.name,
+        plan.packages.len(),
+        plan.packages
+            .iter()
+            .map(|package| package.level)
+            .max()
+            .map_or(0, |level| level + 1)
+    );
+    Ok(())
+}
+
+fn validate_shipper_plan(
+    root: &Path,
+    contract: &PublicationContract,
+    plan: &ShipperPlan,
+) -> Result<(), String> {
+    if plan.schema_version != "shipper.plan.v1" {
+        return Err(format!(
+            "unsupported Shipper plan schema {}",
+            plan.schema_version
+        ));
+    }
+    if plan.plan_id.trim().is_empty() {
+        return Err("Shipper plan has no plan_id".to_string());
+    }
+    if plan.workspace_root.trim().is_empty() {
+        return Err("Shipper plan has no workspace_root identity".to_string());
+    }
+    if plan.registry.name != "crates-io" {
+        return Err(format!(
+            "Shipper plan targets '{}' instead of crates-io",
+            plan.registry.name
+        ));
+    }
+    let expected_names = contract
+        .packages
+        .iter()
+        .map(|package| package.name.as_str())
+        .collect::<BTreeSet<_>>();
+    if plan.publishable_count != expected_names.len() || plan.packages.len() != expected_names.len()
+    {
+        return Err(format!(
+            "Shipper plan must contain exactly {} publishable packages: count={} entries={}",
+            expected_names.len(),
+            plan.publishable_count,
+            plan.packages.len()
+        ));
+    }
+
+    let mut package_by_name = BTreeMap::new();
+    let mut orders = BTreeSet::new();
+    for package in &plan.packages {
+        if !expected_names.contains(package.name.as_str()) {
+            return Err(format!(
+                "Shipper plan contains unapproved package {}",
+                package.name
+            ));
+        }
+        if package.version != contract.release_version {
+            return Err(format!(
+                "Shipper plan package {} has version {}, expected {}",
+                package.name, package.version, contract.release_version
+            ));
+        }
+        if package.order == 0 || !orders.insert(package.order) {
+            return Err(format!(
+                "Shipper plan has duplicate or zero package order at {}",
+                package.name
+            ));
+        }
+        if package_by_name
+            .insert(package.name.as_str(), package)
+            .is_some()
+        {
+            return Err(format!(
+                "Shipper plan contains duplicate package {}",
+                package.name
+            ));
+        }
+    }
+    let expected_orders = (1..=expected_names.len()).collect::<BTreeSet<_>>();
+    if orders != expected_orders {
+        return Err(format!(
+            "Shipper plan package orders are not contiguous: {:?}",
+            orders
+        ));
+    }
+
+    let metadata = cargo_metadata(root)?;
+    let workspace_edges = workspace_edges(&metadata);
+    for (package, dependencies) in workspace_edges {
+        let Some(package_plan) = package_by_name.get(package.as_str()) else {
+            continue;
+        };
+        for dependency in dependencies {
+            let Some(dependency_plan) = package_by_name.get(dependency.as_str()) else {
+                continue;
+            };
+            if dependency_plan.order >= package_plan.order {
+                return Err(format!(
+                    "Shipper plan orders dependency {} after dependent {}",
+                    dependency, package
+                ));
+            }
+            if dependency_plan.level >= package_plan.level {
+                return Err(format!(
+                    "Shipper plan level for dependency {} is not below dependent {}",
+                    dependency, package
+                ));
+            }
+            let dependency_entry = format!("{dependency}@{}", contract.release_version);
+            if !package_plan
+                .dependencies
+                .iter()
+                .any(|entry| entry == &dependency_entry)
+            {
+                return Err(format!(
+                    "Shipper plan dependency list for {} omits {}",
+                    package, dependency_entry
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn normalize_package_path(path: &str) -> Result<String, String> {
@@ -948,10 +1126,10 @@ mod tests {
     use super::{
         architecture_check, architecture_receipt, docs_check, fixture_check, ledger_records,
         local_publication_dependencies, normalize_package_path, package_check, package_publish,
-        release_contract_check, run, runtime_packages, schema_check, schema_check_report,
-        string_array, topology_entries, validate_publication_contract, validate_publication_order,
-        workspace_edges, DependencyKind, Metadata, MetadataPackage, PublicationContract,
-        PublicationPackage, Resolve, ResolveDependency, ResolveNode,
+        publication_plan_check, release_contract_check, run, runtime_packages, schema_check,
+        schema_check_report, string_array, topology_entries, validate_publication_contract,
+        validate_shipper_plan, workspace_edges, DependencyKind, Metadata, MetadataPackage,
+        PublicationContract, PublicationPackage, Resolve, ResolveDependency, ResolveNode,
     };
     use std::fs;
     use std::path::Path;
@@ -1068,7 +1246,7 @@ mod tests {
     }
 
     #[test]
-    fn publication_order_validation_rejects_drift() -> Result<(), String> {
+    fn publication_contract_requires_the_four_public_packages() -> Result<(), String> {
         let package = |name: &str| PublicationPackage {
             name: name.to_string(),
             required_paths: Vec::new(),
@@ -1078,17 +1256,126 @@ mod tests {
         let contract = PublicationContract {
             schema_version: 1,
             release_version: "0.1.2".to_string(),
-            publication_order: vec!["types".to_string(), "engine".to_string()],
-            packages: vec![package("types"), package("engine")],
+            packages: vec![
+                package("lintdiff-types"),
+                package("lintdiff-engine"),
+                package("lintdiff-render"),
+                package("lintdiff"),
+            ],
         };
-        validate_publication_order(&contract)?;
+        validate_publication_contract(&contract)?;
+        let missing = PublicationContract {
+            schema_version: contract.schema_version,
+            release_version: contract.release_version.clone(),
+            packages: contract.packages[..3].to_vec(),
+        };
+        if validate_publication_contract(&missing).is_ok() {
+            return Err("publication contract accepted a missing package".to_string());
+        }
+        Ok(())
+    }
 
-        let drifted = PublicationContract {
-            publication_order: vec!["engine".to_string(), "types".to_string()],
-            ..contract
-        };
-        if validate_publication_order(&drifted).is_ok() {
-            return Err("publication order drift was accepted".to_string());
+    #[test]
+    fn pinned_shipper_plan_fixture_is_accepted() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        let path = root.join("plans/fixtures/shipper-plan.v1.json");
+        publication_plan_check(root, Some(&path.to_string_lossy().to_string()))
+    }
+
+    #[test]
+    fn shipper_plan_validation_fails_closed_for_contract_drift() -> Result<(), String> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .ok_or_else(|| "missing repository root".to_string())?;
+        let plan_path = root.join("plans/fixtures/shipper-plan.v1.json");
+        let plan_text = fs::read_to_string(&plan_path).map_err(|error| error.to_string())?;
+        let mut plan: serde_json::Value =
+            serde_json::from_str(&plan_text).map_err(|error| error.to_string())?;
+        let target_dir = root.join("target");
+        fs::create_dir_all(&target_dir).map_err(|error| error.to_string())?;
+        type PlanMutation = fn(&mut serde_json::Value);
+        let package_cases: [(&str, PlanMutation); 4] = [
+            ("missing-package", |value: &mut serde_json::Value| {
+                if let Some(packages) = value
+                    .get_mut("packages")
+                    .and_then(serde_json::Value::as_array_mut)
+                {
+                    packages.pop();
+                }
+                value["publishable_count"] = serde_json::json!(3);
+            }),
+            ("extra-package", |value: &mut serde_json::Value| {
+                let package = value
+                    .get("packages")
+                    .and_then(serde_json::Value::as_array)
+                    .and_then(|packages| packages.first())
+                    .cloned();
+                if let (Some(package), Some(packages)) = (
+                    package,
+                    value
+                        .get_mut("packages")
+                        .and_then(serde_json::Value::as_array_mut),
+                ) {
+                    packages.push(package);
+                }
+                value["publishable_count"] = serde_json::json!(5);
+            }),
+            ("wrong-version", |value: &mut serde_json::Value| {
+                if let Some(package) = value
+                    .get_mut("packages")
+                    .and_then(serde_json::Value::as_array_mut)
+                    .and_then(|packages| packages.first_mut())
+                {
+                    package["version"] = serde_json::json!("9.9.9");
+                }
+            }),
+            (
+                "invalid-dependency-order",
+                |value: &mut serde_json::Value| {
+                    if let Some(packages) = value
+                        .get_mut("packages")
+                        .and_then(serde_json::Value::as_array_mut)
+                    {
+                        if let Some(package) = packages.first_mut() {
+                            package["order"] = serde_json::json!(4);
+                        }
+                        if let Some(package) = packages.get_mut(3) {
+                            package["order"] = serde_json::json!(1);
+                        }
+                    }
+                },
+            ),
+        ];
+        for (name, mutate) in package_cases {
+            let mut candidate = plan.clone();
+            mutate(&mut candidate);
+            let path = target_dir.join(format!("xtask-shipper-plan-{name}.json"));
+            fs::write(
+                &path,
+                serde_json::to_vec_pretty(&candidate).map_err(|error| error.to_string())?,
+            )
+            .map_err(|error| error.to_string())?;
+            if publication_plan_check(root, Some(&path.to_string_lossy().to_string())).is_ok() {
+                fs::remove_file(&path).map_err(|error| error.to_string())?;
+                return Err(format!("Shipper plan accepted {name} fixture"));
+            }
+            fs::remove_file(&path).map_err(|error| error.to_string())?;
+        }
+        plan["registry"]["name"] = serde_json::json!("other-registry");
+        if validate_shipper_plan(
+            root,
+            &toml::from_str::<PublicationContract>(
+                &fs::read_to_string(root.join("contracts/package-publication.toml"))
+                    .map_err(|error| error.to_string())?,
+            )
+            .map_err(|error| error.to_string())?,
+            &serde_json::from_value(plan).map_err(|error| error.to_string())?,
+        )
+        .is_ok()
+        {
+            return Err("Shipper plan accepted a non-crates.io registry".to_string());
         }
         Ok(())
     }
@@ -1098,7 +1385,6 @@ mod tests {
         let contract = PublicationContract {
             schema_version: 2,
             release_version: "0.1.2".to_string(),
-            publication_order: Vec::new(),
             packages: Vec::new(),
         };
         if validate_publication_contract(&contract).is_ok() {

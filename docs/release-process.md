@@ -275,6 +275,7 @@ The workflow runs the following pinned commands from the exact annotated tag:
 cargo install shipper --version 0.4.0 --locked
 shipper --version
 shipper plan --registry crates-io --state-dir .shipper --format json
+cargo run -p xtask -- publication-plan-check .shipper/plan.json
 shipper preflight --registry crates-io --state-dir .shipper --policy safe --format json
 shipper publish --registry crates-io --state-dir .shipper \
   --policy safe --verify-mode package --readiness-method both \
@@ -285,8 +286,10 @@ shipper publish --registry crates-io --state-dir .shipper \
 
 The release job is downstream of `publish-crates-io`, so GitHub Release
 creation cannot run until Shipper completes the four-crate registry closure.
-Plan and preflight evidence are uploaded as hidden-file-inclusive workflow
-artifacts. The final `.shipper` state is also bundled as
+The raw Shipper plan and the lintdiff validation result are uploaded as
+hidden-file-inclusive workflow artifacts. The Shipper plan is authoritative for
+dependency order; lintdiff only verifies the approved package set, versions,
+and dependency constraints. The final `.shipper` state is also bundled as
 `shipper-release-state.tar.gz` and attached to the GitHub Release. A failed or
 ambiguous Shipper run must resume from its retained state; it must not be
 restarted by manually uploading crates outside Shipper.
