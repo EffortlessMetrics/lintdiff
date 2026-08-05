@@ -6,6 +6,7 @@ on:
       - ".github/workflows/release.yml"
       - "action.yml"
       - "scripts/action/**"
+      - "scripts/release/**"
       - "scripts/verify-release-action-contract.ps1"
       - ".github/workflows/release-action-contract.yml"
   pull_request:
@@ -13,6 +14,7 @@ on:
       - ".github/workflows/release.yml"
       - "action.yml"
       - "scripts/action/**"
+      - "scripts/release/**"
       - "scripts/verify-release-action-contract.ps1"
       - ".github/workflows/release-action-contract.yml"
   workflow_dispatch:
@@ -26,6 +28,9 @@ jobs:
       - name: Verify Action script fixtures
         shell: bash
         run: bash scripts/action/tests/test-action-scripts.sh
+      - name: Verify Shipper recovery fixtures
+        shell: bash
+        run: bash scripts/release/tests/test-shipper-state.sh
       - name: Verify release asset contract
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify-release-action-contract.ps1

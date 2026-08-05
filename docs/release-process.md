@@ -289,15 +289,33 @@ creation cannot run until Shipper completes the four-crate registry closure.
 The raw Shipper plan and the lintdiff validation result are uploaded as
 hidden-file-inclusive workflow artifacts. The Shipper plan is authoritative for
 dependency order; lintdiff only verifies the approved package set, versions,
-and dependency constraints. The final `.shipper` state is also bundled as
-`shipper-release-state.tar.gz` and attached to the GitHub Release. A failed or
-ambiguous Shipper run must resume from its retained state; it must not be
-restarted by manually uploading crates outside Shipper.
+and dependency constraints. Plan and preflight evidence is retained for 30
+days; final state is retained for 90 days. The final `.shipper` state is also
+bundled as `shipper-release-state.tar.gz` and attached to the GitHub Release.
+A failed or ambiguous Shipper run must resume from its retained state; it must
+not be restarted by manually uploading crates outside Shipper.
+
+The same workflow has three manual, non-tag modes:
+
+```text
+rehearse  exact ref → release gates → Shipper plan and preflight; no publish
+binaries  exact ref → four platform archives and checksums; no registry/release
+resume    exact original tag + prior run ID → restore state → shipper resume
+```
+
+`rehearse` and `binaries` do not create a GitHub Release or mutate crates.io.
+`resume` requires both an exact original tag/ref and `artifact_run_id`; it
+restores the prior final state, checks that `state.json` and `plan.json` share
+the same plan ID and crates.io registry, then invokes `shipper resume` with the
+same readiness and retry posture as the tag train. It never regenerates or
+hand-edits Shipper state. All three state artifacts upload under `always()` so
+an interruption leaves an operator-readable recovery trail.
 
 Before publication, the packaged-source and local consumer proof can be run with:
 
 ```powershell
 pwsh -File scripts/verify-publication-consumers.ps1
+bash scripts/release/tests/test-shipper-state.sh
 ```
 
 That proof unpacks the four `.crate` archives, builds temporary consumers with
