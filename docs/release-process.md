@@ -15,7 +15,7 @@ This document describes the automated release process for lintdiff, including ve
 
 ## Release Workflow Overview
 
-lintdiff uses an automated release workflow defined in [`.github/workflows/release.yml`](../.github/workflows/release.yml) that builds and publishes binaries for multiple platforms.
+lintdiff uses an automated, tag-driven release workflow defined in [`.github/workflows/release.yml`](../.github/workflows/release.yml). It builds binaries, publishes the four-crate registry closure through Shipper, and creates the GitHub Release only after registry publication succeeds.
 
 ## Current v0.1.1 support boundary
 
@@ -32,21 +32,21 @@ See [the product contract](../PRODUCT.md) and the
 
 ### Trigger Conditions
 
-The release workflow is triggered by:
+The release workflow is triggered only by:
 
-1. **Tag Push**: Pushing a tag matching `v*.*.*` (e.g., `v0.1.1`, `v1.0.0-beta.1`)
-2. **Manual Dispatch**: Via the GitHub Actions UI with a specified version tag
+1. **Tag Push**: Pushing an annotated tag matching `v*.*.*` (e.g., `v0.1.1`, `v1.0.0-beta.1`)
 
 ### Workflow Jobs
 
-The release workflow consists of four jobs:
+The release workflow consists of five jobs:
 
 | Job | Purpose |
 |-----|---------|
-| `prepare` | Determines version number from tag or input |
+| `prepare` | Validates the annotated tag and determines the release version |
 | `build` | Builds release binaries for all target platforms |
 | `checksums` | Generates combined SHA256 checksums file |
-| `release` | Creates GitHub Release with artifacts |
+| `publish-crates-io` | Runs the pinned Shipper plan, preflight, and publish stages |
+| `release` | Creates GitHub Release with binaries, checksums, and Shipper state |
 
 ### Produced Artifacts
 
@@ -64,6 +64,7 @@ Each archive contains a single `lintdiff` (or `lintdiff.exe` on Windows) binary.
 Additionally:
 - Individual SHA256 checksums for each archive (`.sha256` files)
 - Combined `checksums-{version}.txt` file containing all checksums
+- Final Shipper state (`shipper-release-state.tar.gz`) containing publication evidence
 
 ### Release Notes
 
@@ -130,7 +131,7 @@ Before creating a release, ensure:
 - [ ] Any new dependencies are properly licensed
 - [ ] `cargo run -p xtask -- package-check` passes for all four registry packages
 - [ ] `cargo semver-checks -p lintdiff-types` passes against the published baseline
-- [ ] The ordered publication plan and clean `cargo install lintdiff` proof are ready
+- [ ] The Shipper plan, preflight, publication evidence, and clean registry-consumer proof are ready
 
 ### Step-by-Step Guide
 
@@ -196,7 +197,7 @@ git push origin v0.1.2
 
 1. Go to the [Actions tab](https://github.com/effortless-metrics/lintdiff/actions) in GitHub
 2. Find the "Release" workflow run for your tag
-3. Monitor progress through all four jobs
+3. Monitor `prepare`, `build`, `checksums`, `publish-crates-io`, and `release`
 
 #### 6. Verify the Release
 
@@ -251,8 +252,11 @@ repository tooling and remains private:
 3. `lintdiff-render`
 4. `lintdiff`
 
-Publish each package only after the preceding package is visible in the
-registry index. The final product proof must run from a clean consumer context:
+The tag-triggered workflow delegates registry execution to the pinned Shipper
+release engine. Shipper derives the dependency order from the workspace and
+persists its plan, preflight result, publish state, receipts, readiness checks,
+and resumable execution state under `.shipper/`. The final product proof must
+run from a clean consumer context:
 
 ```bash
 cargo install lintdiff --registry crates-io --version 0.1.2 --locked
@@ -265,28 +269,27 @@ also resolve from crates.io in temporary consumers without path dependencies or
 patch overrides. This section is a preparation contract; it does not claim that
 the packages are already published.
 
-Create and push an annotated `v0.1.2` tag at the approved release commit
-before invoking the publisher. The publisher requires that remote tag to peel
-to the exact commit and treats the tag as the release authority. It also
-records the local archive file count, size, and SHA-256 before any publication.
+The workflow runs the following pinned commands from the exact annotated tag:
 
-The protected ordered publisher is prepared at `scripts/publish-crates.ps1`.
-Preflight is non-publishing:
-
-```powershell
-pwsh -File scripts/publish-crates.ps1 -ReleaseCommit <exact-main-sha>
+```bash
+cargo install shipper --version 0.4.0 --locked
+shipper --version
+shipper plan --registry crates-io --state-dir .shipper --format json
+shipper preflight --registry crates-io --state-dir .shipper --policy safe --format json
+shipper publish --registry crates-io --state-dir .shipper \
+  --policy safe --verify-mode package --readiness-method both \
+  --readiness-timeout 15m --verify-timeout 10m --max-attempts 12 \
+  --base-delay 10s --max-delay 15m --retry-strategy exponential \
+  --format json
 ```
 
-Publication requires both `-Publish` and the explicit confirmation token
-`LINTDIFF_PUBLISH_CONFIRM=0.1.2:<exact-release-sha>`. It uses
-`--registry crates-io` for every publish and install operation. For each
-package, an existing exact version is accepted only when its crates.io
-checksum matches the prepared archive; otherwise the package is published,
-waited for, checksum-verified, and resolved by a clean Cargo consumer before
-the next package proceeds. This makes reruns safe after partial publication.
-The final install is `cargo install lintdiff --registry crates-io --version
-0.1.2 --locked`, followed by fixture receipt validation. Do not invoke publish
-mode without release authorization.
+The release job is downstream of `publish-crates-io`, so GitHub Release
+creation cannot run until Shipper completes the four-crate registry closure.
+Plan and preflight evidence are uploaded as hidden-file-inclusive workflow
+artifacts. The final `.shipper` state is also bundled as
+`shipper-release-state.tar.gz` and attached to the GitHub Release. A failed or
+ambiguous Shipper run must resume from its retained state; it must not be
+restarted by manually uploading crates outside Shipper.
 
 Before publication, the packaged-source and local consumer proof can be run with:
 
@@ -299,20 +302,6 @@ local patch overrides, and installs the extracted `lintdiff` package locally.
 It does not prove crates.io-only resolution; that remains a post-publication
 gate using `cargo install lintdiff --registry crates-io --version 0.1.2 --locked` from a clean
 consumer context.
-
-### Manual Release via Workflow Dispatch
-
-If you need to trigger a release without pushing a tag:
-
-1. Go to [Actions → Release](https://github.com/effortless-metrics/lintdiff/actions/workflows/release.yml)
-2. Click "Run workflow"
-3. Enter the version tag (e.g., `v0.2.0`)
-4. Click "Run workflow"
-
-This is useful for:
-- Re-releasing a failed build
-- Creating a release from a specific commit
-- Testing the release workflow
 
 ---
 

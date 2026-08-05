@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - "v*.*.*"
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version tag (e.g., v0.1.0)"
-        required: true
-        type: string
 
 permissions:
   contents: write
@@ -25,18 +19,26 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Determine version
+      - name: Check out tagged release
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate annotated tag and release commit
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          # Strip 'v' prefix for version number
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/}"
+          test -n "$VERSION"
+          test "$VERSION" != "$GITHUB_REF"
+          TAG_SHA="$(git rev-list -n 1 "$VERSION")"
+          test "$TAG_SHA" = "$GITHUB_SHA"
+          TAG_TYPE="$(git cat-file -t "$VERSION")"
+          test "$TAG_TYPE" = tag
+          echo "release_commit=${TAG_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
           VERSION_NUM="${VERSION#v}"
           echo "version=${VERSION_NUM}" >> $GITHUB_OUTPUT
-          echo "tag=${VERSION}" >> $GITHUB_OUTPUT
           echo "Determined version: ${VERSION_NUM} (tag: ${VERSION})"
 
   build:
@@ -148,8 +150,97 @@ jobs:
           name: checksums
           path: checksums-${{ needs.prepare.outputs.version }}.txt
 
+  publish-crates-io:
+    name: Publish crates through Shipper
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.tag }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+
+      - name: Install pinned Shipper
+        run: |
+          cargo install shipper --version 0.4.0 --locked
+          shipper --version
+
+      - name: Run lintdiff release gates
+        run: |
+          cargo run -p xtask -- package-check
+          cargo run -p xtask -- release-contract-check
+
+      - name: Build Shipper plan
+        run: |
+          set -o pipefail
+          mkdir -p .shipper
+          shipper plan \
+            --registry crates-io \
+            --state-dir .shipper \
+            --format json | tee .shipper/plan.json
+
+      - name: Upload Shipper plan evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-plan-${{ needs.prepare.outputs.version }}
+          path: .shipper/**
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Run Shipper preflight
+        run: |
+          set -o pipefail
+          shipper preflight \
+            --registry crates-io \
+            --state-dir .shipper \
+            --policy safe \
+            --format json | tee .shipper/preflight.json
+
+      - name: Upload Shipper preflight evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-preflight-${{ needs.prepare.outputs.version }}
+          path: .shipper/**
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Publish through Shipper
+        run: |
+          set -o pipefail
+          shipper publish \
+            --registry crates-io \
+            --state-dir .shipper \
+            --policy safe \
+            --verify-mode package \
+            --readiness-method both \
+            --readiness-timeout 15m \
+            --verify-timeout 10m \
+            --max-attempts 12 \
+            --base-delay 10s \
+            --max-delay 15m \
+            --retry-strategy exponential \
+            --format json | tee .shipper/publish.json
+
+      - name: Bundle final Shipper state
+        run: tar -czf shipper-release-state.tar.gz .shipper
+
+      - name: Upload final Shipper evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-final-${{ needs.prepare.outputs.version }}
+          path: |
+            .shipper/**
+            shipper-release-state.tar.gz
+          include-hidden-files: true
+          if-no-files-found: error
+
   release:
-    needs: [prepare, build, checksums]
+    needs: [prepare, build, checksums, publish-crates-io]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -158,7 +249,18 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
+          pattern: lintdiff-*
           merge-multiple: true
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: checksums
+          path: .
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: shipper-final-${{ needs.prepare.outputs.version }}
+          path: shipper-final
 
       - name: Extract changelog for this version
         id: changelog
@@ -189,6 +291,7 @@ jobs:
           files: |
             lintdiff-${{ needs.prepare.outputs.version }}-*
             checksums-${{ needs.prepare.outputs.version }}.txt
+            shipper-final/shipper-release-state.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -203,3 +306,4 @@ jobs:
           done
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- \`checksums-${{ needs.prepare.outputs.version }}.txt\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`shipper-release-state.tar.gz\`" >> $GITHUB_STEP_SUMMARY
