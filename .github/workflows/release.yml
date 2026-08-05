@@ -4,6 +4,25 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Release operation to run without publication by default
+        type: choice
+        options:
+          - rehearse
+          - binaries
+          - resume
+        default: rehearse
+        required: true
+      ref:
+        description: Exact branch, tag, or commit to check out
+        required: false
+        type: string
+      artifact_run_id:
+        description: Prior release run containing Shipper state (resume only)
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -16,6 +35,9 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
+      mode: ${{ steps.version.outputs.mode }}
+      checkout_ref: ${{ steps.version.outputs.checkout_ref }}
+      commit: ${{ steps.version.outputs.commit }}
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
@@ -23,25 +45,59 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'push' && github.ref_name || inputs.ref || github.sha }}
 
-      - name: Validate annotated tag and release commit
+      - name: Validate exact ref and resolve release identity
         id: version
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF#refs/tags/}"
-          test -n "$VERSION"
-          test "$VERSION" != "$GITHUB_REF"
-          TAG_SHA="$(git rev-list -n 1 "$VERSION")"
-          test "$TAG_SHA" = "$GITHUB_SHA"
-          TAG_TYPE="$(git cat-file -t "$VERSION")"
-          test "$TAG_TYPE" = tag
-          echo "release_commit=${TAG_SHA}" >> "$GITHUB_OUTPUT"
-          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
-          VERSION_NUM="${VERSION#v}"
-          echo "version=${VERSION_NUM}" >> $GITHUB_OUTPUT
-          echo "Determined version: ${VERSION_NUM} (tag: ${VERSION})"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            MODE="tag"
+            REQUESTED_REF="${GITHUB_REF#refs/tags/}"
+            TAG_SHA="$(git rev-list -n 1 "$REQUESTED_REF")"
+            test "$TAG_SHA" = "$GITHUB_SHA"
+            TAG_TYPE="$(git cat-file -t "$REQUESTED_REF")"
+            test "$TAG_TYPE" = tag
+            VERSION_NUM="${REQUESTED_REF#v}"
+            TAG="$REQUESTED_REF"
+          else
+            MODE="${{ inputs.mode }}"
+            REQUESTED_REF="${{ inputs.ref }}"
+            case "$MODE" in
+              rehearse|binaries)
+                ;;
+              resume)
+                test -n "$REQUESTED_REF"
+                test -n "${{ inputs.artifact_run_id }}"
+                ;;
+              *)
+                echo "unsupported release mode: $MODE" >&2
+                exit 1
+                ;;
+            esac
+            if [ -z "$REQUESTED_REF" ]; then
+              REQUESTED_REF="$GITHUB_SHA"
+            fi
+            TAG_SHA="$(git rev-parse "${REQUESTED_REF}^{commit}")"
+            test "$TAG_SHA" = "$(git rev-parse HEAD)"
+            VERSION_NUM="$(sed -n '/^\[workspace\.package\]/,/^\[/p' Cargo.toml | sed -n 's/^version = "\([^"]*\)"/\1/p' | head -n 1)"
+            test -n "$VERSION_NUM"
+            TAG=""
+            if [ "$MODE" = "resume" ]; then
+              TAG_TYPE="$(git cat-file -t "$REQUESTED_REF")"
+              test "$TAG_TYPE" = tag
+              TAG="$REQUESTED_REF"
+            fi
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$REQUESTED_REF" >> "$GITHUB_OUTPUT"
+          echo "commit=$TAG_SHA" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION_NUM" >> "$GITHUB_OUTPUT"
+          echo "Resolved mode=$MODE ref=$REQUESTED_REF commit=$TAG_SHA version=$VERSION_NUM"
 
   build:
+    if: ${{ github.event_name == 'push' || inputs.mode == 'binaries' }}
     needs: prepare
     strategy:
       fail-fast: false
@@ -67,6 +123,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -132,6 +190,7 @@ jobs:
             lintdiff-${{ needs.prepare.outputs.version }}-${{ matrix.target }}.*
 
   checksums:
+    if: ${{ github.event_name == 'push' || inputs.mode == 'binaries' }}
     needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
@@ -150,15 +209,16 @@ jobs:
           name: checksums
           path: checksums-${{ needs.prepare.outputs.version }}.txt
 
-  publish-crates-io:
-    name: Publish crates through Shipper
+  rehearse:
+    name: Rehearse Shipper release without publication
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'rehearse' }}
     needs: prepare
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -176,6 +236,7 @@ jobs:
           cargo run -p xtask -- release-contract-check
 
       - name: Build Shipper plan
+        id: plan
         run: |
           set -o pipefail
           mkdir -p .shipper
@@ -185,20 +246,27 @@ jobs:
             --format json | tee .shipper/plan.json
 
       - name: Validate Shipper plan
+        id: validate_plan
+        if: ${{ always() && steps.plan.outcome == 'success' }}
         run: |
           set -o pipefail
           cargo run -p xtask -- publication-plan-check .shipper/plan.json \
             | tee .shipper/plan-validation.txt
 
-      - name: Upload Shipper plan and validation evidence
+      - name: Upload Shipper plan evidence
+        id: upload_plan
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: shipper-plan-${{ needs.prepare.outputs.version }}
-          path: .shipper/**
+          name: shipper-state-plan-${{ needs.prepare.outputs.version }}
+          path: .shipper/
           include-hidden-files: true
-          if-no-files-found: error
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Run Shipper preflight
+        id: preflight
+        if: ${{ always() && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
         run: |
           set -o pipefail
           shipper preflight \
@@ -208,14 +276,138 @@ jobs:
             --format json | tee .shipper/preflight.json
 
       - name: Upload Shipper preflight evidence
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: shipper-preflight-${{ needs.prepare.outputs.version }}
-          path: .shipper/**
+          name: shipper-state-preflight-${{ needs.prepare.outputs.version }}
+          path: .shipper/
           include-hidden-files: true
-          if-no-files-found: error
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Bundle final Shipper state
+        if: ${{ always() }}
+        run: |
+          if [ -d .shipper ]; then
+            tar -czf shipper-release-state.tar.gz .shipper
+          fi
+
+      - name: Upload final Shipper evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-state-final-${{ needs.prepare.outputs.version }}
+          path: |
+            .shipper/
+            shipper-release-state.tar.gz
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: warn
+
+  publish-crates-io:
+    name: Publish or resume crates through Shipper
+    if: ${{ github.event_name == 'push' || inputs.mode == 'resume' }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+
+      - name: Install pinned Shipper
+        run: |
+          cargo install shipper --version 0.4.0 --locked
+          shipper --version
+
+      - name: Run lintdiff release gates
+        run: |
+          cargo run -p xtask -- package-check
+          cargo run -p xtask -- release-contract-check
+
+      - name: Restore prior Shipper state for resume
+        if: ${{ inputs.mode == 'resume' }}
+        uses: actions/download-artifact@v8
+        with:
+          pattern: shipper-state-final-*
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .shipper-restore
+          merge-multiple: true
+
+      - name: Install restored Shipper state
+        if: ${{ inputs.mode == 'resume' }}
+        run: |
+          set -euo pipefail
+          test -d .shipper-restore
+          mkdir -p .shipper
+          cp -R .shipper-restore/. .shipper/
+
+      - name: Validate restored Shipper state
+        id: validate_state
+        if: ${{ inputs.mode == 'resume' }}
+        run: bash scripts/release/validate-shipper-state.sh .shipper
+
+      - name: Build Shipper plan
+        id: plan
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -o pipefail
+          mkdir -p .shipper
+          shipper plan \
+            --registry crates-io \
+            --state-dir .shipper \
+            --format json | tee .shipper/plan.json
+
+      - name: Validate Shipper plan
+        id: validate_plan
+        if: ${{ github.event_name == 'push' && steps.plan.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cargo run -p xtask -- publication-plan-check .shipper/plan.json \
+            | tee .shipper/plan-validation.txt
+
+      - name: Upload Shipper plan evidence
+        id: upload_plan
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-state-plan-${{ needs.prepare.outputs.version }}
+          path: .shipper/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Run Shipper preflight
+        id: preflight
+        if: ${{ github.event_name == 'push' && steps.plan.outcome == 'success' && steps.validate_plan.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          shipper preflight \
+            --registry crates-io \
+            --state-dir .shipper \
+            --policy safe \
+            --format json | tee .shipper/preflight.json
+
+      - name: Upload Shipper preflight evidence
+        id: upload_preflight
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: shipper-state-preflight-${{ needs.prepare.outputs.version }}
+          path: .shipper/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Publish through Shipper
+        id: publish
+        if: ${{ github.event_name == 'push' && steps.preflight.outcome == 'success' && steps.upload_preflight.outcome == 'success' }}
         run: |
           set -o pipefail
           shipper publish \
@@ -232,40 +424,94 @@ jobs:
             --retry-strategy exponential \
             --format json | tee .shipper/publish.json
 
+      - name: Resume through Shipper
+        id: resume
+        if: ${{ inputs.mode == 'resume' && steps.validate_state.outcome == 'success' && steps.upload_plan.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          shipper resume \
+            --registry crates-io \
+            --state-dir .shipper \
+            --policy safe \
+            --verify-mode package \
+            --readiness-method both \
+            --readiness-timeout 15m \
+            --verify-timeout 10m \
+            --max-attempts 12 \
+            --base-delay 10s \
+            --max-delay 15m \
+            --retry-strategy exponential \
+            --format json | tee .shipper/resume.json
+
       - name: Bundle final Shipper state
-        run: tar -czf shipper-release-state.tar.gz .shipper
+        if: ${{ always() }}
+        run: |
+          if [ -d .shipper ]; then
+            tar -czf shipper-release-state.tar.gz .shipper
+          fi
 
       - name: Upload final Shipper evidence
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: shipper-final-${{ needs.prepare.outputs.version }}
+          name: shipper-state-final-${{ needs.prepare.outputs.version }}
           path: |
-            .shipper/**
+            .shipper/
             shipper-release-state.tar.gz
           include-hidden-files: true
-          if-no-files-found: error
+          retention-days: 90
+          if-no-files-found: warn
 
   release:
+    if: ${{ always() && (github.event_name == 'push' || inputs.mode == 'resume') && needs.prepare.result == 'success' && needs.publish-crates-io.result == 'success' }}
     needs: [prepare, build, checksums, publish-crates-io]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - uses: actions/download-artifact@v8
+        if: ${{ github.event_name == 'push' }}
         with:
           pattern: lintdiff-*
           merge-multiple: true
 
       - uses: actions/download-artifact@v8
+        if: ${{ github.event_name == 'push' }}
         with:
           name: checksums
           path: .
 
       - uses: actions/download-artifact@v8
+        if: ${{ inputs.mode == 'resume' }}
         with:
-          name: shipper-final-${{ needs.prepare.outputs.version }}
+          pattern: lintdiff-*
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v8
+        if: ${{ inputs.mode == 'resume' }}
+        with:
+          name: checksums
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .
+
+      - uses: actions/download-artifact@v8
+        if: ${{ github.event_name == 'push' }}
+        with:
+          name: shipper-state-final-${{ needs.prepare.outputs.version }}
+          path: shipper-final
+
+      - uses: actions/download-artifact@v8
+        if: ${{ inputs.mode == 'resume' }}
+        with:
+          name: shipper-state-final-${{ needs.prepare.outputs.version }}
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           path: shipper-final
 
       - name: Extract changelog for this version
