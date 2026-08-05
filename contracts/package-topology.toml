@@ -24,13 +24,6 @@ publication_closure = [
   "lintdiff-render",
   "lintdiff",
 ]
-publication_order = [
-  "lintdiff-types",
-  "lintdiff-engine",
-  "lintdiff-render",
-  "lintdiff",
-]
-
 repository_tooling = ["xtask"]
 conditional_dev_support = ["lintdiff-test-support"]
 deferred_workspace = []

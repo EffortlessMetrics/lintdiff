@@ -1,0 +1,69 @@
+{
+  "schema_version": "shipper.plan.v1",
+  "plan_id": "f999d51981a5d28079de8e0a49c38c6ae95a6b83754528f5beed5aa06ab2978e",
+  "registry": {
+    "name": "crates-io",
+    "api_base": "https://crates.io"
+  },
+  "workspace_root": "/workspace/lintdiff",
+  "publishable_count": 4,
+  "skipped_count": 1,
+  "internal_dependency_edges": 5,
+  "publish_levels": 3,
+  "artifacts": [
+    {
+      "kind": "plan_json_stdout",
+      "path": ".shipper/plan.txt",
+      "description": "Recommended CI capture path for shipper plan output."
+    }
+  ],
+  "packages": [
+    {
+      "order": 1,
+      "name": "lintdiff-types",
+      "version": "0.1.2",
+      "manifest_path": "crates/lintdiff-types/Cargo.toml",
+      "level": 0,
+      "dependencies": [],
+      "order_reason": "no workspace dependencies"
+    },
+    {
+      "order": 2,
+      "name": "lintdiff-engine",
+      "version": "0.1.2",
+      "manifest_path": "crates/lintdiff-engine/Cargo.toml",
+      "level": 1,
+      "dependencies": ["lintdiff-types@0.1.2"],
+      "order_reason": "depends on: lintdiff-types@0.1.2"
+    },
+    {
+      "order": 3,
+      "name": "lintdiff-render",
+      "version": "0.1.2",
+      "manifest_path": "crates/lintdiff-render/Cargo.toml",
+      "level": 1,
+      "dependencies": ["lintdiff-types@0.1.2"],
+      "order_reason": "depends on: lintdiff-types@0.1.2"
+    },
+    {
+      "order": 4,
+      "name": "lintdiff",
+      "version": "0.1.2",
+      "manifest_path": "crates/lintdiff/Cargo.toml",
+      "level": 2,
+      "dependencies": [
+        "lintdiff-engine@0.1.2",
+        "lintdiff-render@0.1.2",
+        "lintdiff-types@0.1.2"
+      ],
+      "order_reason": "depends on: lintdiff-engine@0.1.2, lintdiff-render@0.1.2, lintdiff-types@0.1.2"
+    }
+  ],
+  "skipped": [
+    {
+      "name": "xtask",
+      "version": "0.1.2",
+      "reason": "publish = false"
+    }
+  ]
+}
