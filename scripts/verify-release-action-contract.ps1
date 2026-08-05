@@ -95,6 +95,13 @@ Assert-ContainsLiteral -Text $releaseText -Literal 'name: shipper-state-final-' 
 Assert-ContainsLiteral -Text $releaseText -Literal 'retention-days: 30' -Name "plan/preflight retention"
 Assert-ContainsLiteral -Text $releaseText -Literal 'retention-days: 90' -Name "final state retention"
 Assert-ContainsLiteral -Text $releaseText -Literal 'if: ${{ always() }}' -Name "always state upload"
+Assert-ContainsLiteral -Text $releaseText -Literal 'id-token: write' -Name "Trusted Publishing permission"
+Assert-ContainsLiteral -Text $releaseText -Literal 'environment: release' -Name "release environment"
+Assert-ContainsLiteral -Text $releaseText -Literal 'rust-lang/crates-io-auth-action@v1' -Name "Trusted Publishing action"
+Assert-ContainsLiteral -Text $releaseText -Literal 'continue-on-error: true' -Name "observable auth fallback"
+Assert-ContainsLiteral -Text $releaseText -Literal 'CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}' -Name "selected registry credential"
+Assert-ContainsLiteral -Text $releaseText -Literal 'scripts/release/select-crates-auth.sh' -Name "redacted auth evidence helper"
+Assert-ContainsLiteral -Text $releaseText -Literal 'auth-evidence.json' -Name "auth evidence artifact"
 
 Assert-NotContainsLiteral -Text $actionText -Literal "effortless-metrics/lintdiff/releases/latest" -Name "legacy lowercase API org"
 Assert-NotContainsLiteral -Text $actionText -Literal "github.com/effortless-metrics/lintdiff/releases/download" -Name "legacy lowercase release download org"

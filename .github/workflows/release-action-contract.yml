@@ -31,6 +31,9 @@ jobs:
       - name: Verify Shipper recovery fixtures
         shell: bash
         run: bash scripts/release/tests/test-shipper-state.sh
+      - name: Verify crates.io auth fixtures
+        shell: bash
+        run: bash scripts/release/tests/test-crates-auth.sh
       - name: Verify release asset contract
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify-release-action-contract.ps1
